@@ -103,9 +103,9 @@ app.post('/api/merchants', authMiddleware, (req: Request, res: Response) => {
 
 // --- 附近在线商户 (公开) ---
 app.get('/api/merchants/nearby', (req: Request, res: Response) => {
-  const lat = parseFloat(req.query.lat as string);
-  const lng = parseFloat(req.query.lng as string);
-  const radius = parseFloat(req.query.radius as string) || 5;
+  const lat = parseFloat(String(req.query.lat));
+  const lng = parseFloat(String(req.query.lng));
+  const radius = parseFloat(String(req.query.radius)) || 5;
 
   if (isNaN(lat) || isNaN(lng)) return err(res, 400, 'lat/lng 参数必填');
 

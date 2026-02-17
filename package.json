@@ -4,7 +4,7 @@
   "description": "WCP商户发现平台 - 后端API",
   "scripts": {
     "dev": "npx tsx src/server.ts",
-    "build": "npx tsc",
+    "build": "tsc",
     "start": "node dist/server.js"
   },
   "dependencies": {
@@ -16,7 +16,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
+    "@types/express": "^4.17.21",
     "@types/uuid": "^10.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
