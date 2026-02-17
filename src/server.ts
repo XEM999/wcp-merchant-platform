@@ -42,13 +42,13 @@ app.use(express.json());
 // ==================== 认证接口 ====================
 
 // --- 注册 ---
-app.post('/api/auth/register', (req: Request, res: Response) => {
+app.post('/api/auth/register', async (req: Request, res: Response) => {
   const { phone, password } = req.body;
   if (!phone || !password) return err(res, 400, 'phone/password 必填');
   if (password.length < 6) return err(res, 400, '密码至少6位');
 
   try {
-    const result = register(phone, password);
+    const result = await register(phone, password);
     res.status(201).json({ message: '注册成功', token: result.token, user: result.user });
   } catch (e: any) {
     if (e.message.includes('已注册')) {
@@ -60,12 +60,12 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
 });
 
 // --- 登录 ---
-app.post('/api/auth/login', (req: Request, res: Response) => {
+app.post('/api/auth/login', async (req: Request, res: Response) => {
   const { phone, password } = req.body;
   if (!phone || !password) return err(res, 400, 'phone/password 必填');
 
   try {
-    const result = login(phone, password);
+    const result = await login(phone, password);
     res.json({ message: '登录成功', token: result.token, user: result.user });
   } catch (e: any) {
     return err(res, 401, e.message || '手机号或密码错误');
@@ -82,27 +82,32 @@ app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
 // ==================== 商户接口 ====================
 
 // --- 商户注册 (需登录) ---
-app.post('/api/merchants', authMiddleware, (req: Request, res: Response) => {
+app.post('/api/merchants', authMiddleware, async (req: Request, res: Response) => {
   const { name, type, phone, email, description, location, address } = req.body;
   if (!name || !type || !phone) return err(res, 400, 'name/type/phone 必填');
   if (!location?.lat || !location?.lng) return err(res, 400, 'location{lat,lng} 必填');
 
   const userId = (req as any).userId;
-  const m = createMerchant({
-    name,
-    type,
-    phone,
-    email,
-    description,
-    location,
-    address,
-    userId,
-  });
-  res.status(201).json({ message: '注册成功', merchant: m });
+  try {
+    const m = await createMerchant({
+      name,
+      type,
+      phone,
+      email,
+      description,
+      location,
+      address,
+      userId,
+    });
+    res.status(201).json({ message: '注册成功', merchant: m });
+  } catch (e: any) {
+    console.error('商户注册错误:', e);
+    return err(res, 500, '商户注册失败');
+  }
 });
 
 // --- 附近在线商户 (公开) ---
-app.get('/api/merchants/nearby', (req: Request, res: Response) => {
+app.get('/api/merchants/nearby', async (req: Request, res: Response) => {
   const lat = parseFloat(String(req.query.lat));
   const lng = parseFloat(String(req.query.lng));
   const radius = parseFloat(String(req.query.radius)) || 5;
@@ -110,79 +115,108 @@ app.get('/api/merchants/nearby', (req: Request, res: Response) => {
   if (isNaN(lat) || isNaN(lng)) return err(res, 400, 'lat/lng 参数必填');
 
   const center: Location = { lat, lng };
-  const results = getNearbyMerchants(center, radius);
-
-  res.json({ center, radius, count: results.length, merchants: results });
+  try {
+    const results = await getNearbyMerchants(center, radius);
+    res.json({ center, radius, count: results.length, merchants: results });
+  } catch (e: any) {
+    console.error('附近商户查询错误:', e);
+    return err(res, 500, '查询失败');
+  }
 });
 
 // --- 商户列表 (公开) ---
-app.get('/api/merchants', (req: Request, res: Response) => {
-  const all = getAllMerchants();
-  res.json({ count: all.length, merchants: all });
+app.get('/api/merchants', async (req: Request, res: Response) => {
+  try {
+    const all = await getAllMerchants();
+    res.json({ count: all.length, merchants: all });
+  } catch (e: any) {
+    console.error('商户列表查询错误:', e);
+    return err(res, 500, '查询失败');
+  }
 });
 
 // --- 商户详情 (公开) ---
-app.get('/api/merchants/:id', (req: Request, res: Response) => {
-  const m = getMerchant(req.params.id);
-  if (!m) return err(res, 404, '商户不存在');
-  res.json(m);
+app.get('/api/merchants/:id', async (req: Request, res: Response) => {
+  try {
+    const m = await getMerchant(req.params.id);
+    if (!m) return err(res, 404, '商户不存在');
+    res.json(m);
+  } catch (e: any) {
+    console.error('商户详情查询错误:', e);
+    return err(res, 500, '查询失败');
+  }
 });
 
 // --- 上线/下线 (需登录，支持PATCH和PUT) ---
-app.put('/api/merchants/:id/status', authMiddleware, (req: Request, res: Response) => {
-  const m = getMerchant(req.params.id);
-  if (!m) return err(res, 404, '商户不存在');
-  if (m.userId && m.userId !== (req as any).userId) return err(res, 403, '无权操作');
-  if (typeof req.body.online !== 'boolean') return err(res, 400, 'online 必须是 boolean');
-  const updated = updateMerchantStatus(req.params.id, req.body.online);
-  res.json({ message: updated?.online ? '已上线' : '已下线', merchant: updated });
+app.put('/api/merchants/:id/status', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const m = await getMerchant(req.params.id);
+    if (!m) return err(res, 404, '商户不存在');
+    if (m.userId && m.userId !== (req as any).userId) return err(res, 403, '无权操作');
+    if (typeof req.body.online !== 'boolean') return err(res, 400, 'online 必须是 boolean');
+    const updated = await updateMerchantStatus(req.params.id, req.body.online);
+    res.json({ message: updated?.online ? '已上线' : '已下线', merchant: updated });
+  } catch (e: any) {
+    console.error('商户状态更新错误:', e);
+    return err(res, 500, '更新失败');
+  }
 });
 
-app.patch('/api/merchants/:id/status', authMiddleware, (req: Request, res: Response) => {
-  const m = getMerchant(req.params.id);
-  if (!m) return err(res, 404, '商户不存在');
-  
-  // 验证商户归属
-  if (m.userId && m.userId !== (req as any).userId) {
-    return err(res, 403, '无权操作此商户');
-  }
+app.patch('/api/merchants/:id/status', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const m = await getMerchant(req.params.id);
+    if (!m) return err(res, 404, '商户不存在');
+    
+    // 验证商户归属
+    if (m.userId && m.userId !== (req as any).userId) {
+      return err(res, 403, '无权操作此商户');
+    }
 
-  if (typeof req.body.online !== 'boolean') return err(res, 400, 'online 必须是 boolean');
-  
-  const updated = updateMerchantStatus(req.params.id, req.body.online);
-  res.json({ message: updated?.online ? '已上线' : '已下线', merchant: updated });
+    if (typeof req.body.online !== 'boolean') return err(res, 400, 'online 必须是 boolean');
+    
+    const updated = await updateMerchantStatus(req.params.id, req.body.online);
+    res.json({ message: updated?.online ? '已上线' : '已下线', merchant: updated });
+  } catch (e: any) {
+    console.error('商户状态更新错误:', e);
+    return err(res, 500, '更新失败');
+  }
 });
 
 // --- 更新菜单 (需登录，商户自己操作) ---
-app.put('/api/merchants/:id/menu', authMiddleware, (req: Request, res: Response) => {
-  const m = getMerchant(req.params.id);
-  if (!m) return err(res, 404, '商户不存在');
-  
-  // 验证商户归属
-  if (m.userId && m.userId !== (req as any).userId) {
-    return err(res, 403, '无权操作此商户');
+app.put('/api/merchants/:id/menu', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const m = await getMerchant(req.params.id);
+    if (!m) return err(res, 404, '商户不存在');
+    
+    // 验证商户归属
+    if (m.userId && m.userId !== (req as any).userId) {
+      return err(res, 403, '无权操作此商户');
+    }
+
+    const items = req.body.items;
+    if (!Array.isArray(items)) return err(res, 400, 'items 必须是数组');
+
+    const updated = await updateMenu(req.params.id, items);
+    res.json({ message: '菜单已更新', menuItems: updated?.menuItems });
+  } catch (e: any) {
+    console.error('菜单更新错误:', e);
+    return err(res, 500, '更新失败');
   }
-
-  const items = req.body.items;
-  if (!Array.isArray(items)) return err(res, 400, 'items 必须是数组');
-
-  const updated = updateMenu(req.params.id, items);
-  res.json({ message: '菜单已更新', menuItems: updated?.menuItems });
 });
 
 // --- 提交评价 (需登录) ---
-app.post('/api/merchants/:id/reviews', authMiddleware, (req: Request, res: Response) => {
-  const m = getMerchant(req.params.id);
-  if (!m) return err(res, 404, '商户不存在');
-
-  const { score, comment } = req.body;
-  if (!score || score < 1 || score > 5) return err(res, 400, 'score 必须 1-5');
-  if (!comment) return err(res, 400, 'comment 必填');
-
-  const userId = (req as any).userId;
-  
+app.post('/api/merchants/:id/reviews', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const result = createReview({
+    const m = await getMerchant(req.params.id);
+    if (!m) return err(res, 404, '商户不存在');
+
+    const { score, comment } = req.body;
+    if (!score || score < 1 || score > 5) return err(res, 400, 'score 必须 1-5');
+    if (!comment) return err(res, 400, 'comment 必填');
+
+    const userId = (req as any).userId;
+    
+    const result = await createReview({
       merchantId: m.id,
       userId,
       score: Number(score),
@@ -195,9 +229,9 @@ app.post('/api/merchants/:id/reviews', authMiddleware, (req: Request, res: Respo
 });
 
 // --- 获取评价 (公开) ---
-app.get('/api/merchants/:id/reviews', (req: Request, res: Response) => {
+app.get('/api/merchants/:id/reviews', async (req: Request, res: Response) => {
   try {
-    const result = getReviews(req.params.id);
+    const result = await getReviews(req.params.id);
     res.json(result);
   } catch (e: any) {
     return err(res, 404, e.message);

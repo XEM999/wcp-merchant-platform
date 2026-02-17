@@ -8,11 +8,13 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.96.0",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
     "cors": "^2.8.6",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.3",
+    "postgres": "^3.4.8",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

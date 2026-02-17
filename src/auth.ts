@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 import { createUser, getUserByPhone, getUserById, verifyPassword, User } from './database';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'wcp-dev-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET || 'nearbite-jwt-secret-2026';
 const TOKEN_EXPIRY = '7d';
 
 // ==================== 类型定义 ====================
@@ -19,8 +18,8 @@ export interface AuthRequest {
 
 // ==================== 注册 ====================
 
-export function register(phone: string, password: string): { token: string; user: Omit<User, 'passwordHash'> } {
-  const user = createUser(phone, password);
+export async function register(phone: string, password: string): Promise<{ token: string; user: Omit<User, 'passwordHash'> }> {
+  const user = await createUser(phone, password);
   const token = generateToken(user);
   const { passwordHash, ...userWithoutPassword } = user;
   return { token, user: userWithoutPassword };
@@ -28,8 +27,8 @@ export function register(phone: string, password: string): { token: string; user
 
 // ==================== 登录 ====================
 
-export function login(phone: string, password: string): { token: string; user: Omit<User, 'passwordHash'> } {
-  const user = getUserByPhone(phone);
+export async function login(phone: string, password: string): Promise<{ token: string; user: Omit<User, 'passwordHash'> }> {
+  const user = await getUserByPhone(phone);
   if (!user) {
     throw new Error('手机号或密码错误');
   }
@@ -56,7 +55,7 @@ export function verifyToken(token: string): TokenPayload {
 
 import { Request, Response, NextFunction } from 'express';
 
-export function authMiddleware(req: Request, res: Response, next: NextFunction): void | Response {
+export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.status(401).json({ error: '缺少Authorization header' });
@@ -66,7 +65,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
   const token = authHeader.slice(7);
   try {
     const payload = verifyToken(token);
-    const user = getUserById(payload.userId);
+    const user = await getUserById(payload.userId);
     if (!user) {
       res.status(401).json({ error: '用户不存在' });
       return;
@@ -81,13 +80,13 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
 
 // ==================== 可选：管理员中间件 ====================
 
-export function optionalAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
+export async function optionalAuthMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.slice(7);
     try {
       const payload = verifyToken(token);
-      const user = getUserById(payload.userId);
+      const user = await getUserById(payload.userId);
       if (user) {
         (req as any).user = user;
         (req as any).userId = user.id;
