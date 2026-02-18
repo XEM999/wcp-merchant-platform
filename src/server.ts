@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
+import { EventEmitter } from 'events';
 import {
   createMerchant,
   getMerchant,
@@ -12,6 +13,16 @@ import {
   getReviews,
   Merchant,
   Location,
+  // 订单相关导入
+  createOrder,
+  getOrder,
+  getOrdersByMerchant,
+  getOrdersByUser,
+  updateOrderStatus,
+  getUserMerchantId,
+  Order,
+  OrderStatus,
+  OrderItem,
 } from './database';
 import { register, login, authMiddleware, optionalAuthMiddleware } from './auth';
 
@@ -32,6 +43,40 @@ function haversine(a: Location, b: Location): number {
 function err(res: Response, status: number, msg: string) {
   return res.status(status).json({ error: msg });
 }
+
+// ==================== SSE 事件分发 ====================
+
+/** 订单事件总线 - 用于实时推送订单状态变化 */
+const orderEventBus = new EventEmitter();
+// 设置最大监听器数量，避免内存泄漏警告
+orderEventBus.setMaxListeners(100);
+
+/** SSE 事件类型 */
+interface OrderEvent {
+  type: 'order_created' | 'order_updated' | 'order_status_changed';
+  orderId: string;
+  merchantId?: string;
+  userId?: string;
+  data?: any;
+}
+
+/** 发送订单事件 */
+function emitOrderEvent(event: OrderEvent) {
+  orderEventBus.emit('order_event', event);
+  // 同时发送到特定订单和商户频道
+  if (event.orderId) {
+    orderEventBus.emit(`order:${event.orderId}`, event);
+  }
+  if (event.merchantId) {
+    orderEventBus.emit(`merchant:${event.merchantId}`, event);
+  }
+  if (event.userId) {
+    orderEventBus.emit(`user:${event.userId}`, event);
+  }
+}
+
+/** SSE 心跳间隔（毫秒） */
+const SSE_HEARTBEAT_INTERVAL = 30000;
 
 // ==================== Express ====================
 
@@ -238,6 +283,288 @@ app.get('/api/merchants/:id/reviews', async (req: Request, res: Response) => {
   }
 });
 
+// ==================== 订单接口 ====================
+
+/**
+ * POST /api/orders
+ * 买家下单（需登录）
+ * 请求体: { merchantId, items: [{name, qty, price, note?}], tableNumber?, pickupMethod?, note? }
+ */
+app.post('/api/orders', authMiddleware, async (req: Request, res: Response) => {
+  const { merchantId, items, tableNumber, pickupMethod, note } = req.body;
+  const userId = (req as any).userId;
+
+  // 参数校验
+  if (!merchantId) return err(res, 400, 'merchantId 必填');
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return err(res, 400, 'items 必须是非空数组');
+  }
+
+  // 校验每个商品项
+  for (const item of items) {
+    if (!item.name || typeof item.qty !== 'number' || item.qty <= 0) {
+      return err(res, 400, '每个商品项必须有 name 和有效的 qty');
+    }
+    if (typeof item.price !== 'number' || item.price < 0) {
+      return err(res, 400, '每个商品项必须有有效的 price');
+    }
+  }
+
+  try {
+    // 检查商户是否存在且在线
+    const merchant = await getMerchant(merchantId);
+    if (!merchant) return err(res, 404, '商户不存在');
+    if (!merchant.online) return err(res, 400, '商户当前不在线，无法下单');
+
+    // 创建订单
+    const order = await createOrder({
+      merchantId,
+      userId,
+      items: items as OrderItem[],
+      tableNumber: tableNumber || null,
+      pickupMethod: pickupMethod || 'self',
+      note: note || '',
+    });
+
+    // 发送订单创建事件（通知商家）
+    emitOrderEvent({
+      type: 'order_created',
+      orderId: order.id,
+      merchantId,
+      userId,
+      data: order,
+    });
+
+    console.log(`📦 新订单创建: ${order.id}, 商户: ${merchantId}, 用户: ${userId}`);
+    res.status(201).json({ message: '下单成功', order });
+  } catch (e: any) {
+    console.error('下单错误:', e);
+    return err(res, 500, e.message || '下单失败');
+  }
+});
+
+/**
+ * GET /api/orders/my
+ * 买家获取自己的订单列表（需登录）
+ */
+app.get('/api/orders/my', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+
+  try {
+    const orders = await getOrdersByUser(userId);
+    res.json({ count: orders.length, orders });
+  } catch (e: any) {
+    console.error('获取用户订单错误:', e);
+    return err(res, 500, '获取订单失败');
+  }
+});
+
+/**
+ * GET /api/orders/merchant
+ * 商家获取自己店的订单列表（需登录+验证是商家）
+ * 查询参数: ?status=pending|accepted|preparing|ready|picked_up|rejected
+ */
+app.get('/api/orders/merchant', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const status = req.query.status as OrderStatus | undefined;
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权访问');
+    }
+
+    // 获取订单列表
+    const orders = await getOrdersByMerchant(merchantId, status);
+    res.json({ count: orders.length, merchantId, orders });
+  } catch (e: any) {
+    console.error('获取商家订单错误:', e);
+    return err(res, 500, '获取订单失败');
+  }
+});
+
+/**
+ * GET /api/orders/:id
+ * 获取订单详情
+ */
+app.get('/api/orders/:id', authMiddleware, async (req: Request, res: Response) => {
+  const orderId = req.params.id;
+  const userId = (req as any).userId;
+
+  try {
+    const order = await getOrder(orderId);
+    if (!order) return err(res, 404, '订单不存在');
+
+    // 验证权限：只有订单所有者或商家可以查看
+    const merchantId = await getUserMerchantId(userId);
+    if (order.userId !== userId && order.merchantId !== merchantId) {
+      return err(res, 403, '无权查看此订单');
+    }
+
+    res.json(order);
+  } catch (e: any) {
+    console.error('获取订单详情错误:', e);
+    return err(res, 500, '获取订单失败');
+  }
+});
+
+/**
+ * PATCH /api/orders/:id/status
+ * 更新订单状态（商家操作）
+ * 请求体: { status: 'accepted'|'rejected'|'preparing'|'ready'|'picked_up' }
+ */
+app.patch('/api/orders/:id/status', authMiddleware, async (req: Request, res: Response) => {
+  const orderId = req.params.id;
+  const userId = (req as any).userId;
+  const { status } = req.body;
+
+  // 参数校验
+  const validStatuses: OrderStatus[] = ['accepted', 'rejected', 'preparing', 'ready', 'picked_up'];
+  if (!status || !validStatuses.includes(status)) {
+    return err(res, 400, `status 必须是: ${validStatuses.join(', ')}`);
+  }
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权操作');
+    }
+
+    // 更新订单状态
+    const order = await updateOrderStatus(orderId, status, merchantId);
+
+    // 发送订单更新事件（通知买家）
+    emitOrderEvent({
+      type: 'order_status_changed',
+      orderId: order.id,
+      merchantId: order.merchantId,
+      userId: order.userId,
+      data: order,
+    });
+
+    console.log(`📝 订单状态更新: ${order.id} → ${status}`);
+    res.json({ message: '状态已更新', order });
+  } catch (e: any) {
+    console.error('更新订单状态错误:', e);
+    return err(res, 400, e.message);
+  }
+});
+
+/**
+ * GET /api/orders/:id/stream
+ * SSE 实时推送订单状态变化（买家监听）
+ */
+app.get('/api/orders/:id/stream', authMiddleware, async (req: Request, res: Response) => {
+  const orderId = req.params.id;
+  const userId = (req as any).userId;
+
+  try {
+    // 验证订单存在且属于用户
+    const order = await getOrder(orderId);
+    if (!order) {
+      return err(res, 404, '订单不存在');
+    }
+    if (order.userId !== userId) {
+      return err(res, 403, '无权订阅此订单');
+    }
+
+    // 设置 SSE 响应头
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    // 发送初始数据
+    res.write(`data: ${JSON.stringify({ type: 'connected', order })}\n\n`);
+
+    // 创建事件监听器
+    const listener = (event: OrderEvent) => {
+      if (event.orderId === orderId) {
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      }
+    };
+
+    // 订阅订单事件
+    orderEventBus.on(`order:${orderId}`, listener);
+
+    // 心跳定时器
+    const heartbeat = setInterval(() => {
+      res.write(': ping\n\n');
+    }, SSE_HEARTBEAT_INTERVAL);
+
+    // 清理函数
+    const cleanup = () => {
+      orderEventBus.off(`order:${orderId}`, listener);
+      clearInterval(heartbeat);
+    };
+
+    // 客户端断开连接时清理
+    req.on('close', cleanup);
+    res.on('close', cleanup);
+
+  } catch (e: any) {
+    console.error('SSE 订阅错误:', e);
+    return err(res, 500, '订阅失败');
+  }
+});
+
+/**
+ * GET /api/orders/merchant/stream
+ * SSE 实时推送新订单（商家监听）
+ */
+app.get('/api/orders/merchant/stream', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权订阅');
+    }
+
+    // 设置 SSE 响应头
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    // 发送初始连接确认
+    res.write(`data: ${JSON.stringify({ type: 'connected', merchantId })}\n\n`);
+
+    // 创建事件监听器
+    const listener = (event: OrderEvent) => {
+      // 只推送该商家的订单事件
+      if (event.merchantId === merchantId) {
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      }
+    };
+
+    // 订阅商户事件
+    orderEventBus.on(`merchant:${merchantId}`, listener);
+
+    // 心跳定时器
+    const heartbeat = setInterval(() => {
+      res.write(': ping\n\n');
+    }, SSE_HEARTBEAT_INTERVAL);
+
+    // 清理函数
+    const cleanup = () => {
+      orderEventBus.off(`merchant:${merchantId}`, listener);
+      clearInterval(heartbeat);
+    };
+
+    // 客户端断开连接时清理
+    req.on('close', cleanup);
+    res.on('close', cleanup);
+
+  } catch (e: any) {
+    console.error('商家 SSE 订阅错误:', e);
+    return err(res, 500, '订阅失败');
+  }
+});
+
 // ==================== 全局错误处理 ====================
 
 app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
@@ -252,7 +579,29 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🏪 WCP商户API已启动: http://localhost:${PORT}`);
-  console.log('接口: POST/GET merchants, PATCH status, PUT menu, POST/GET reviews, GET nearby');
-  console.log('认证: POST /api/auth/register, POST /api/auth/login, GET /api/auth/me');
+  console.log(`🏪 NearBite API已启动: http://localhost:${PORT}`);
+  console.log('');
+  console.log('📍 商户接口:');
+  console.log('  POST /api/merchants - 商户注册');
+  console.log('  GET  /api/merchants - 商户列表');
+  console.log('  GET  /api/merchants/nearby - 附近商户');
+  console.log('  GET  /api/merchants/:id - 商户详情');
+  console.log('  PATCH /api/merchants/:id/status - 上线/下线');
+  console.log('  PUT  /api/merchants/:id/menu - 更新菜单');
+  console.log('  POST /api/merchants/:id/reviews - 提交评价');
+  console.log('  GET  /api/merchants/:id/reviews - 获取评价');
+  console.log('');
+  console.log('🔐 认证接口:');
+  console.log('  POST /api/auth/register - 注册');
+  console.log('  POST /api/auth/login - 登录');
+  console.log('  GET  /api/auth/me - 获取当前用户');
+  console.log('');
+  console.log('📦 订单接口:');
+  console.log('  POST   /api/orders - 买家下单');
+  console.log('  GET    /api/orders/my - 买家获取自己的订单');
+  console.log('  GET    /api/orders/merchant - 商家获取订单列表');
+  console.log('  GET    /api/orders/:id - 获取订单详情');
+  console.log('  PATCH  /api/orders/:id/status - 更新订单状态');
+  console.log('  GET    /api/orders/:id/stream - SSE订阅订单状态(买家)');
+  console.log('  GET    /api/orders/merchant/stream - SSE订阅新订单(商家)');
 });

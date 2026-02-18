@@ -467,3 +467,303 @@ export async function getReviews(merchantId: string): Promise<{ count: number; r
     reviews: mappedReviews,
   };
 }
+
+// ==================== 订单类型定义 ====================
+
+/** 订单状态 */
+export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'picked_up' | 'rejected';
+
+/** 取餐方式 */
+export type PickupMethod = 'self' | 'table_delivery';
+
+/** 订单项 */
+export interface OrderItem {
+  name: string;      // 商品名称
+  qty: number;       // 数量
+  price: number;     // 单价
+  note?: string;     // 商品备注
+}
+
+/** 状态历史记录 */
+export interface StatusHistory {
+  status: OrderStatus;
+  timestamp: string; // ISO 时间字符串
+}
+
+/** 订单数据结构 */
+export interface Order {
+  id: string;
+  merchantId: string;
+  userId: string;
+  status: OrderStatus;
+  items: OrderItem[];
+  tableNumber: string | null;   // null 表示自取
+  pickupMethod: PickupMethod;
+  note: string;                 // 买家备注
+  totalAmount: number;
+  statusHistory: StatusHistory[];
+  createdAt: Date;
+  updatedAt: Date;
+  acceptedAt: Date | null;
+  preparingAt: Date | null;
+  readyAt: Date | null;
+  pickedUpAt: Date | null;
+}
+
+/** 创建订单参数 */
+export interface CreateOrderParams {
+  merchantId: string;
+  userId: string;
+  items: OrderItem[];
+  tableNumber?: string | null;
+  pickupMethod?: PickupMethod;
+  note?: string;
+}
+
+/** 订单数据库行映射 */
+interface OrderDbRow {
+  id: string;
+  merchant_id: string;
+  user_id: string;
+  status: OrderStatus;
+  items: OrderItem[];
+  table_number: string | null;
+  pickup_method: PickupMethod;
+  note: string;
+  total: number;  // 数据库中叫 total
+  status_history: StatusHistory[];
+  created_at: string;
+  updated_at: string;
+  accepted_at: string | null;
+  preparing_at: string | null;
+  ready_at: string | null;
+  picked_up_at: string | null;
+}
+
+/** 将数据库行映射为 Order 对象 */
+function mapOrderFromDb(data: OrderDbRow): Order {
+  return {
+    id: data.id,
+    merchantId: data.merchant_id,
+    userId: data.user_id,
+    status: data.status,
+    items: data.items || [],
+    tableNumber: data.table_number,
+    pickupMethod: data.pickup_method || 'self',
+    note: data.note || '',
+    totalAmount: data.total,
+    statusHistory: data.status_history || [],
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at || data.created_at),
+    acceptedAt: data.accepted_at ? new Date(data.accepted_at) : null,
+    preparingAt: data.preparing_at ? new Date(data.preparing_at) : null,
+    readyAt: data.ready_at ? new Date(data.ready_at) : null,
+    pickedUpAt: data.picked_up_at ? new Date(data.picked_up_at) : null,
+  };
+}
+
+// ==================== 订单操作 ====================
+
+/**
+ * 创建订单
+ * @param data 订单数据
+ * @returns 创建的订单
+ */
+export async function createOrder(data: CreateOrderParams): Promise<Order> {
+  // 计算总金额
+  const totalAmount = data.items.reduce((sum, item) => sum + item.price * item.qty, 0);
+  
+  // 初始化状态历史
+  const statusHistory: StatusHistory[] = [
+    { status: 'pending', timestamp: new Date().toISOString() }
+  ];
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .insert({
+      merchant_id: data.merchantId,
+      user_id: data.userId,
+      status: 'pending',
+      items: data.items,
+      table_number: data.tableNumber || null,
+      pickup_method: data.pickupMethod || 'self',
+      note: data.note || '',
+      total: totalAmount,
+      status_history: statusHistory,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('创建订单错误:', error);
+    throw new Error(`创建订单失败: ${error.message}`);
+  }
+
+  return mapOrderFromDb(order as OrderDbRow);
+}
+
+/**
+ * 获取单个订单
+ * @param orderId 订单ID
+ * @returns 订单或 undefined
+ */
+export async function getOrder(orderId: string): Promise<Order | undefined> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', orderId)
+    .single();
+
+  if (error || !data) return undefined;
+  
+  return mapOrderFromDb(data as OrderDbRow);
+}
+
+/**
+ * 商家获取订单列表
+ * @param merchantId 商家ID
+ * @param status 可选状态过滤
+ * @returns 订单列表（按创建时间倒序）
+ */
+export async function getOrdersByMerchant(
+  merchantId: string, 
+  status?: OrderStatus
+): Promise<Order[]> {
+  let query = supabase
+    .from('orders')
+    .select('*')
+    .eq('merchant_id', merchantId)
+    .order('created_at', { ascending: false });
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('获取商家订单错误:', error);
+    return [];
+  }
+
+  return (data || []).map(row => mapOrderFromDb(row as OrderDbRow));
+}
+
+/**
+ * 买家获取自己的订单
+ * @param userId 用户ID
+ * @returns 订单列表（按创建时间倒序）
+ */
+export async function getOrdersByUser(userId: string): Promise<Order[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('获取用户订单错误:', error);
+    return [];
+  }
+
+  return (data || []).map(row => mapOrderFromDb(row as OrderDbRow));
+}
+
+/** 状态流转规则 */
+const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pending: ['accepted', 'rejected'],
+  accepted: ['preparing'],
+  preparing: ['ready'],
+  ready: ['picked_up'],
+  picked_up: [], // 终态
+  rejected: [],  // 终态
+};
+
+/** 状态对应的时间戳字段 */
+const STATUS_TIMESTAMP_FIELD: Record<OrderStatus, string> = {
+  pending: 'created_at',
+  accepted: 'accepted_at',
+  preparing: 'preparing_at',
+  ready: 'ready_at',
+  picked_up: 'picked_up_at',
+  rejected: 'updated_at',
+};
+
+/**
+ * 更新订单状态
+ * @param orderId 订单ID
+ * @param newStatus 新状态
+ * @param merchantId 商家ID（用于验证权限）
+ * @returns 更新后的订单
+ */
+export async function updateOrderStatus(
+  orderId: string, 
+  newStatus: OrderStatus, 
+  merchantId: string
+): Promise<Order> {
+  // 获取当前订单
+  const order = await getOrder(orderId);
+  if (!order) {
+    throw new Error('订单不存在');
+  }
+
+  // 验证商家权限
+  if (order.merchantId !== merchantId) {
+    throw new Error('无权操作此订单');
+  }
+
+  // 验证状态流转
+  const allowedNextStatuses = STATUS_TRANSITIONS[order.status];
+  if (!allowedNextStatuses.includes(newStatus)) {
+    throw new Error(`无效的状态流转: ${order.status} → ${newStatus}。允许的下一状态: ${allowedNextStatuses.join(', ') || '无（终态）'}`);
+  }
+
+  // 更新状态历史
+  const statusHistory = [...order.statusHistory, { 
+    status: newStatus, 
+    timestamp: new Date().toISOString() 
+  }];
+
+  // 构建更新数据
+  const updateData: Record<string, any> = {
+    status: newStatus,
+    status_history: statusHistory,
+    updated_at: new Date().toISOString(),
+  };
+
+  // 设置对应的时间戳
+  const timestampField = STATUS_TIMESTAMP_FIELD[newStatus];
+  if (timestampField !== 'created_at' && timestampField !== 'updated_at') {
+    updateData[timestampField] = new Date().toISOString();
+  }
+
+  const { data, error } = await supabase
+    .from('orders')
+    .update(updateData)
+    .eq('id', orderId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('更新订单状态错误:', error);
+    throw new Error(`更新订单状态失败: ${error.message}`);
+  }
+
+  return mapOrderFromDb(data as OrderDbRow);
+}
+
+/**
+ * 检查用户是否是商家
+ * @param userId 用户ID
+ * @returns 商家ID或null
+ */
+export async function getUserMerchantId(userId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('merchants')
+    .select('id')
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !data) return null;
+  return data.id;
+}
