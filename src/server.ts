@@ -23,8 +23,23 @@ import {
   Order,
   OrderStatus,
   OrderItem,
+  // Admin相关导入
+  getAdminStats,
+  getAllUsers,
+  getAllOrdersAdmin,
+  getAllMerchantsAdmin,
+  banMerchant,
+  unbanMerchant,
+  banUser,
+  unbanUser,
+  logAdminAction,
+  getAdminLogs,
+  promoteUserToAdmin,
+  getAllOrdersForExport,
+  getAllMerchantsForExport,
+  initAdminAccount,
 } from './database';
-import { register, login, authMiddleware, optionalAuthMiddleware } from './auth';
+import { register, login, authMiddleware, optionalAuthMiddleware, adminMiddleware, superAdminMiddleware } from './auth';
 
 // ==================== 工具函数 ====================
 
@@ -565,6 +580,366 @@ app.get('/api/orders/merchant/stream', authMiddleware, async (req: Request, res:
   }
 });
 
+// ==================== Admin 管理后台接口 ====================
+
+// 所有admin路由都需要authMiddleware + adminMiddleware
+
+/**
+ * GET /api/admin/stats
+ * 平台数据总览
+ */
+app.get('/api/admin/stats', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const stats = await getAdminStats();
+    res.json(stats);
+  } catch (e: any) {
+    console.error('获取统计数据错误:', e);
+    return err(res, 500, '获取统计数据失败');
+  }
+});
+
+/**
+ * GET /api/admin/users
+ * 用户列表（分页）
+ */
+app.get('/api/admin/users', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(String(req.query.page)) || 1;
+    const limit = parseInt(String(req.query.limit)) || 20;
+
+    const result = await getAllUsers(page, limit);
+    res.json({
+      page,
+      limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / limit),
+      users: result.users.map(u => {
+        const { passwordHash, ...userWithoutPassword } = u;
+        return userWithoutPassword;
+      }),
+    });
+  } catch (e: any) {
+    console.error('获取用户列表错误:', e);
+    return err(res, 500, '获取用户列表失败');
+  }
+});
+
+/**
+ * GET /api/admin/merchants
+ * 商户列表（分页，含统计）
+ */
+app.get('/api/admin/merchants', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(String(req.query.page)) || 1;
+    const limit = parseInt(String(req.query.limit)) || 20;
+
+    const result = await getAllMerchantsAdmin(page, limit);
+    res.json({
+      page,
+      limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / limit),
+      merchants: result.merchants,
+    });
+  } catch (e: any) {
+    console.error('获取商户列表错误:', e);
+    return err(res, 500, '获取商户列表失败');
+  }
+});
+
+/**
+ * GET /api/admin/orders
+ * 订单列表（分页，可筛选状态）
+ */
+app.get('/api/admin/orders', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(String(req.query.page)) || 1;
+    const limit = parseInt(String(req.query.limit)) || 20;
+    const status = req.query.status as OrderStatus | undefined;
+
+    const result = await getAllOrdersAdmin(page, limit, status);
+    res.json({
+      page,
+      limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / limit),
+      orders: result.orders,
+    });
+  } catch (e: any) {
+    console.error('获取订单列表错误:', e);
+    return err(res, 500, '获取订单列表失败');
+  }
+});
+
+/**
+ * PATCH /api/admin/merchants/:id/ban
+ * 封禁商户
+ */
+app.patch('/api/admin/merchants/:id/ban', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const merchantId = req.params.id;
+  const { reason } = req.body;
+
+  if (!reason || typeof reason !== 'string') {
+    return err(res, 400, '封禁原因必填');
+  }
+
+  try {
+    // 检查商户是否存在
+    const merchant = await getMerchant(merchantId);
+    if (!merchant) {
+      return err(res, 404, '商户不存在');
+    }
+
+    // 执行封禁
+    const success = await banMerchant(merchantId, reason);
+    if (!success) {
+      return err(res, 500, '封禁失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'ban_merchant', 'merchant', merchantId, { reason, merchantName: merchant.name });
+
+    res.json({ message: '商户已封禁', merchantId, reason });
+  } catch (e: any) {
+    console.error('封禁商户错误:', e);
+    return err(res, 500, '封禁商户失败');
+  }
+});
+
+/**
+ * PATCH /api/admin/merchants/:id/unban
+ * 解封商户
+ */
+app.patch('/api/admin/merchants/:id/unban', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const merchantId = req.params.id;
+
+  try {
+    // 检查商户是否存在
+    const merchant = await getMerchant(merchantId);
+    if (!merchant) {
+      return err(res, 404, '商户不存在');
+    }
+
+    // 执行解封
+    const success = await unbanMerchant(merchantId);
+    if (!success) {
+      return err(res, 500, '解封失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'unban_merchant', 'merchant', merchantId, { merchantName: merchant.name });
+
+    res.json({ message: '商户已解封', merchantId });
+  } catch (e: any) {
+    console.error('解封商户错误:', e);
+    return err(res, 500, '解封商户失败');
+  }
+});
+
+/**
+ * PATCH /api/admin/users/:id/ban
+ * 封禁用户
+ */
+app.patch('/api/admin/users/:id/ban', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const userId = req.params.id;
+  const { reason } = req.body;
+
+  if (!reason || typeof reason !== 'string') {
+    return err(res, 400, '封禁原因必填');
+  }
+
+  try {
+    // 执行封禁
+    const success = await banUser(userId, reason);
+    if (!success) {
+      return err(res, 500, '封禁失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'ban_user', 'user', userId, { reason });
+
+    res.json({ message: '用户已封禁', userId, reason });
+  } catch (e: any) {
+    console.error('封禁用户错误:', e);
+    return err(res, 500, '封禁用户失败');
+  }
+});
+
+/**
+ * PATCH /api/admin/users/:id/unban
+ * 解封用户
+ */
+app.patch('/api/admin/users/:id/unban', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const userId = req.params.id;
+
+  try {
+    // 执行解封
+    const success = await unbanUser(userId);
+    if (!success) {
+      return err(res, 500, '解封失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'unban_user', 'user', userId, {});
+
+    res.json({ message: '用户已解封', userId });
+  } catch (e: any) {
+    console.error('解封用户错误:', e);
+    return err(res, 500, '解封用户失败');
+  }
+});
+
+/**
+ * GET /api/admin/logs
+ * 操作日志
+ */
+app.get('/api/admin/logs', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(String(req.query.page)) || 1;
+    const limit = parseInt(String(req.query.limit)) || 20;
+
+    const result = await getAdminLogs(page, limit);
+    res.json({
+      page,
+      limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / limit),
+      logs: result.logs,
+    });
+  } catch (e: any) {
+    console.error('获取操作日志错误:', e);
+    return err(res, 500, '获取操作日志失败');
+  }
+});
+
+/**
+ * POST /api/admin/promote
+ * 提升用户为admin（需要超级管理员）
+ */
+app.post('/api/admin/promote', authMiddleware, superAdminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const { userId } = req.body;
+
+  if (!userId) {
+    return err(res, 400, 'userId 必填');
+  }
+
+  try {
+    const success = await promoteUserToAdmin(userId);
+    if (!success) {
+      return err(res, 500, '提升失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'promote_to_admin', 'user', userId, {});
+
+    res.json({ message: '用户已提升为管理员', userId });
+  } catch (e: any) {
+    console.error('提升用户为管理员错误:', e);
+    return err(res, 500, '提升用户为管理员失败');
+  }
+});
+
+/**
+ * GET /api/admin/export/orders
+ * 导出订单数据（CSV格式）
+ */
+app.get('/api/admin/export/orders', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const orders = await getAllOrdersForExport();
+
+    // CSV表头
+    const headers = [
+      '订单ID', '商户ID', '商户名称', '用户ID', '用户手机',
+      '状态', '总金额', '商品', '桌号', '取餐方式', '备注', '创建时间', '更新时间'
+    ];
+
+    // 生成CSV内容
+    const csvRows = [
+      headers.join(','),
+      ...orders.map(o => [
+        o.id,
+        o.merchantId,
+        `"${(o.merchantName || '').replace(/"/g, '""')}"`,
+        o.userId,
+        o.userPhone,
+        o.status,
+        o.total,
+        `"${o.items.replace(/"/g, '""')}"`,
+        o.tableNumber,
+        o.pickupMethod,
+        `"${o.note.replace(/"/g, '""')}"`,
+        o.createdAt,
+        o.updatedAt,
+      ].join(','))
+    ];
+
+    // UTF-8 BOM（Excel兼容）
+    const BOM = '\uFEFF';
+    const csvContent = BOM + csvRows.join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=orders_${new Date().toISOString().slice(0, 10)}.csv`);
+    res.send(csvContent);
+  } catch (e: any) {
+    console.error('导出订单数据错误:', e);
+    return err(res, 500, '导出订单数据失败');
+  }
+});
+
+/**
+ * GET /api/admin/export/merchants
+ * 导出商户数据（CSV格式）
+ */
+app.get('/api/admin/export/merchants', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const merchants = await getAllMerchantsForExport();
+
+    // CSV表头
+    const headers = [
+      '商户ID', '名称', '类型', '电话', '邮箱', '地址',
+      '纬度', '经度', '在线', '评分', '评价数', '订单数', '总收入', '是否封禁', '创建时间'
+    ];
+
+    // 生成CSV内容
+    const csvRows = [
+      headers.join(','),
+      ...merchants.map(m => [
+        m.id,
+        `"${m.name.replace(/"/g, '""')}"`,
+        m.type,
+        m.phone,
+        `"${(m.email || '').replace(/"/g, '""')}"`,
+        `"${(m.address || '').replace(/"/g, '""')}"`,
+        m.lat,
+        m.lng,
+        m.online ? '是' : '否',
+        m.rating,
+        m.reviewCount,
+        m.orderCount,
+        m.totalRevenue,
+        m.banned ? '是' : '否',
+        m.createdAt,
+      ].join(','))
+    ];
+
+    // UTF-8 BOM（Excel兼容）
+    const BOM = '\uFEFF';
+    const csvContent = BOM + csvRows.join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=merchants_${new Date().toISOString().slice(0, 10)}.csv`);
+    res.send(csvContent);
+  } catch (e: any) {
+    console.error('导出商户数据错误:', e);
+    return err(res, 500, '导出商户数据失败');
+  }
+});
+
 // ==================== 全局错误处理 ====================
 
 app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
@@ -578,7 +953,10 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 // ==================== 启动 ====================
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  // 初始化管理员账号
+  await initAdminAccount();
+  
   console.log(`🏪 NearBite API已启动: http://localhost:${PORT}`);
   console.log('');
   console.log('📍 商户接口:');
@@ -604,4 +982,18 @@ app.listen(PORT, () => {
   console.log('  PATCH  /api/orders/:id/status - 更新订单状态');
   console.log('  GET    /api/orders/:id/stream - SSE订阅订单状态(买家)');
   console.log('  GET    /api/orders/merchant/stream - SSE订阅新订单(商家)');
+  console.log('');
+  console.log('👑 Admin管理后台接口:');
+  console.log('  GET  /api/admin/stats - 平台数据总览');
+  console.log('  GET  /api/admin/users - 用户列表');
+  console.log('  GET  /api/admin/merchants - 商户列表');
+  console.log('  GET  /api/admin/orders - 订单列表');
+  console.log('  PATCH /api/admin/merchants/:id/ban - 封禁商户');
+  console.log('  PATCH /api/admin/merchants/:id/unban - 解封商户');
+  console.log('  PATCH /api/admin/users/:id/ban - 封禁用户');
+  console.log('  PATCH /api/admin/users/:id/unban - 解封用户');
+  console.log('  GET  /api/admin/logs - 操作日志');
+  console.log('  POST /api/admin/promote - 提升用户为admin');
+  console.log('  GET  /api/admin/export/orders - 导出订单CSV');
+  console.log('  GET  /api/admin/export/merchants - 导出商户CSV');
 });

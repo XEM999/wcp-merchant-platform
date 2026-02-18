@@ -777,3 +777,621 @@ export async function getUserMerchantId(userId: string): Promise<string | null> 
   if (error || !data) return null;
   return data.id;
 }
+
+// ==================== Admin 管理后台操作 ====================
+
+/** Admin统计数据 */
+export interface AdminStats {
+  totalUsers: number;
+  totalMerchants: number;
+  totalOrders: number;
+  totalRevenue: number;
+  todayOrders: number;
+  todayRevenue: number;
+}
+
+/** 用户列表项（包含额外信息） */
+export interface UserListItem extends User {
+  orderCount: number;
+  totalSpent: number;
+  banned?: boolean;
+  bannedAt?: Date;
+  banReason?: string;
+}
+
+/** 商户列表项（包含统计信息） */
+export interface MerchantListItem extends Merchant {
+  orderCount: number;
+  totalRevenue: number;
+  banned?: boolean;
+  bannedAt?: Date;
+  banReason?: string;
+}
+
+/** 管理员日志 */
+export interface AdminLog {
+  id: string;
+  adminId: string;
+  adminPhone?: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  details: Record<string, any>;
+  createdAt: Date;
+}
+
+/**
+ * 获取平台统计数据
+ */
+export async function getAdminStats(): Promise<AdminStats> {
+  // 获取用户总数
+  const { count: totalUsers } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true });
+
+  // 获取商户总数
+  const { count: totalMerchants } = await supabase
+    .from('merchants')
+    .select('*', { count: 'exact', head: true });
+
+  // 获取订单总数和总收入
+  const { data: orderStats } = await supabase
+    .from('orders')
+    .select('total');
+
+  const totalOrders = orderStats?.length || 0;
+  const totalRevenue = orderStats?.reduce((sum, o) => sum + (o.total || 0), 0) || 0;
+
+  // 获取今日订单数和今日收入
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayISO = today.toISOString();
+
+  const { data: todayOrders } = await supabase
+    .from('orders')
+    .select('total')
+    .gte('created_at', todayISO);
+
+  const todayOrdersCount = todayOrders?.length || 0;
+  const todayRevenue = todayOrders?.reduce((sum, o) => sum + (o.total || 0), 0) || 0;
+
+  return {
+    totalUsers: totalUsers || 0,
+    totalMerchants: totalMerchants || 0,
+    totalOrders,
+    totalRevenue,
+    todayOrders: todayOrdersCount,
+    todayRevenue,
+  };
+}
+
+/**
+ * 分页获取所有用户
+ */
+export async function getAllUsers(page: number = 1, limit: number = 20): Promise<{ users: UserListItem[]; total: number }> {
+  const offset = (page - 1) * limit;
+
+  // 获取用户总数
+  const { count: total } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true });
+
+  // 获取用户列表
+  const { data: users, error } = await supabase
+    .from('users')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error || !users) {
+    return { users: [], total: 0 };
+  }
+
+  // 获取每个用户的订单统计
+  const userIds = users.map(u => u.id);
+  const { data: userOrders } = await supabase
+    .from('orders')
+    .select('user_id, total')
+    .in('user_id', userIds);
+
+  // 统计每个用户的订单数和消费金额
+  const userStats: Record<string, { orderCount: number; totalSpent: number }> = {};
+  (userOrders || []).forEach((order: any) => {
+    if (!userStats[order.user_id]) {
+      userStats[order.user_id] = { orderCount: 0, totalSpent: 0 };
+    }
+    userStats[order.user_id].orderCount++;
+    userStats[order.user_id].totalSpent += order.total || 0;
+  });
+
+  const mappedUsers: UserListItem[] = users.map((u: any) => ({
+    id: u.id,
+    phone: u.phone,
+    passwordHash: u.password_hash,
+    role: u.role,
+    createdAt: new Date(u.created_at),
+    orderCount: userStats[u.id]?.orderCount || 0,
+    totalSpent: userStats[u.id]?.totalSpent || 0,
+    banned: u.banned || false,
+    bannedAt: u.banned_at ? new Date(u.banned_at) : undefined,
+    banReason: u.ban_reason || undefined,
+  }));
+
+  return { users: mappedUsers, total: total || 0 };
+}
+
+/**
+ * 分页获取所有订单（管理员视角）
+ */
+export async function getAllOrdersAdmin(
+  page: number = 1, 
+  limit: number = 20, 
+  status?: OrderStatus
+): Promise<{ orders: (Order & { merchantName?: string; userName?: string })[]; total: number }> {
+  const offset = (page - 1) * limit;
+
+  // 构建查询
+  let query = supabase
+    .from('orders')
+    .select('*', { count: 'exact' });
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  // 获取总数
+  const { count: total } = await query;
+
+  // 获取分页数据
+  let dataQuery = supabase
+    .from('orders')
+    .select('*');
+
+  if (status) {
+    dataQuery = dataQuery.eq('status', status);
+  }
+
+  const { data: orders, error } = await dataQuery
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error || !orders) {
+    return { orders: [], total: 0 };
+  }
+
+  // 获取商户和用户信息
+  const merchantIds = [...new Set(orders.map((o: any) => o.merchant_id))];
+  const userIds = [...new Set(orders.map((o: any) => o.user_id))];
+
+  const { data: merchants } = await supabase
+    .from('merchants')
+    .select('id, name')
+    .in('id', merchantIds);
+
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, phone')
+    .in('id', userIds);
+
+  const merchantMap: Record<string, string> = {};
+  (merchants || []).forEach((m: any) => {
+    merchantMap[m.id] = m.name;
+  });
+
+  const userMap: Record<string, string> = {};
+  (users || []).forEach((u: any) => {
+    userMap[u.id] = u.phone;
+  });
+
+  const mappedOrders = orders.map((o: any) => ({
+    ...mapOrderFromDb(o as OrderDbRow),
+    merchantName: merchantMap[o.merchant_id],
+    userName: userMap[o.user_id],
+  }));
+
+  return { orders: mappedOrders, total: total || 0 };
+}
+
+/**
+ * 分页获取所有商户（含统计信息）
+ */
+export async function getAllMerchantsAdmin(
+  page: number = 1, 
+  limit: number = 20
+): Promise<{ merchants: MerchantListItem[]; total: number }> {
+  const offset = (page - 1) * limit;
+
+  // 获取商户总数
+  const { count: total } = await supabase
+    .from('merchants')
+    .select('*', { count: 'exact', head: true });
+
+  // 获取商户列表
+  const { data: merchants, error } = await supabase
+    .from('merchants')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error || !merchants) {
+    return { merchants: [], total: 0 };
+  }
+
+  // 获取每个商户的订单统计
+  const merchantIds = merchants.map(m => m.id);
+  const { data: merchantOrders } = await supabase
+    .from('orders')
+    .select('merchant_id, total')
+    .in('merchant_id', merchantIds);
+
+  // 统计每个商户的订单数和收入
+  const merchantStats: Record<string, { orderCount: number; totalRevenue: number }> = {};
+  (merchantOrders || []).forEach((order: any) => {
+    if (!merchantStats[order.merchant_id]) {
+      merchantStats[order.merchant_id] = { orderCount: 0, totalRevenue: 0 };
+    }
+    merchantStats[order.merchant_id].orderCount++;
+    merchantStats[order.merchant_id].totalRevenue += order.total || 0;
+  });
+
+  // 获取商户的菜单
+  const { data: allMenuItems } = await supabase
+    .from('menu_items')
+    .select('*')
+    .in('merchant_id', merchantIds)
+    .order('sort_order', { ascending: true });
+
+  const menuByMerchant: Record<string, MenuItem[]> = {};
+  (allMenuItems || []).forEach((item: any) => {
+    if (!menuByMerchant[item.merchant_id]) {
+      menuByMerchant[item.merchant_id] = [];
+    }
+    menuByMerchant[item.merchant_id].push({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      category: item.category,
+      available: item.available,
+    });
+  });
+
+  const mappedMerchants: MerchantListItem[] = merchants.map((m: any) => ({
+    ...mapMerchantFromDb(m, menuByMerchant[m.id] || []),
+    orderCount: merchantStats[m.id]?.orderCount || 0,
+    totalRevenue: merchantStats[m.id]?.totalRevenue || 0,
+    banned: m.banned || false,
+    bannedAt: m.banned_at ? new Date(m.banned_at) : undefined,
+    banReason: m.ban_reason || undefined,
+  }));
+
+  return { merchants: mappedMerchants, total: total || 0 };
+}
+
+/**
+ * 封禁商户
+ */
+export async function banMerchant(merchantId: string, reason: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('merchants')
+    .update({
+      online: false,
+      banned: true,
+      banned_at: new Date().toISOString(),
+      ban_reason: reason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', merchantId);
+
+  if (error) {
+    console.error('封禁商户错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 解封商户
+ */
+export async function unbanMerchant(merchantId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('merchants')
+    .update({
+      banned: false,
+      banned_at: null,
+      ban_reason: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', merchantId);
+
+  if (error) {
+    console.error('解封商户错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 封禁用户
+ */
+export async function banUser(userId: string, reason: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('users')
+    .update({
+      banned: true,
+      banned_at: new Date().toISOString(),
+      ban_reason: reason,
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('封禁用户错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 解封用户
+ */
+export async function unbanUser(userId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('users')
+    .update({
+      banned: false,
+      banned_at: null,
+      ban_reason: null,
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('解封用户错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 记录管理员操作日志
+ */
+export async function logAdminAction(
+  adminId: string,
+  action: string,
+  targetType: string,
+  targetId: string,
+  details: Record<string, any>
+): Promise<void> {
+  const { error } = await supabase
+    .from('admin_logs')
+    .insert({
+      admin_id: adminId,
+      action,
+      target_type: targetType,
+      target_id: targetId,
+      details,
+    });
+
+  if (error) {
+    console.error('记录管理员日志错误:', error);
+  }
+}
+
+/**
+ * 分页获取管理员操作日志
+ */
+export async function getAdminLogs(page: number = 1, limit: number = 20): Promise<{ logs: AdminLog[]; total: number }> {
+  const offset = (page - 1) * limit;
+
+  // 获取总数
+  const { count: total } = await supabase
+    .from('admin_logs')
+    .select('*', { count: 'exact', head: true });
+
+  // 获取日志列表
+  const { data: logs, error } = await supabase
+    .from('admin_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error || !logs) {
+    return { logs: [], total: 0 };
+  }
+
+  // 获取管理员手机号
+  const adminIds = [...new Set(logs.map((l: any) => l.admin_id))];
+  const { data: admins } = await supabase
+    .from('users')
+    .select('id, phone')
+    .in('id', adminIds);
+
+  const adminMap: Record<string, string> = {};
+  (admins || []).forEach((a: any) => {
+    adminMap[a.id] = a.phone;
+  });
+
+  const mappedLogs: AdminLog[] = logs.map((l: any) => ({
+    id: l.id,
+    adminId: l.admin_id,
+    adminPhone: adminMap[l.admin_id],
+    action: l.action,
+    targetType: l.target_type,
+    targetId: l.target_id,
+    details: l.details || {},
+    createdAt: new Date(l.created_at),
+  }));
+
+  return { logs: mappedLogs, total: total || 0 };
+}
+
+/**
+ * 提升用户为管理员
+ */
+export async function promoteUserToAdmin(userId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('users')
+    .update({ role: 'admin' })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('提升用户为管理员错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 获取所有订单数据（用于导出CSV）
+ */
+export async function getAllOrdersForExport(): Promise<any[]> {
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !orders) {
+    return [];
+  }
+
+  // 获取商户和用户信息
+  const merchantIds = [...new Set(orders.map((o: any) => o.merchant_id))];
+  const userIds = [...new Set(orders.map((o: any) => o.user_id))];
+
+  const { data: merchants } = await supabase
+    .from('merchants')
+    .select('id, name')
+    .in('id', merchantIds);
+
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, phone')
+    .in('id', userIds);
+
+  const merchantMap: Record<string, string> = {};
+  (merchants || []).forEach((m: any) => {
+    merchantMap[m.id] = m.name;
+  });
+
+  const userMap: Record<string, string> = {};
+  (users || []).forEach((u: any) => {
+    userMap[u.id] = u.phone;
+  });
+
+  return orders.map((o: any) => ({
+    id: o.id,
+    merchantId: o.merchant_id,
+    merchantName: merchantMap[o.merchant_id] || '',
+    userId: o.user_id,
+    userPhone: userMap[o.user_id] || '',
+    status: o.status,
+    total: o.total,
+    items: JSON.stringify(o.items),
+    tableNumber: o.table_number || '',
+    pickupMethod: o.pickup_method,
+    note: o.note || '',
+    createdAt: o.created_at,
+    updatedAt: o.updated_at,
+  }));
+}
+
+/**
+ * 获取所有商户数据（用于导出CSV）
+ */
+export async function getAllMerchantsForExport(): Promise<any[]> {
+  const { data: merchants, error } = await supabase
+    .from('merchants')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !merchants) {
+    return [];
+  }
+
+  // 获取每个商户的订单统计
+  const merchantIds = merchants.map(m => m.id);
+  const { data: merchantOrders } = await supabase
+    .from('orders')
+    .select('merchant_id, total')
+    .in('merchant_id', merchantIds);
+
+  const merchantStats: Record<string, { orderCount: number; totalRevenue: number }> = {};
+  (merchantOrders || []).forEach((order: any) => {
+    if (!merchantStats[order.merchant_id]) {
+      merchantStats[order.merchant_id] = { orderCount: 0, totalRevenue: 0 };
+    }
+    merchantStats[order.merchant_id].orderCount++;
+    merchantStats[order.merchant_id].totalRevenue += order.total || 0;
+  });
+
+  return merchants.map((m: any) => ({
+    id: m.id,
+    name: m.name,
+    type: m.type,
+    phone: m.phone,
+    email: m.email || '',
+    address: m.address || '',
+    lat: m.lat,
+    lng: m.lng,
+    online: m.online,
+    rating: m.rating || 0,
+    reviewCount: m.review_count || 0,
+    orderCount: merchantStats[m.id]?.orderCount || 0,
+    totalRevenue: merchantStats[m.id]?.totalRevenue || 0,
+    banned: m.banned || false,
+    createdAt: m.created_at,
+  }));
+}
+
+/**
+ * 初始化管理员账号
+ * 启动时检查是否存在admin账号，如果不存在就创建
+ */
+export async function initAdminAccount(): Promise<void> {
+  try {
+    // 检查是否已存在指定手机号的admin
+    const { data: existingAdmin } = await supabase
+      .from('users')
+      .select('id')
+      .eq('phone', '0210000000')
+      .eq('role', 'admin')
+      .single();
+
+    if (existingAdmin) {
+      console.log('✅ 管理员账号已存在');
+      return;
+    }
+
+    // 检查手机号是否已被普通用户使用
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('phone', '0210000000')
+      .single();
+
+    if (existingUser) {
+      // 如果已存在但不是admin，提升为admin
+      await supabase
+        .from('users')
+        .update({ role: 'admin' })
+        .eq('id', existingUser.id);
+      console.log('✅ 已将现有用户提升为管理员');
+      return;
+    }
+
+    // 创建新的admin账号
+    const { error } = await supabase
+      .from('users')
+      .insert({
+        phone: '0210000000',
+        password_hash: hashPassword('admin2026'),
+        role: 'admin',
+      });
+
+    if (error) {
+      console.error('❌ 创建管理员账号失败:', error);
+    } else {
+      console.log('✅ 管理员账号创建成功: 0210000000 / admin2026');
+    }
+  } catch (err) {
+    console.error('初始化管理员账号时出错:', err);
+  }
+}
