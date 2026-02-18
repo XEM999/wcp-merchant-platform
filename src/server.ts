@@ -32,6 +32,11 @@ import {
   unbanMerchant,
   banUser,
   unbanUser,
+  suspendMerchant,
+  unsuspendMerchant,
+  suspendUser,
+  unsuspendUser,
+  updateMerchantPlan,
   logAdminAction,
   getAdminLogs,
   promoteUserToAdmin,
@@ -210,10 +215,26 @@ app.get('/api/merchants/:id', async (req: Request, res: Response) => {
 
 // --- 上线/下线 (需登录，支持PATCH和PUT) ---
 app.put('/api/merchants/:id/status', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
   try {
     const m = await getMerchant(req.params.id);
     if (!m) return err(res, 404, '商户不存在');
     if (m.userId && m.userId !== (req as any).userId) return err(res, 403, '无权操作');
+    
+    // 检查商户账号状态
+    if (m.accountStatus === 'banned' || m.accountStatus === 'suspended' || m.accountStatus === 'expired') {
+      return err(res, 403, '商家账号已停权/到期，无法操作');
+    }
+    
     if (typeof req.body.online !== 'boolean') return err(res, 400, 'online 必须是 boolean');
     const updated = await updateMerchantStatus(req.params.id, req.body.online);
     res.json({ message: updated?.online ? '已上线' : '已下线', merchant: updated });
@@ -224,6 +245,16 @@ app.put('/api/merchants/:id/status', authMiddleware, async (req: Request, res: R
 });
 
 app.patch('/api/merchants/:id/status', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
   try {
     const m = await getMerchant(req.params.id);
     if (!m) return err(res, 404, '商户不存在');
@@ -231,6 +262,11 @@ app.patch('/api/merchants/:id/status', authMiddleware, async (req: Request, res:
     // 验证商户归属
     if (m.userId && m.userId !== (req as any).userId) {
       return err(res, 403, '无权操作此商户');
+    }
+
+    // 检查商户账号状态
+    if (m.accountStatus === 'banned' || m.accountStatus === 'suspended' || m.accountStatus === 'expired') {
+      return err(res, 403, '商家账号已停权/到期，无法操作');
     }
 
     if (typeof req.body.online !== 'boolean') return err(res, 400, 'online 必须是 boolean');
@@ -245,6 +281,16 @@ app.patch('/api/merchants/:id/status', authMiddleware, async (req: Request, res:
 
 // --- 更新菜单 (需登录，商户自己操作) ---
 app.put('/api/merchants/:id/menu', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
   try {
     const m = await getMerchant(req.params.id);
     if (!m) return err(res, 404, '商户不存在');
@@ -252,6 +298,11 @@ app.put('/api/merchants/:id/menu', authMiddleware, async (req: Request, res: Res
     // 验证商户归属
     if (m.userId && m.userId !== (req as any).userId) {
       return err(res, 403, '无权操作此商户');
+    }
+
+    // 检查商户账号状态
+    if (m.accountStatus === 'banned' || m.accountStatus === 'suspended' || m.accountStatus === 'expired') {
+      return err(res, 403, '商家账号已停权/到期，无法操作');
     }
 
     const items = req.body.items;
@@ -308,7 +359,16 @@ app.get('/api/merchants/:id/reviews', async (req: Request, res: Response) => {
  */
 app.post('/api/orders', authMiddleware, async (req: Request, res: Response) => {
   const { merchantId, items, tableNumber, pickupMethod, note } = req.body;
+  const user = (req as any).user;
   const userId = (req as any).userId;
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
 
   // 参数校验
   if (!merchantId) return err(res, 400, 'merchantId 必填');
@@ -331,6 +391,11 @@ app.post('/api/orders', authMiddleware, async (req: Request, res: Response) => {
     const merchant = await getMerchant(merchantId);
     if (!merchant) return err(res, 404, '商户不存在');
     if (!merchant.online) return err(res, 400, '商户当前不在线，无法下单');
+
+    // 检查商户账号状态
+    if (merchant.accountStatus === 'banned' || merchant.accountStatus === 'suspended' || merchant.accountStatus === 'expired') {
+      return err(res, 403, '商家账号已停权/到期，无法下单');
+    }
 
     // 创建订单
     const order = await createOrder({
@@ -381,14 +446,29 @@ app.get('/api/orders/my', authMiddleware, async (req: Request, res: Response) =>
  * 查询参数: ?status=pending|accepted|preparing|ready|picked_up|rejected
  */
 app.get('/api/orders/merchant', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
   const userId = (req as any).userId;
   const status = req.query.status as OrderStatus | undefined;
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
 
   try {
     // 验证用户是否是商家
     const merchantId = await getUserMerchantId(userId);
     if (!merchantId) {
       return err(res, 403, '您不是商家，无权访问');
+    }
+
+    // 获取商家信息并检查账号状态
+    const merchant = await getMerchant(merchantId);
+    if (merchant && (merchant.accountStatus === 'banned' || merchant.accountStatus === 'suspended' || merchant.accountStatus === 'expired')) {
+      return err(res, 403, '商家账号已停权/到期，无法操作');
     }
 
     // 获取订单列表
@@ -432,8 +512,17 @@ app.get('/api/orders/:id', authMiddleware, async (req: Request, res: Response) =
  */
 app.patch('/api/orders/:id/status', authMiddleware, async (req: Request, res: Response) => {
   const orderId = req.params.id;
+  const user = (req as any).user;
   const userId = (req as any).userId;
   const { status } = req.body;
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
 
   // 参数校验
   const validStatuses: OrderStatus[] = ['accepted', 'rejected', 'preparing', 'ready', 'picked_up'];
@@ -446,6 +535,12 @@ app.patch('/api/orders/:id/status', authMiddleware, async (req: Request, res: Re
     const merchantId = await getUserMerchantId(userId);
     if (!merchantId) {
       return err(res, 403, '您不是商家，无权操作');
+    }
+
+    // 获取商家信息并检查账号状态
+    const merchant = await getMerchant(merchantId);
+    if (merchant && (merchant.accountStatus === 'banned' || merchant.accountStatus === 'suspended' || merchant.accountStatus === 'expired')) {
+      return err(res, 403, '商家账号已停权/到期，无法操作');
     }
 
     // 更新订单状态

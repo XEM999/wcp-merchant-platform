@@ -41,6 +41,15 @@ export interface Merchant {
   rating: number;
   reviewCount: number;
   createdAt: Date;
+  // 订阅和账号状态字段
+  accountStatus: string; // free_trial, active, expired, suspended, banned
+  plan: string; // free, pro
+  planExpiresAt?: Date;
+  commissionRate: number;
+  suspendedAt?: Date;
+  suspendedReason?: string;
+  bannedAt?: Date;
+  banReason?: string;
 }
 
 export interface User {
@@ -49,6 +58,12 @@ export interface User {
   passwordHash: string;
   role?: string;
   createdAt: Date;
+  // 账号状态字段
+  accountStatus: string; // active, suspended, banned
+  suspendedAt?: Date;
+  suspendedReason?: string;
+  bannedAt?: Date;
+  banReason?: string;
 }
 
 // ==================== Supabase 客户端 ====================
@@ -131,6 +146,7 @@ export async function createUser(phone: string, password: string): Promise<User>
     passwordHash: data.password_hash,
     role: data.role,
     createdAt: new Date(data.created_at),
+    accountStatus: data.account_status || 'active',
   };
 }
 
@@ -149,6 +165,12 @@ export async function getUserByPhone(phone: string): Promise<User | undefined> {
     passwordHash: data.password_hash,
     role: data.role,
     createdAt: new Date(data.created_at),
+    // 账号状态字段映射
+    accountStatus: data.account_status || 'active',
+    suspendedAt: data.suspended_at ? new Date(data.suspended_at) : undefined,
+    suspendedReason: data.suspended_reason || undefined,
+    bannedAt: data.banned_at ? new Date(data.banned_at) : undefined,
+    banReason: data.ban_reason || undefined,
   };
 }
 
@@ -167,6 +189,12 @@ export async function getUserById(id: string): Promise<User | undefined> {
     passwordHash: data.password_hash,
     role: data.role,
     createdAt: new Date(data.created_at),
+    // 账号状态字段映射
+    accountStatus: data.account_status || 'active',
+    suspendedAt: data.suspended_at ? new Date(data.suspended_at) : undefined,
+    suspendedReason: data.suspended_reason || undefined,
+    bannedAt: data.banned_at ? new Date(data.banned_at) : undefined,
+    banReason: data.ban_reason || undefined,
   };
 }
 
@@ -188,6 +216,15 @@ function mapMerchantFromDb(data: any, menuItems: MenuItem[] = []): Merchant {
     rating: data.rating || 0,
     reviewCount: data.review_count || 0,
     createdAt: new Date(data.created_at),
+    // 订阅和账号状态字段映射
+    accountStatus: data.account_status || 'free_trial',
+    plan: data.plan || 'free',
+    planExpiresAt: data.plan_expires_at ? new Date(data.plan_expires_at) : undefined,
+    commissionRate: data.commission_rate || 0,
+    suspendedAt: data.suspended_at ? new Date(data.suspended_at) : undefined,
+    suspendedReason: data.suspended_reason || undefined,
+    bannedAt: data.banned_at ? new Date(data.banned_at) : undefined,
+    banReason: data.ban_reason || undefined,
   };
 }
 
@@ -949,6 +986,7 @@ export async function getAllUsers(page: number = 1, limit: number = 20): Promise
     passwordHash: u.password_hash,
     role: u.role,
     createdAt: new Date(u.created_at),
+    accountStatus: u.account_status || 'active',
     orderCount: userStats[u.id]?.orderCount || 0,
     totalSpent: userStats[u.id]?.totalSpent || 0,
     banned: u.banned || false,
@@ -1117,6 +1155,7 @@ export async function banMerchant(merchantId: string, reason: string): Promise<b
       banned: true,
       banned_at: new Date().toISOString(),
       ban_reason: reason,
+      account_status: 'banned',
       updated_at: new Date().toISOString(),
     })
     .eq('id', merchantId);
@@ -1138,6 +1177,7 @@ export async function unbanMerchant(merchantId: string): Promise<boolean> {
       banned: false,
       banned_at: null,
       ban_reason: null,
+      account_status: 'free_trial',
       updated_at: new Date().toISOString(),
     })
     .eq('id', merchantId);
@@ -1159,6 +1199,7 @@ export async function banUser(userId: string, reason: string): Promise<boolean> 
       banned: true,
       banned_at: new Date().toISOString(),
       ban_reason: reason,
+      account_status: 'banned',
     })
     .eq('id', userId);
 
@@ -1179,11 +1220,121 @@ export async function unbanUser(userId: string): Promise<boolean> {
       banned: false,
       banned_at: null,
       ban_reason: null,
+      account_status: 'active',
     })
     .eq('id', userId);
 
   if (error) {
     console.error('解封用户错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 停权商家
+ */
+export async function suspendMerchant(id: string, reason: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('merchants')
+    .update({
+      account_status: 'suspended',
+      suspended_at: new Date().toISOString(),
+      suspended_reason: reason,
+      online: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.error('停权商家错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 解除商家停权
+ */
+export async function unsuspendMerchant(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('merchants')
+    .update({
+      account_status: 'free_trial',
+      suspended_at: null,
+      suspended_reason: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.error('解除商家停权错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 停权用户
+ */
+export async function suspendUser(id: string, reason: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('users')
+    .update({
+      account_status: 'suspended',
+      suspended_at: new Date().toISOString(),
+      suspended_reason: reason,
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.error('停权用户错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 解除用户停权
+ */
+export async function unsuspendUser(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('users')
+    .update({
+      account_status: 'active',
+      suspended_at: null,
+      suspended_reason: null,
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.error('解除用户停权错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 更新商家套餐
+ */
+export async function updateMerchantPlan(id: string, plan: string, expiresAt?: Date): Promise<boolean> {
+  const updateData: Record<string, any> = {
+    plan,
+    account_status: 'active',
+    updated_at: new Date().toISOString(),
+  };
+
+  if (expiresAt) {
+    updateData.plan_expires_at = expiresAt.toISOString();
+  }
+
+  const { error } = await supabase
+    .from('merchants')
+    .update(updateData)
+    .eq('id', id);
+
+  if (error) {
+    console.error('更新商家套餐错误:', error);
     return false;
   }
   return true;
