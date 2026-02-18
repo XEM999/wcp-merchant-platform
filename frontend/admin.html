@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--p:#1e40af;--pl:#3b82f6;--pd:#1e3a8a;--bg:#0f172a;--c:#1e293b;--h:#334155;--t1:#f1f5f9;--t2:#94a3b8;--bd:#475569;--ok:#22c55e;--no:#ef4444;--wn:#f59e0b}
+:root{--p:#1e40af;--pl:#3b82f6;--pd:#1e3a8a;--bg:#0f172a;--c:#1e293b;--h:#334155;--t1:#f1f5f9;--t2:#94a3b8;--bd:#475569;--ok:#22c55e;--no:#ef4444;--wn:#f59e0b;--or:#f97316}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
 a{color:var(--pl);text-decoration:none}
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pd),var(--bg))}
@@ -26,6 +26,7 @@ a{color:var(--pl);text-decoration:none}
 .btn-o{background:var(--bd);color:var(--t1)}.btn-o:hover{background:var(--h)}
 .btn-w{width:100%}
 .btn-sm{padding:.375rem .75rem;font-size:.75rem}
+.btn-xs{padding:.25rem .5rem;font-size:.7rem}
 .app{display:none;min-height:100vh}
 .app.on{display:flex}
 .side{width:240px;background:var(--c);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;overflow-y:auto}
@@ -69,6 +70,8 @@ tbody tr:hover{background:var(--h)}
 .b-ok{background:rgba(34,197,94,.1);color:var(--ok)}
 .b-no{background:rgba(239,68,68,.1);color:var(--no)}
 .b-wn{background:rgba(245,158,11,.1);color:var(--wn)}
+.b-or{background:rgba(249,115,22,.1);color:var(--or)}
+.b-bl{background:rgba(59,130,246,.1);color:var(--pl)}
 .pg-bar{display:flex;justify-content:space-between;align-items:center;padding:1rem;border-top:1px solid var(--bd)}
 .pg-info{color:var(--t2);font-size:.875rem}
 .pg-btns{display:flex;gap:.5rem}
@@ -80,6 +83,16 @@ tbody tr:hover{background:var(--h)}
 .modal{background:var(--c);padding:1.5rem;border-radius:12px;width:100%;max-width:400px;margin:1rem}
 .modal h3{margin-bottom:1rem;font-size:1.125rem}
 .modal-acts{display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem}
+.radio-group{display:flex;flex-direction:column;gap:.75rem}
+.radio-item{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg);border-radius:8px;cursor:pointer;transition:all .2s}
+.radio-item:hover{background:var(--h)}
+.radio-item input{display:none}
+.radio-item .check{width:20px;height:20px;border:2px solid var(--bd);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.radio-item input:checked+.check{border-color:var(--pl)}
+.radio-item input:checked+.check::after{content:'●';color:var(--pl);font-size:12px}
+.radio-item .txt{flex:1}
+.radio-item .txt .n{font-weight:500}
+.radio-item .txt .d{font-size:.75rem;color:var(--t2)}
 .ss{background:var(--c);padding:1.5rem;border-radius:12px;border:1px solid var(--bd);margin-bottom:1rem}
 .ss h3{margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--bd)}
 .sr{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0}
@@ -95,6 +108,7 @@ tbody tr:hover{background:var(--h)}
 .toast{position:fixed;top:1rem;right:1rem;padding:.875rem 1.25rem;border-radius:8px;color:#fff;font-size:.875rem;z-index:2000;transform:translateX(calc(100% + 2rem));transition:transform .3s ease}
 .toast.show{transform:translateX(0)}
 .toast-ok{background:var(--ok)}.toast-no{background:var(--no)}
+.btn-group{display:flex;gap:.25rem;flex-wrap:wrap}
 @media(max-width:768px){
 .side{display:none}
 .main{margin-left:0;padding:1rem;padding-bottom:5rem}
@@ -104,6 +118,8 @@ tbody tr:hover{background:var(--h)}
 .sb{width:100%}.sb input{flex:1}
 table{font-size:.75rem}th,td{padding:.5rem .5rem}
 .ph{flex-direction:column;align-items:flex-start}
+.btn-group{flex-direction:column}
+.btn-group .btn{width:100%;justify-content:center}
 }
 @media(max-width:480px){.sg{grid-template-columns:1fr}}
 .overflow-x{overflow-x:auto}
@@ -167,7 +183,7 @@ table{font-size:.75rem}th,td{padding:.5rem .5rem}
       <div class="ph"><h1 data-i18n="nav_merchants">商家</h1></div>
       <div class="tc">
         <div class="th"><div class="sb"><input type="text" id="mSearch" data-i18n-ph="ph_searchMerchant" placeholder="搜索商家..."><button class="btn btn-p btn-sm" onclick="M.search()" data-i18n="search">搜索</button></div></div>
-        <div class="overflow-x"><table><thead><tr><th data-i18n="name">名称</th><th data-i18n="type">类型</th><th data-i18n="phone">手机号</th><th data-i18n="status">状态</th><th data-i18n="rating">评分</th><th data-i18n="actions">操作</th></tr></thead><tbody id="mBody"></tbody></table></div>
+        <div class="overflow-x"><table><thead><tr><th data-i18n="name">名称</th><th data-i18n="type">类型</th><th data-i18n="phone">手机号</th><th data-i18n="status">状态</th><th data-i18n="plan">套餐</th><th data-i18n="commission">提成</th><th data-i18n="rating">评分</th><th data-i18n="actions">操作</th></tr></thead><tbody id="mBody"></tbody></table></div>
         <div class="pg-bar"><div class="pg-info" id="mInfo"></div><div class="pg-btns"><button id="mPrev" onclick="M.prev()" data-i18n="prev">上一页</button><button id="mNext" onclick="M.next()" data-i18n="next">下一页</button></div></div>
       </div>
     </div>
@@ -214,11 +230,47 @@ table{font-size:.75rem}th,td{padding:.5rem .5rem}
   </div></nav>
 </div>
 
+<!-- Ban Modal -->
 <div id="banModal" class="mo">
   <div class="modal">
     <h3 id="banTitle">封禁</h3>
     <div class="fg"><label data-i18n="banReason">封禁原因</label><textarea id="banReason" rows="3" placeholder="输入原因..."></textarea></div>
     <div class="modal-acts"><button class="btn btn-o btn-sm" onclick="closeBan()" data-i18n="cancel">取消</button><button class="btn btn-d btn-sm" id="banConfirm" data-i18n="confirm">确认</button></div>
+  </div>
+</div>
+
+<!-- Suspend Modal -->
+<div id="suspendModal" class="mo">
+  <div class="modal">
+    <h3 id="suspendTitle">停权</h3>
+    <div class="fg"><label data-i18n="suspendReason">停权原因</label><textarea id="suspendReason" rows="3" placeholder="输入原因..."></textarea></div>
+    <div class="modal-acts"><button class="btn btn-o btn-sm" onclick="closeSuspend()" data-i18n="cancel">取消</button><button class="btn btn-d btn-sm" id="suspendConfirm" data-i18n="confirm">确认</button></div>
+  </div>
+</div>
+
+<!-- Plan Modal -->
+<div id="planModal" class="mo">
+  <div class="modal">
+    <h3 data-i18n="changePlan">调整套餐</h3>
+    <div class="radio-group" id="planOptions">
+      <label class="radio-item">
+        <input type="radio" name="plan" value="free" checked>
+        <span class="check"></span>
+        <span class="txt">
+          <div class="n" data-i18n="planFree">免费版</div>
+          <div class="d" data-i18n="planFreeDesc">基础功能</div>
+        </span>
+      </label>
+      <label class="radio-item">
+        <input type="radio" name="plan" value="pro">
+        <span class="check"></span>
+        <span class="txt">
+          <div class="n">Pro版</div>
+          <div class="d" data-i18n="planProDesc">高级功能</div>
+        </span>
+      </label>
+    </div>
+    <div class="modal-acts"><button class="btn btn-o btn-sm" onclick="closePlan()" data-i18n="cancel">取消</button><button class="btn btn-p btn-sm" id="planConfirm" data-i18n="confirm">确认</button></div>
   </div>
 </div>
 
@@ -234,17 +286,23 @@ adminPanel:'管理后台',login:'登录',phone:'手机号',password:'密码',
 nav_dashboard:'概览',nav_users:'用户',nav_merchants:'商家',nav_orders:'订单',nav_logs:'操作日志',nav_settings:'设置',
 admin:'管理员',search:'搜索',
 s_users:'总用户',s_merchants:'总商家',s_orders:'总订单',s_revenue:'总收入',s_todayOrders:'今日订单',s_todayRevenue:'今日收入',s_active:'在线商家',
-role:'角色',registered:'注册时间',status:'状态',actions:'操作',name:'名称',type:'类型',rating:'评分',
+role:'角色',registered:'注册时间',status:'状态',actions:'操作',name:'名称',type:'类型',rating:'评分',plan:'套餐',commission:'提成',
 orderId:'订单号',merchant:'商家',amount:'金额',time:'时间',operator:'操作人',detail:'详情',
 adminInfo:'管理员信息',dataExport:'数据导出',export:'导出',exportOrders:'导出订单CSV',account:'账号',logout:'退出登录',
 banUser:'封禁用户',banMerchant:'封禁商家',unban:'解封',banReason:'封禁原因',cancel:'取消',confirm:'确认',
+suspendUser:'停权用户',suspendMerchant:'停权商家',unsuspend:'解停',suspendReason:'停权原因',
+changePlan:'调整套餐',planFree:'免费版',planFreeDesc:'基础功能',planProDesc:'高级功能',
 prev:'上一页',next:'下一页',
-st_active:'正常',st_banned:'已封禁',st_online:'在线',st_offline:'离线',
+st_active:'正常',st_banned:'已封禁',st_suspended:'已停权',st_online:'在线',st_offline:'离线',
+st_free_trial:'免费试用',st_expired:'已到期',
+plan_free:'免费版',plan_pro:'Pro版',
 st_pending:'待处理',st_preparing:'准备中',st_ready:'待取餐',st_completed:'已完成',st_cancelled:'已取消',
 justNow:'刚刚',mAgo:'{n}分钟前',hAgo:'{n}小时前',dAgo:'{n}天前',
 noData:'暂无数据',loading:'加载中...',
 pageOf:'第 {p} 页 / 共 {t} 页',
 confirmBan:'确认封禁？',confirmUnban:'确认解封？',
+confirmSuspend:'确认停权？',confirmUnsuspend:'确认解停？',
+confirmPlan:'确认更换套餐？',
 opSuccess:'操作成功',opFail:'操作失败',loginFail:'登录失败，请检查账号密码',
 ph_searchUser:'搜索手机号...',ph_searchMerchant:'搜索商家名称...'
 },
@@ -253,17 +311,23 @@ adminPanel:'Admin Panel',login:'Login',phone:'Phone',password:'Password',
 nav_dashboard:'Dashboard',nav_users:'Users',nav_merchants:'Merchants',nav_orders:'Orders',nav_logs:'Logs',nav_settings:'Settings',
 admin:'Admin',search:'Search',
 s_users:'Total Users',s_merchants:'Total Merchants',s_orders:'Total Orders',s_revenue:'Total Revenue',s_todayOrders:"Today's Orders",s_todayRevenue:"Today's Revenue",s_active:'Active Merchants',
-role:'Role',registered:'Registered',status:'Status',actions:'Actions',name:'Name',type:'Type',rating:'Rating',
+role:'Role',registered:'Registered',status:'Status',actions:'Actions',name:'Name',type:'Type',rating:'Rating',plan:'Plan',commission:'Commission',
 orderId:'Order ID',merchant:'Merchant',amount:'Amount',time:'Time',operator:'Operator',detail:'Detail',
 adminInfo:'Admin Info',dataExport:'Data Export',export:'Export',exportOrders:'Export Orders CSV',account:'Account',logout:'Logout',
 banUser:'Ban User',banMerchant:'Ban Merchant',unban:'Unban',banReason:'Ban Reason',cancel:'Cancel',confirm:'Confirm',
+suspendUser:'Suspend User',suspendMerchant:'Suspend Merchant',unsuspend:'Unsuspend',suspendReason:'Suspend Reason',
+changePlan:'Change Plan',planFree:'Free',planFreeDesc:'Basic features',planProDesc:'Advanced features',
 prev:'Prev',next:'Next',
-st_active:'Active',st_banned:'Banned',st_online:'Online',st_offline:'Offline',
+st_active:'Active',st_banned:'Banned',st_suspended:'Suspended',st_online:'Online',st_offline:'Offline',
+st_free_trial:'Free Trial',st_expired:'Expired',
+plan_free:'Free',plan_pro:'Pro',
 st_pending:'Pending',st_preparing:'Preparing',st_ready:'Ready',st_completed:'Completed',st_cancelled:'Cancelled',
 justNow:'Just now',mAgo:'{n}m ago',hAgo:'{n}h ago',dAgo:'{n}d ago',
 noData:'No data',loading:'Loading...',
 pageOf:'Page {p} of {t}',
 confirmBan:'Confirm ban?',confirmUnban:'Confirm unban?',
+confirmSuspend:'Confirm suspend?',confirmUnsuspend:'Confirm unsuspend?',
+confirmPlan:'Confirm plan change?',
 opSuccess:'Success',opFail:'Failed',loginFail:'Login failed. Check credentials.',
 ph_searchUser:'Search phone...',ph_searchMerchant:'Search merchant name...'
 }
@@ -273,8 +337,13 @@ var lang=localStorage.getItem('nb_lang')||'zh';
 var token=localStorage.getItem('nb_token');
 var user=JSON.parse(localStorage.getItem('nb_user')||'null');
 var banCtx=null;
+var suspendCtx=null;
+var planCtx=null;
 
-function t(k){return(LANG[lang]&&LANG[lang][k])||k}
+function t(k){
+  var val=LANG[lang]&&LANG[lang][k];
+  return val!==undefined?val:k;
+}
 
 function fmtNum(n){if(n==null)return'0';return Number(n).toLocaleString()}
 function fmtMoney(n){return'$'+fmtNum(n!=null?Math.round(n):0)}
@@ -290,12 +359,57 @@ function relTime(d){
   return t('dAgo').replace('{n}',dy);
 }
 
+function getStatusBadge(status){
+  var map={
+    'active':{cls:'b-bl',txt:t('st_active')},
+    'banned':{cls:'b-no',txt:t('st_banned')},
+    'suspended':{cls:'b-or',txt:t('st_suspended')},
+    'free_trial':{cls:'b-ok',txt:t('st_free_trial')},
+    'expired':{cls:'b-wn',txt:t('st_expired')},
+    'online':{cls:'b-ok',txt:t('st_online')},
+    'offline':{cls:'b-no',txt:t('st_offline')}
+  };
+  var m=map[status]||{cls:'b-ok',txt:status||'active'};
+  return'<span class="badge '+m.cls+'">'+m.txt+'</span>';
+}
+
+function getMerchantStatusBadge(m){
+  if(m.banned)return getStatusBadge('banned');
+  if(m.suspended)return getStatusBadge('suspended');
+  var online=m.isOnline||m.is_online;
+  return online?getStatusBadge('online'):getStatusBadge('offline');
+}
+
+function getUserStatusBadge(u){
+  if(u.banned)return getStatusBadge('banned');
+  if(u.suspended)return getStatusBadge('suspended');
+  return getStatusBadge('active');
+}
+
+function getUserStatus(u){
+  if(u.banned)return'banned';
+  if(u.suspended)return'suspended';
+  return'active';
+}
+
+function getMerchantStatus(m){
+  if(m.banned)return'banned';
+  if(m.suspended)return'suspended';
+  var online=m.isOnline||m.is_online;
+  return online?'online':'offline';
+}
+
+function getPlanBadge(plan){
+  var txt=plan==='pro'?t('plan_pro'):t('plan_free');
+  var cls=plan==='pro'?'b-bl':'b-ok';
+  return'<span class="badge '+cls+'">'+txt+'</span>';
+}
+
 function applyI18n(){
   document.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=t(el.getAttribute('data-i18n'))});
   document.querySelectorAll('[data-i18n-ph]').forEach(function(el){el.placeholder=t(el.getAttribute('data-i18n-ph'))});
   var sel=document.getElementById('oFilter');
   if(sel){
-    sel.options[0].text=t('st_active').replace('正常','全部状态')||'All';
     sel.options[0].text=lang==='zh'?'全部状态':'All Status';
     if(sel.options[1])sel.options[1].text=t('st_pending');
     if(sel.options[2])sel.options[2].text=t('st_preparing');
@@ -312,7 +426,6 @@ function showToast(msg,ok){
   setTimeout(function(){el.classList.remove('show')},3000);
 }
 
-/* API helper */
 function api(path,opts){
   opts=opts||{};
   var headers=Object.assign({'Content-Type':'application/json'},opts.headers||{});
@@ -325,7 +438,6 @@ function api(path,opts){
     });
 }
 
-/* Auth */
 document.getElementById('loginForm').addEventListener('submit',function(e){
   e.preventDefault();
   var ph=document.getElementById('lPhone').value.trim();
@@ -359,7 +471,6 @@ function enterApp(){
   goTo('dashboard');
 }
 
-/* Navigation */
 function goTo(pg){
   document.querySelectorAll('.pg').forEach(function(el){el.classList.remove('on')});
   var target=document.getElementById('pg_'+pg);
@@ -375,7 +486,6 @@ document.querySelectorAll('.ni,.mi').forEach(function(el){
   el.addEventListener('click',function(){goTo(el.getAttribute('data-pg'))});
 });
 
-/* Language */
 document.getElementById('langToggle').addEventListener('click',function(e){
   var l=e.target.getAttribute('data-l');
   if(!l)return;
@@ -384,7 +494,6 @@ document.getElementById('langToggle').addEventListener('click',function(e){
   applyI18n();
 });
 
-/* Dashboard */
 function loadStats(){
   api('/api/admin/stats').then(function(d){
     document.getElementById('v_users').textContent=fmtNum(d.totalUsers);
@@ -397,7 +506,6 @@ function loadStats(){
   }).catch(function(){});
 }
 
-/* Generic paginator helper */
 function makePager(cfg){
   var pg=1,total=0,totalPages=1;
   function updateBar(){
@@ -416,16 +524,9 @@ function makePager(cfg){
       cfg.render([]);updateBar();
     });
   }
-  return{
-    load:load,
-    search:function(){pg=1;load()},
-    filter:function(){pg=1;load()},
-    prev:function(){if(pg>1){pg--;load()}},
-    next:function(){if(pg<totalPages){pg++;load()}}
-  };
+  return{load:load,search:function(){pg=1;load()},filter:function(){pg=1;load()},prev:function(){if(pg>1){pg--;load()}},next:function(){if(pg<totalPages){pg++;load()}}};
 }
 
-/* Users */
 var U=makePager({
   key:'users',info:'uInfo',prev:'uPrev',next:'uNext',limit:20,
   url:function(p){return'/api/admin/users?page='+p+'&limit=20&search='+encodeURIComponent(document.getElementById('uSearch').value)},
@@ -433,13 +534,21 @@ var U=makePager({
     var tb=document.getElementById('uBody');
     if(!rows.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--t2)">'+t('noData')+'</td></tr>';return}
     tb.innerHTML=rows.map(function(u){
-      var banned=u.banned||u.status==='banned';
-      var cls=banned?'b-no':'b-ok';
-      var stxt=banned?t('st_banned'):t('st_active');
-      var btn=banned
-        ?'<button class="btn btn-s btn-sm" onclick="unbanUser(\''+u._id+'\')">'+t('unban')+'</button>'
-        :'<button class="btn btn-d btn-sm" onclick="openBan(\'user\',\''+u._id+'\')">'+t('banUser')+'</button>';
-      return'<tr><td>'+(u.phone||'-')+'</td><td>'+(u.role||'user')+'</td><td>'+relTime(u.createdAt||u.created_at)+'</td><td><span class="badge '+cls+'">'+stxt+'</span></td><td>'+btn+'</td></tr>';
+      var st=getUserStatus(u);
+      var badge=getUserStatusBadge(u);
+      var btns='<div class="btn-group">';
+      if(u.suspended){
+        btns+='<button class="btn btn-s btn-xs" onclick="unsuspendUser(\''+u._id+'\')">'+t('unsuspend')+'</button>';
+      }else{
+        btns+='<button class="btn btn-o btn-xs" onclick="openSuspend(\'user\',\''+u._id+'\')">'+t('suspendUser')+'</button>';
+      }
+      if(u.banned){
+        btns+='<button class="btn btn-s btn-xs" onclick="unbanUser(\''+u._id+'\')">'+t('unban')+'</button>';
+      }else{
+        btns+='<button class="btn btn-d btn-xs" onclick="openBan(\'user\',\''+u._id+'\')">'+t('banUser')+'</button>';
+      }
+      btns+='</div>';
+      return'<tr><td>'+(u.phone||'-')+'</td><td>'+(u.role||'user')+'</td><td>'+relTime(u.createdAt||u.created_at)+'</td><td>'+badge+'</td><td>'+btns+'</td></tr>';
     }).join('');
   }
 });
@@ -450,23 +559,38 @@ window.unbanUser=function(id){
   api('/api/admin/users/'+id+'/unban',{method:'PATCH'}).then(function(){showToast(t('opSuccess'));U.load()}).catch(function(){showToast(t('opFail'),false)});
 };
 
-/* Merchants */
+window.unsuspendUser=function(id){
+  if(!confirm(t('confirmUnsuspend')))return;
+  api('/api/admin/users/'+id+'/unsuspend',{method:'PATCH'}).then(function(){showToast(t('opSuccess'));U.load()}).catch(function(){showToast(t('opFail'),false)});
+};
+
 var M=makePager({
   key:'merchants',info:'mInfo',prev:'mPrev',next:'mNext',limit:20,
   url:function(p){return'/api/admin/merchants?page='+p+'&limit=20&search='+encodeURIComponent(document.getElementById('mSearch').value)},
   render:function(rows){
     var tb=document.getElementById('mBody');
-    if(!rows.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--t2)">'+t('noData')+'</td></tr>';return}
+    if(!rows.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--t2)">'+t('noData')+'</td></tr>';return}
     tb.innerHTML=rows.map(function(m){
-      var banned=m.banned||m.status==='banned';
-      var online=m.isOnline||m.is_online;
-      var stCls=online?'b-ok':'b-no';
-      var stTxt=online?t('st_online'):t('st_offline');
-      if(banned){stCls='b-no';stTxt=t('st_banned');}
-      var btn=banned
-        ?'<button class="btn btn-s btn-sm" onclick="unbanMerchant(\''+m._id+'\')">'+t('unban')+'</button>'
-        :'<button class="btn btn-d btn-sm" onclick="openBan(\'merchant\',\''+m._id+'\')">'+t('banMerchant')+'</button>';
-      return'<tr><td>'+(m.name||m.businessName||'-')+'</td><td>'+(m.type||m.cuisine||'-')+'</td><td>'+(m.phone||'-')+'</td><td><span class="badge '+stCls+'">'+stTxt+'</span></td><td>'+((m.rating!=null?Number(m.rating).toFixed(1):'-'))+'</td><td>'+btn+'</td></tr>';
+      var badge=getMerchantStatusBadge(m);
+      var plan=m.plan||m.subscription||'free';
+      var planBadge=getPlanBadge(plan);
+      var comm=m.commission||m.commissionRate||8;
+      var commTxt=comm+'%';
+      var rating=m.rating!=null?Number(m.rating).toFixed(1):'-';
+      var btns='<div class="btn-group">';
+      if(m.suspended){
+        btns+='<button class="btn btn-s btn-xs" onclick="unsuspendMerchant(\''+m._id+'\')">'+t('unsuspend')+'</button>';
+      }else{
+        btns+='<button class="btn btn-o btn-xs" onclick="openSuspend(\'merchant\',\''+m._id+'\')">'+t('suspendMerchant')+'</button>';
+      }
+      if(m.banned){
+        btns+='<button class="btn btn-s btn-xs" onclick="unbanMerchant(\''+m._id+'\')">'+t('unban')+'</button>';
+      }else{
+        btns+='<button class="btn btn-d btn-xs" onclick="openBan(\'merchant\',\''+m._id+'\')">'+t('banMerchant')+'</button>';
+      }
+      btns+='<button class="btn btn-p btn-xs" onclick="openPlan(\''+m._id+'\',\''+plan+'\')">'+t('changePlan')+'</button>';
+      btns+='</div>';
+      return'<tr><td>'+(m.name||m.businessName||'-')+'</td><td>'+(m.type||m.cuisine||'-')+'</td><td>'+(m.phone||'-')+'</td><td>'+badge+'</td><td>'+planBadge+'</td><td>'+commTxt+'</td><td>'+rating+'</td><td>'+btns+'</td></tr>';
     }).join('');
   }
 });
@@ -477,7 +601,11 @@ window.unbanMerchant=function(id){
   api('/api/admin/merchants/'+id+'/unban',{method:'PATCH'}).then(function(){showToast(t('opSuccess'));M.load()}).catch(function(){showToast(t('opFail'),false)});
 };
 
-/* Orders */
+window.unsuspendMerchant=function(id){
+  if(!confirm(t('confirmUnsuspend')))return;
+  api('/api/admin/merchants/'+id+'/unsuspend',{method:'PATCH'}).then(function(){showToast(t('opSuccess'));M.load()}).catch(function(){showToast(t('opFail'),false)});
+};
+
 var O=makePager({
   key:'orders',info:'oInfo',prev:'oPrev',next:'oNext',limit:20,
   url:function(p){var s=document.getElementById('oFilter').value;return'/api/admin/orders?page='+p+'&limit=20'+(s?'&status='+s:'')},
@@ -493,7 +621,6 @@ var O=makePager({
   }
 });
 
-/* Logs */
 var L=makePager({
   key:'logs',info:'lInfo',prev:'lPrev',next:'lNext',limit:50,
   url:function(p){return'/api/admin/logs?page='+p+'&limit=50'},
@@ -506,7 +633,6 @@ var L=makePager({
   }
 });
 
-/* Ban Modal */
 window.openBan=function(type,id){
   banCtx={type:type,id:id};
   document.getElementById('banTitle').textContent=type==='user'?t('banUser'):t('banMerchant');
@@ -520,48 +646,69 @@ window.closeBan=function(){
 document.getElementById('banConfirm').addEventListener('click',function(){
   if(!banCtx)return;
   var reason=document.getElementById('banReason').value.trim();
-  var url=banCtx.type==='user'
-    ?'/api/admin/users/'+banCtx.id+'/ban'
-    :'/api/admin/merchants/'+banCtx.id+'/ban';
+  var url=banCtx.type==='user'?'/api/admin/users/'+banCtx.id+'/ban':'/api/admin/merchants/'+banCtx.id+'/ban';
   api(url,{method:'PATCH',body:JSON.stringify({reason:reason})})
-    .then(function(){
-      showToast(t('opSuccess'));
-      closeBan();
-      if(banCtx&&banCtx.type==='user')U.load();else M.load();
-    })
+    .then(function(){showToast(t('opSuccess'));closeBan();if(banCtx.type==='user')U.load();else M.load()})
     .catch(function(){showToast(t('opFail'),false)});
 });
 document.getElementById('banModal').addEventListener('click',function(e){if(e.target===this)closeBan()});
 
-/* Export */
+window.openSuspend=function(type,id){
+  suspendCtx={type:type,id:id};
+  document.getElementById('suspendTitle').textContent=type==='user'?t('suspendUser'):t('suspendMerchant');
+  document.getElementById('suspendReason').value='';
+  document.getElementById('suspendModal').classList.add('on');
+};
+window.closeSuspend=function(){
+  document.getElementById('suspendModal').classList.remove('on');
+  suspendCtx=null;
+};
+document.getElementById('suspendConfirm').addEventListener('click',function(){
+  if(!suspendCtx)return;
+  var reason=document.getElementById('suspendReason').value.trim();
+  var url=suspendCtx.type==='user'?'/api/admin/users/'+suspendCtx.id+'/suspend':'/api/admin/merchants/'+suspendCtx.id+'/suspend';
+  api(url,{method:'PATCH',body:JSON.stringify({reason:reason})})
+    .then(function(){showToast(t('opSuccess'));closeSuspend();if(suspendCtx.type==='user')U.load();else M.load()})
+    .catch(function(){showToast(t('opFail'),false)});
+});
+document.getElementById('suspendModal').addEventListener('click',function(e){if(e.target===this)closeSuspend()});
+
+window.openPlan=function(id,current){
+  planCtx={id:id};
+  var radios=document.getElementsByName('plan');
+  for(var i=0;i<radios.length;i++){radios[i].checked=(radios[i].value===current);}
+  document.getElementById('planModal').classList.add('on');
+};
+window.closePlan=function(){
+  document.getElementById('planModal').classList.remove('on');
+  planCtx=null;
+};
+document.getElementById('planConfirm').addEventListener('click',function(){
+  if(!planCtx)return;
+  var radios=document.getElementsByName('plan');
+  var plan='free';
+  for(var i=0;i<radios.length;i++){if(radios[i].checked){plan=radios[i].value;break;}}
+  api('/api/admin/merchants/'+planCtx.id+'/plan',{method:'PATCH',body:JSON.stringify({plan:plan})})
+    .then(function(){showToast(t('opSuccess'));closePlan();M.load()})
+    .catch(function(){showToast(t('opFail'),false)});
+});
+document.getElementById('planModal').addEventListener('click',function(e){if(e.target===this)closePlan()});
+
 window.exportCSV=function(type){
   var url='/api/admin/export/'+type;
   var a=document.createElement('a');
   a.href=url;
   a.download=type+'.csv';
-  // Need auth header, so use fetch
   fetch(url,{headers:{'Authorization':'Bearer '+token}})
-    .then(function(r){
-      if(r.status===401){doLogout();return}
-      return r.blob();
-    })
-    .then(function(blob){
-      if(!blob)return;
-      var u=URL.createObjectURL(blob);
-      a.href=u;a.click();
-      URL.revokeObjectURL(u);
-      showToast(t('opSuccess'));
-    })
+    .then(function(r){if(r.status===401){doLogout();return}return r.blob()})
+    .then(function(blob){if(!blob)return;var u=URL.createObjectURL(blob);a.href=u;a.click();URL.revokeObjectURL(u);showToast(t('opSuccess'))})
     .catch(function(){showToast(t('opFail'),false)});
 };
 
-/* Init */
 applyI18n();
 document.querySelectorAll('#langToggle span').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-l')===lang)});
 
-if(token&&user){
-  enterApp();
-}
+if(token&&user){enterApp();}
 
 })();
 </script>

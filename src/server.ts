@@ -874,6 +874,165 @@ app.patch('/api/admin/users/:id/unban', authMiddleware, adminMiddleware, async (
 });
 
 /**
+ * PATCH /api/admin/merchants/:id/suspend
+ * 停权商家
+ */
+app.patch('/api/admin/merchants/:id/suspend', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const merchantId = req.params.id;
+  const { reason } = req.body;
+
+  if (!reason || typeof reason !== 'string') {
+    return err(res, 400, '停权原因必填');
+  }
+
+  try {
+    // 检查商户是否存在
+    const merchant = await getMerchant(merchantId);
+    if (!merchant) {
+      return err(res, 404, '商户不存在');
+    }
+
+    // 执行停权
+    const success = await suspendMerchant(merchantId, reason);
+    if (!success) {
+      return err(res, 500, '停权失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'suspend_merchant', 'merchant', merchantId, { reason, merchantName: merchant.name });
+
+    res.json({ message: '商户已停权', merchantId, reason });
+  } catch (e: any) {
+    console.error('停权商户错误:', e);
+    return err(res, 500, '停权商户失败');
+  }
+});
+
+/**
+ * PATCH /api/admin/merchants/:id/unsuspend
+ * 解除商家停权
+ */
+app.patch('/api/admin/merchants/:id/unsuspend', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const merchantId = req.params.id;
+
+  try {
+    // 检查商户是否存在
+    const merchant = await getMerchant(merchantId);
+    if (!merchant) {
+      return err(res, 404, '商户不存在');
+    }
+
+    // 执行解除停权
+    const success = await unsuspendMerchant(merchantId);
+    if (!success) {
+      return err(res, 500, '解除停权失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'unsuspend_merchant', 'merchant', merchantId, { merchantName: merchant.name });
+
+    res.json({ message: '商户已解除停权', merchantId });
+  } catch (e: any) {
+    console.error('解除商家停权错误:', e);
+    return err(res, 500, '解除商家停权失败');
+  }
+});
+
+/**
+ * PATCH /api/admin/users/:id/suspend
+ * 停权用户
+ */
+app.patch('/api/admin/users/:id/suspend', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const userId = req.params.id;
+  const { reason } = req.body;
+
+  if (!reason || typeof reason !== 'string') {
+    return err(res, 400, '停权原因必填');
+  }
+
+  try {
+    // 执行停权
+    const success = await suspendUser(userId, reason);
+    if (!success) {
+      return err(res, 500, '停权失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'suspend_user', 'user', userId, { reason });
+
+    res.json({ message: '用户已停权', userId, reason });
+  } catch (e: any) {
+    console.error('停权用户错误:', e);
+    return err(res, 500, '停权用户失败');
+  }
+});
+
+/**
+ * PATCH /api/admin/users/:id/unsuspend
+ * 解除用户停权
+ */
+app.patch('/api/admin/users/:id/unsuspend', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const userId = req.params.id;
+
+  try {
+    // 执行解除停权
+    const success = await unsuspendUser(userId);
+    if (!success) {
+      return err(res, 500, '解除停权失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'unsuspend_user', 'user', userId, {});
+
+    res.json({ message: '用户已解除停权', userId });
+  } catch (e: any) {
+    console.error('解除用户停权错误:', e);
+    return err(res, 500, '解除用户停权失败');
+  }
+});
+
+/**
+ * PATCH /api/admin/merchants/:id/plan
+ * 更新商家套餐
+ */
+app.patch('/api/admin/merchants/:id/plan', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const adminId = (req as any).userId;
+  const merchantId = req.params.id;
+  const { plan, expiresAt } = req.body;
+
+  if (!plan || !['free', 'pro'].includes(plan)) {
+    return err(res, 400, 'plan 必须是 free 或 pro');
+  }
+
+  try {
+    // 检查商户是否存在
+    const merchant = await getMerchant(merchantId);
+    if (!merchant) {
+      return err(res, 404, '商户不存在');
+    }
+
+    // 执行更新套餐
+    const expiresAtDate = expiresAt ? new Date(expiresAt) : undefined;
+    const success = await updateMerchantPlan(merchantId, plan, expiresAtDate);
+    if (!success) {
+      return err(res, 500, '更新套餐失败');
+    }
+
+    // 记录操作日志
+    await logAdminAction(adminId, 'update_merchant_plan', 'merchant', merchantId, { plan, expiresAt, merchantName: merchant.name });
+
+    res.json({ message: '商家套餐已更新', merchantId, plan, expiresAt });
+  } catch (e: any) {
+    console.error('更新商家套餐错误:', e);
+    return err(res, 500, '更新商家套餐失败');
+  }
+});
+
+/**
  * GET /api/admin/logs
  * 操作日志
  */
