@@ -996,6 +996,8 @@
     }
 
     /* ===== SSE ===== */
+    let sseRetryCount = 0;
+
     function connectSSE() {
         if (!token || sseConnection) return;
 
@@ -1005,7 +1007,10 @@
             eventSource.onopen = () => {
                 console.log('SSE connected');
                 document.getElementById('statusDot').classList.remove('offline');
-                toast(t('sse_connected'), 'success');
+                if (sseRetryCount > 0) {
+                    console.log('SSE reconnected after ' + sseRetryCount + ' retries');
+                }
+                sseRetryCount = 0;
             };
 
             eventSource.onmessage = (event) => {
@@ -1018,17 +1023,20 @@
             };
 
             eventSource.onerror = () => {
-                console.log('SSE disconnected');
                 document.getElementById('statusDot').classList.add('offline');
                 eventSource.close();
                 sseConnection = null;
-                toast(t('sse_disconnected'), 'error');
+                sseRetryCount++;
+                if (sseRetryCount >= 3) {
+                    toast(t('sse_disconnected'), 'error');
+                }
                 setTimeout(connectSSE, 5000);
             };
 
             sseConnection = eventSource;
         } catch (e) {
             console.error('SSE error:', e);
+            sseRetryCount++;
             setTimeout(connectSSE, 5000);
         }
     }

@@ -844,6 +844,7 @@
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
         .loading-msg {
             margin-top: 12px;
@@ -973,6 +974,37 @@
 
         <!-- Settings Page -->
         <div class="page-content" id="settingsPage">
+            <!-- 提示音设置 -->
+            <div class="settings-group">
+                <div class="settings-item" style="flex-direction:column;align-items:stretch;cursor:default">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                        <span class="settings-item-icon">🔔</span>
+                        <div class="settings-item-text">
+                            <div class="settings-item-label" data-i18n="custom_sound">订单提示音</div>
+                            <div class="settings-item-desc" id="soundStatus" data-i18n="sound_default">使用默认提示音</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="sound-btn" onclick="previewSound()" style="background:var(--primary);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer">
+                            ▶ <span data-i18n="sound_preview">试听</span>
+                        </button>
+                        <label class="sound-btn" style="background:var(--bg-input);color:var(--text);border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+                            📁 <span data-i18n="sound_upload">上传音频</span>
+                            <input type="file" accept="audio/*" onchange="uploadSound(this)" style="display:none">
+                        </label>
+                        <button class="sound-btn" id="recordBtn" onclick="toggleRecord()" style="background:var(--bg-input);color:var(--text);border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer">
+                            🎙 <span data-i18n="sound_record">录音</span>
+                        </button>
+                        <button class="sound-btn" id="resetSoundBtn" onclick="resetSound()" style="background:var(--bg-input);color:var(--red);border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer;display:none">
+                            ↩ <span data-i18n="sound_reset">恢复默认</span>
+                        </button>
+                    </div>
+                    <div id="recordingIndicator" style="display:none;margin-top:8px;color:var(--red);font-size:13px;animation:blink 1s infinite">
+                        ● <span data-i18n="sound_recording">录音中...点击停止</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="settings-group">
                 <div class="settings-item" onclick="switchToKitchen()">
                     <span class="settings-item-icon">📺</span>
@@ -1127,7 +1159,20 @@
             session_expired: '登录已过期，请重新登录',
             sse_connected: '实时连接已建立',
             sse_disconnected: '连接断开，正在重连...',
-            confirm_action: '确认操作'
+            confirm_action: '确认操作',
+            custom_sound: '订单提示音',
+            sound_default: '使用默认提示音',
+            sound_custom: '使用自定义提示音',
+            sound_preview: '试听',
+            sound_upload: '上传音频',
+            sound_record: '录音',
+            sound_reset: '恢复默认',
+            sound_recording: '录音中...点击停止',
+            sound_uploaded: '提示音已更新！',
+            sound_recorded: '录音已保存为提示音！',
+            sound_restored: '已恢复默认提示音',
+            sound_too_large: '文件太大，请选择小于1MB的音频',
+            sound_mic_error: '无法访问麦克风'
         },
         en: {
             merchant_portal: 'Merchant Portal',
@@ -1198,7 +1243,20 @@
             session_expired: 'Session expired, please login again',
             sse_connected: 'Real-time connected',
             sse_disconnected: 'Disconnected, reconnecting...',
-            confirm_action: 'Confirm'
+            confirm_action: 'Confirm',
+            custom_sound: 'Order Alert Sound',
+            sound_default: 'Using default alert',
+            sound_custom: 'Using custom alert',
+            sound_preview: 'Preview',
+            sound_upload: 'Upload Audio',
+            sound_record: 'Record',
+            sound_reset: 'Reset Default',
+            sound_recording: 'Recording...tap to stop',
+            sound_uploaded: 'Alert sound updated!',
+            sound_recorded: 'Recording saved as alert!',
+            sound_restored: 'Default alert restored',
+            sound_too_large: 'File too large, max 1MB',
+            sound_mic_error: 'Cannot access microphone'
         }
     };
 
@@ -1258,31 +1316,134 @@
         document.getElementById('loadingOverlay').classList.remove('active');
     }
 
-    /* ===== Audio ===== */
+    /* ===== Audio & Custom Sound ===== */
+    let customSoundData = localStorage.getItem('customAlertSound'); // base64 data URL
+    let mediaRecorder = null;
+    let recordingChunks = [];
+
+    function updateSoundUI() {
+        const status = document.getElementById('soundStatus');
+        const resetBtn = document.getElementById('resetSoundBtn');
+        if (customSoundData) {
+            if (status) status.textContent = t('sound_custom');
+            if (resetBtn) resetBtn.style.display = 'inline-flex';
+        } else {
+            if (status) status.textContent = t('sound_default');
+            if (resetBtn) resetBtn.style.display = 'none';
+        }
+    }
+
+    function playDefaultBeep() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.4);
+    }
+
     function playNotificationSound() {
         try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (customSoundData) {
+                const audio = new Audio(customSoundData);
+                audio.volume = 0.7;
+                audio.play().catch(() => playDefaultBeep());
+            } else {
+                playDefaultBeep();
             }
-            
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-            oscillator.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1);
-            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
-            
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-            
-            oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + 0.4);
         } catch (e) {
             console.log('Audio not supported');
         }
+    }
+
+    function previewSound() {
+        playNotificationSound();
+    }
+
+    function uploadSound(input) {
+        const file = input.files[0];
+        if (!file) return;
+        if (file.size > 1024 * 1024) {
+            toast(t('sound_too_large'), 'error');
+            input.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            customSoundData = e.target.result;
+            localStorage.setItem('customAlertSound', customSoundData);
+            updateSoundUI();
+            toast(t('sound_uploaded'), 'success');
+            // 试听一下
+            playNotificationSound();
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    }
+
+    function toggleRecord() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            // 停止录音
+            mediaRecorder.stop();
+            document.getElementById('recordingIndicator').style.display = 'none';
+            document.getElementById('recordBtn').style.background = 'var(--bg-input)';
+            return;
+        }
+        // 开始录音
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+            recordingChunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = function(e) {
+                recordingChunks.push(e.data);
+            };
+            mediaRecorder.onstop = function() {
+                stream.getTracks().forEach(function(t) { t.stop(); });
+                const blob = new Blob(recordingChunks, { type: 'audio/webm' });
+                if (blob.size > 1024 * 1024) {
+                    toast(t('sound_too_large'), 'error');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    customSoundData = ev.target.result;
+                    localStorage.setItem('customAlertSound', customSoundData);
+                    updateSoundUI();
+                    toast(t('sound_recorded'), 'success');
+                    playNotificationSound();
+                };
+                reader.readAsDataURL(blob);
+            };
+            mediaRecorder.start();
+            document.getElementById('recordingIndicator').style.display = 'block';
+            document.getElementById('recordBtn').style.background = 'var(--red)';
+            document.getElementById('recordBtn').style.color = '#fff';
+            // 最长10秒自动停止
+            setTimeout(function() {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    document.getElementById('recordingIndicator').style.display = 'none';
+                    document.getElementById('recordBtn').style.background = 'var(--bg-input)';
+                    document.getElementById('recordBtn').style.color = 'var(--text)';
+                }
+            }, 10000);
+        }).catch(function() {
+            toast(t('sound_mic_error'), 'error');
+        });
+    }
+
+    function resetSound() {
+        customSoundData = null;
+        localStorage.removeItem('customAlertSound');
+        updateSoundUI();
+        toast(t('sound_restored'), 'info');
     }
 
     /* ===== API ===== */
@@ -1647,6 +1808,8 @@
     }
 
     /* ===== SSE ===== */
+    let sseRetryCount = 0;
+
     function connectSSE() {
         if (!token || sseConnection) return;
 
@@ -1655,7 +1818,11 @@
             
             eventSource.onopen = () => {
                 console.log('SSE connected');
-                toast(t('sse_connected'), 'info');
+                if (sseRetryCount > 0) {
+                    // 重连成功，静默恢复，不打扰用户
+                    console.log('SSE reconnected after ' + sseRetryCount + ' retries');
+                }
+                sseRetryCount = 0;
             };
 
             eventSource.onmessage = (event) => {
@@ -1668,16 +1835,20 @@
             };
 
             eventSource.onerror = () => {
-                console.log('SSE disconnected');
                 eventSource.close();
                 sseConnection = null;
-                toast(t('sse_disconnected'), 'error');
+                sseRetryCount++;
+                // 只有连续失败3次以上才提示用户
+                if (sseRetryCount >= 3) {
+                    toast(t('sse_disconnected'), 'error');
+                }
                 setTimeout(connectSSE, 5000);
             };
 
             sseConnection = eventSource;
         } catch (e) {
             console.error('SSE error:', e);
+            sseRetryCount++;
             setTimeout(connectSSE, 5000);
         }
     }
@@ -1868,6 +2039,7 @@
     // Entry point
     document.addEventListener('DOMContentLoaded', async () => {
         applyLang();
+        updateSoundUI();
         
         const isAuth = await checkAuth();
         if (isAuth) {
