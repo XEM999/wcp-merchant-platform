@@ -971,26 +971,31 @@ app.delete('/api/admin/reviews/:id', authMiddleware, adminMiddleware, async (req
   }
 });
 
+// ==================== 页面路由 ====================
+const frontendDir = path.join(__dirname, '..', 'frontend');
+
+app.get('/', (_req: Request, res: Response) => {
+  res.sendFile('index.html', { root: frontendDir });
+});
+app.get('/merchant', (_req: Request, res: Response) => {
+  res.sendFile('merchant.html', { root: frontendDir });
+});
+app.get('/kitchen', (_req: Request, res: Response) => {
+  res.sendFile('kitchen.html', { root: frontendDir });
+});
+app.get('/admin', (_req: Request, res: Response) => {
+  res.sendFile('admin.html', { root: frontendDir });
+});
+
+// ==================== 前端静态文件 ====================
+app.use(express.static(frontendDir));
+
 // ==================== 全局错误处理 ====================
 
 app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('服务器错误:', error.message);
   res.status(500).json({ error: '服务器内部错误' });
 });
-
-// ==================== 页面路由 ====================
-app.get('/merchant', (_req: Request, res: Response) => {
-  res.sendFile('merchant.html', {root: path.join(__dirname, '../frontend')});
-});
-app.get('/kitchen', (_req: Request, res: Response) => {
-  res.sendFile('kitchen.html', {root: path.join(__dirname, '../frontend')});
-});
-app.get('/admin', (_req: Request, res: Response) => {
-  res.sendFile('admin.html', {root: path.join(__dirname, '../frontend')});
-});
-
-// ==================== 前端静态文件 ====================
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // ==================== 启动 ====================
 
