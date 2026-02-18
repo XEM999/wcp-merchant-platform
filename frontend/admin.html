@@ -1,52 +1,300 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NearBite Admin 管理后台</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #ff6b35;
-            --primary-light: #fff7ed;
-            --primary-dark: #ea580c;
-            --bg: #fafafa;
-            --text: #111827;
-            --text-2: #6b7280;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .container { max-width: 600px; text-align: center; }
-        .icon { font-size: 64px; margin-bottom: 20px; }
-        h1 { font-size: 24px; margin-bottom: 12px; color: var(--primary-dark); }
-        p { color: var(--text-2); margin-bottom: 24px; }
-        .back-btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-        .back-btn:hover { background: var(--primary-dark); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>WCP Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--c1:#1e40af;--c2:#3b82f6;--bg:#0f172a;--s1:#1e293b;--s2:#334155;--tx:#f1f5f9;--tm:#94a3b8;--bd:#475569;--ok:#22c55e;--no:#ef4444;--wn:#f59e0b;--sw:230px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;line-height:1.5}
+#loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a,var(--c1),var(--c2));padding:20px}
+.login-card{background:var(--s1);border-radius:16px;padding:40px;width:100%;max-width:400px;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);border:1px solid var(--bd)}
+.login-logo{text-align:center;margin-bottom:30px}
+.login-logo h1{font-size:28px;font-weight:700;color:var(--c2)}
+.login-logo p{color:var(--tm);font-size:14px;margin-top:5px}
+.fg{margin-bottom:20px}
+.fg label{display:block;font-size:14px;font-weight:500;margin-bottom:8px;color:var(--tm)}
+.fg input,.fg select,.fg textarea{width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:15px;font-family:inherit;transition:.2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--c2);box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+.fg textarea{resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;transition:.2s;border:none}
+.btn-p{background:var(--c2);color:#fff}.btn-p:hover{background:var(--c1)}
+.btn-d{background:var(--no);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-s{background:var(--ok);color:#fff}.btn-s:hover{background:#16a34a}
+.btn-o{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}.btn-o:hover{background:var(--bd)}
+.btn-bl{width:100%}
+#appLayout{display:none;min-height:100vh}
+#appLayout.on{display:flex}
+.side{width:var(--sw);background:var(--s1);border-right:1px solid var(--bd);position:fixed;top:0;left:0;height:100vh;display:flex;flex-direction:column;z-index:100;transition:transform .3s}
+.side-hd{padding:20px;border-bottom:1px solid var(--bd)}
+.side-hd h2{font-size:20px;font-weight:700;color:var(--c2)}
+.side-nav{flex:1;padding:15px 10px;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:12px;padding:12px 15px;border-radius:8px;color:var(--tm);cursor:pointer;transition:.2s;margin-bottom:5px;font-size:14px}
+.ni:hover{background:var(--s2);color:var(--tx)}
+.ni.on{background:var(--c1);color:#fff}
+.ni .ic{font-size:18px;width:24px;text-align:center}
+.side-ft{padding:15px;border-top:1px solid var(--bd)}
+.lt{display:flex;gap:5px;margin-bottom:10px}
+.lb{flex:1;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;background:var(--bg);border:1px solid var(--bd);color:var(--tm);transition:.2s}
+.lb.on{background:var(--c2);color:#fff;border-color:var(--c2)}
+.mc{flex:1;margin-left:var(--sw);padding:24px;padding-bottom:80px}
+.pg{display:none}.pg.on{display:block}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:15px}
+.pt{font-size:24px;font-weight:600}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px;margin-bottom:30px}
+.sc{background:var(--s1);border-radius:12px;padding:20px;border:1px solid var(--bd);transition:.2s}
+.sc:hover{transform:translateY(-2px);box-shadow:0 10px 30px -10px rgba(0,0,0,.5)}
+.sc .lb2{font-size:13px;color:var(--tm);margin-bottom:8px}
+.sc .vl{font-size:28px;font-weight:700;color:var(--c2)}
+.sc .vl.gr{color:var(--ok)}.sc .vl.or{color:var(--wn)}
+.tc{background:var(--s1);border-radius:12px;border:1px solid var(--bd);overflow:hidden}
+.tt{padding:15px 20px;border-bottom:1px solid var(--bd);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.si{flex:1;min-width:200px;padding:10px 15px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:14px;font-family:inherit}
+.si:focus{outline:none;border-color:var(--c2)}
+.fs{padding:10px 15px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:14px;cursor:pointer;font-family:inherit}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px 20px;text-align:left;border-bottom:1px solid var(--bd)}
+th{background:var(--bg);font-size:13px;font-weight:600;color:var(--tm);text-transform:uppercase;letter-spacing:.5px}
+td{font-size:14px}
+tr:hover td{background:rgba(255,255,255,.02)}
+.sb{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.sb-ok{background:rgba(34,197,94,.15);color:var(--ok)}
+.sb-no{background:rgba(239,68,68,.15);color:var(--no)}
+.sb-wn{background:rgba(245,158,11,.15);color:var(--wn)}
+.pn{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;flex-wrap:wrap;gap:10px}
+.pi{font-size:14px;color:var(--tm)}
+.pb{display:flex;gap:5px}
+.pbtn{min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);cursor:pointer;font-size:14px;transition:.2s;font-family:inherit}
+.pbtn:hover:not(:disabled){border-color:var(--c2);color:var(--c2)}
+.pbtn.on{background:var(--c2);border-color:var(--c2);color:#fff}
+.pbtn:disabled{opacity:.4;cursor:not-allowed}
+.ab{display:flex;gap:8px}
+.abtn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:none;cursor:pointer;font-size:14px;transition:.2s}
+.abtn.bn{background:rgba(239,68,68,.15);color:var(--no)}.abtn.bn:hover{background:var(--no);color:#fff}
+.abtn.ub{background:rgba(34,197,94,.15);color:var(--ok)}.abtn.ub:hover{background:var(--ok);color:#fff}
+.mo{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.mo.on{display:flex}
+.md{background:var(--s1);border-radius:12px;padding:25px;width:100%;max-width:450px;border:1px solid var(--bd)}
+.md h3{font-size:18px;font-weight:600;margin-bottom:20px}
+.mf{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.scard{background:var(--s1);border-radius:12px;padding:25px;border:1px solid var(--bd);margin-bottom:20px}
+.scard h3{font-size:16px;font-weight:600;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid var(--bd)}
+.ir{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bd)}
+.ir:last-child{border-bottom:none}
+.ir .lbl{color:var(--tm);font-size:14px}
+.ir .val{font-weight:500;font-size:14px}
+.eb{display:flex;gap:10px;flex-wrap:wrap}
+.mn{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:1px solid var(--bd);padding:8px 0;z-index:100}
+.mni{display:flex;justify-content:space-around}
+.mi{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px;color:var(--tm);cursor:pointer;font-size:10px;border-radius:8px;transition:.2s}
+.mi.on{color:var(--c2)}
+.mi .ic{font-size:20px}
+.mt{display:none;position:fixed;top:15px;left:15px;z-index:150;width:40px;height:40px;border-radius:8px;background:var(--s1);border:1px solid var(--bd);color:var(--tx);cursor:pointer;font-size:20px;align-items:center;justify-content:center}
+.toast{position:fixed;bottom:80px;right:20px;background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:15px 20px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:2000;transform:translateY(100px);opacity:0;transition:.3s;font-size:14px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.tok{border-left:4px solid var(--ok)}
+.toast.tno{border-left:4px solid var(--no)}
+.ld{display:flex;align-items:center;justify-content:center;padding:40px}
+.sp{width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--c2);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:768px){
+.mt{display:flex}
+.side{transform:translateX(-100%)}
+.side.open{transform:translateX(0)}
+.mc{margin-left:0;padding-top:70px;padding-bottom:100px}
+.mn{display:block}
+.ph{flex-direction:column;align-items:flex-start}
+.sg{grid-template-columns:repeat(2,1fr)}
+th,td{padding:10px 12px;font-size:13px}
+.tt{flex-direction:column}
+.si{width:100%}
+}
+@media(max-width:480px){.sg{grid-template-columns:1fr}.login-card{padding:25px}}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">🔒</div>
-        <h1>NearBite Admin 管理后台</h1>
-        <p>管理后台页面 - Phase 1f 将实现</p>
-        <a href="/" class="back-btn">← 返回首页</a>
-    </div>
+<div id="loginPage">
+<div class="login-card">
+<div class="login-logo"><h1>WCP Admin</h1><p data-i18n="login.subtitle">管理后台</p></div>
+<form id="loginForm">
+<div class="fg"><label data-i18n="login.phone">手机号</label><input type="tel" id="lPhone" required></div>
+<div class="fg"><label data-i18n="login.password">密码</label><input type="password" id="lPass" required></div>
+<button type="submit" class="btn btn-p btn-bl" data-i18n="login.submit">登录</button>
+</form>
+</div>
+</div>
+<div id="appLayout">
+<button class="mt" id="menuTog">☰</button>
+<aside class="side" id="sidebar">
+<div class="side-hd"><h2>WCP Admin</h2></div>
+<nav class="side-nav">
+<div class="ni on" data-pg="dashboard"><span class="ic">📊</span><span data-i18n="nav.dashboard">概览</span></div>
+<div class="ni" data-pg="users"><span class="ic">👥</span><span data-i18n="nav.users">用户</span></div>
+<div class="ni" data-pg="merchants"><span class="ic">🏪</span><span data-i18n="nav.merchants">商家</span></div>
+<div class="ni" data-pg="orders"><span class="ic">📋</span><span data-i18n="nav.orders">订单</span></div>
+<div class="ni" data-pg="logs"><span class="ic">📝</span><span data-i18n="nav.logs">日志</span></div>
+<div class="ni" data-pg="settings"><span class="ic">⚙️</span><span data-i18n="nav.settings">设置</span></div>
+</nav>
+<div class="side-ft">
+<div class="lt"><button class="lb on" data-lang="zh">中文</button><button class="lb" data-lang="en">EN</button></div>
+<button class="btn btn-o btn-bl" id="sideLogout" data-i18n="nav.logout">退出登录</button>
+</div>
+</aside>
+<main class="mc">
+<div class="pg on" id="pg-dashboard">
+<div class="ph"><h1 class="pt" data-i18n="nav.dashboard">概览</h1></div>
+<div class="sg">
+<div class="sc"><div class="lb2" data-i18n="st.totalUsers">总用户数</div><div class="vl" id="vTU">-</div></div>
+<div class="sc"><div class="lb2" data-i18n="st.totalMerchants">总商家数</div><div class="vl" id="vTM">-</div></div>
+<div class="sc"><div class="lb2" data-i18n="st.activeMerchants">活跃商家</div><div class="vl gr" id="vAM">-</div></div>
+<div class="sc"><div class="lb2" data-i18n="st.totalOrders">总订单数</div><div class="vl" id="vTO">-</div></div>
+<div class="sc"><div class="lb2" data-i18n="st.totalRevenue">总收入</div><div class="vl or" id="vTR">-</div></div>
+<div class="sc"><div class="lb2" data-i18n="st.todayOrders">今日订单</div><div class="vl" id="vDO">-</div></div>
+<div class="sc"><div class="lb2" data-i18n="st.todayRevenue">今日收入</div><div class="vl gr" id="vDR">-</div></div>
+</div>
+</div>
+<div class="pg" id="pg-users">
+<div class="ph"><h1 class="pt" data-i18n="nav.users">用户管理</h1></div>
+<div class="tc">
+<div class="tt"><input class="si" id="uSrch" data-i18n-ph="co.searchPhone" placeholder="搜索手机号..."></div>
+<table><thead><tr><th data-i18n="tb.phone">手机号</th><th data-i18n="tb.role">角色</th><th data-i18n="tb.regTime">注册时间</th><th data-i18n="tb.status">状态</th><th data-i18n="tb.actions">操作</th></tr></thead>
+<tbody id="uTB"><tr><td colspan="5"><div class="ld"><div class="sp"></div></div></td></tr></tbody></table>
+<div class="pn"><div class="pi" id="uPI"></div><div class="pb" id="uPB"></div></div>
+</div>
+</div>
+<div class="pg" id="pg-merchants">
+<div class="ph"><h1 class="pt" data-i18n="nav.merchants">商家管理</h1></div>
+<div class="tc">
+<div class="tt"><input class="si" id="mSrch" data-i18n-ph="co.searchMerch" placeholder="搜索名称/手机号..."></div>
+<table><thead><tr><th data-i18n="tb.name">名称</th><th data-i18n="tb.type">类型</th><th data-i18n="tb.phone">手机号</th><th data-i18n="tb.online">在线</th><th data-i18n="tb.rating">评分</th><th data-i18n="tb.actions">操作</th></tr></thead>
+<tbody id="mTB"><tr><td colspan="6"><div class="ld"><div class="sp"></div></div></td></tr></tbody></table>
+<div class="pn"><div class="pi" id="mPI"></div><div class="pb" id="mPB"></div></div>
+</div>
+</div>
+<div class="pg" id="pg-orders">
+<div class="ph"><h1 class="pt" data-i18n="nav.orders">订单管理</h1><button class="btn btn-p" id="expOrd">📥 <span data-i18n="co.exportCSV">导出CSV</span></button></div>
+<div class="tc">
+<div class="tt"><select class="fs" id="oFlt"><option value="" data-i18n="co.allStatus">全部状态</option><option value="pending" data-i18n="s.pending">待处理</option><option value="accepted" data-i18n="s.accepted">已接单</option><option value="completed" data-i18n="s.completed">已完成</option><option value="cancelled" data-i18n="s.cancelled">已取消</option></select></div>
+<table><thead><tr><th data-i18n="tb.orderNo">订单号</th><th data-i18n="tb.merchant">商家</th><th data-i18n="tb.amount">金额</th><th data-i18n="tb.status">状态</th><th data-i18n="tb.time">时间</th></tr></thead>
+<tbody id="oTB"><tr><td colspan="5"><div class="ld"><div class="sp"></div></div></td></tr></tbody></table>
+<div class="pn"><div class="pi" id="oPI"></div><div class="pb" id="oPB"></div></div>
+</div>
+</div>
+<div class="pg" id="pg-logs">
+<div class="ph"><h1 class="pt" data-i18n="nav.logs">操作日志</h1></div>
+<div class="tc">
+<table><thead><tr><th data-i18n="tb.time">时间</th><th data-i18n="tb.operator">操作人</th><th data-i18n="tb.type">类型</th><th data-i18n="tb.detail">详情</th></tr></thead>
+<tbody id="lTB"><tr><td colspan="4"><div class="ld"><div class="sp"></div></div></td></tr></tbody></table>
+<div class="pn"><div class="pi" id="lPI"></div><div class="pb" id="lPB"></div></div>
+</div>
+</div>
+<div class="pg" id="pg-settings">
+<div class="ph"><h1 class="pt" data-i18n="nav.settings">设置</h1></div>
+<div class="scard"><h3 data-i18n="set.adminInfo">管理员信息</h3>
+<div class="ir"><span class="lbl" data-i18n="tb.phone">手机号</span><span class="val" id="aPhone">-</span></div>
+<div class="ir"><span class="lbl" data-i18n="tb.role">角色</span><span class="val" id="aRole">-</span></div>
+<div class="ir"><span class="lbl" data-i18n="set.lastLogin">上次登录</span><span class="val" id="aLogin">-</span></div>
+</div>
+<div class="scard"><h3 data-i18n="set.exportData">导出数据</h3>
+<div class="eb"><button class="btn btn-p" id="expOrd2">📥 <span data-i18n="set.exportOrders">导出订单</span></button><button class="btn btn-p" id="expMer">📥 <span data-i18n="set.exportMerch">导出商家</span></button></div>
+</div>
+<div class="scard"><button class="btn btn-d btn-bl" id="setLogout" data-i18n="nav.logout">退出登录</button></div>
+</div>
+</main>
+<nav class="mn"><div class="mni">
+<div class="mi on" data-pg="dashboard"><span class="ic">📊</span><span data-i18n="nav.dashboard">概览</span></div>
+<div class="mi" data-pg="users"><span class="ic">👥</span><span data-i18n="nav.users">用户</span></div>
+<div class="mi" data-pg="merchants"><span class="ic">🏪</span><span data-i18n="nav.merchants">商家</span></div>
+<div class="mi" data-pg="orders"><span class="ic">📋</span><span data-i18n="nav.orders">订单</span></div>
+<div class="mi" data-pg="logs"><span class="ic">📝</span><span data-i18n="nav.logs">日志</span></div>
+<div class="mi" data-pg="settings"><span class="ic">⚙️</span><span data-i18n="nav.settings">设置</span></div>
+</div></nav>
+</div>
+<div class="mo" id="banModal"><div class="md">
+<h3 id="bmTitle">封禁</h3>
+<div id="bmBody"><div class="fg"><label data-i18n="md.reason">封禁原因</label><textarea id="bmReason" rows="3" placeholder="请输入封禁原因"></textarea></div></div>
+<div class="mf"><button class="btn btn-o" id="bmCancel" data-i18n="co.cancel">取消</button><button class="btn btn-d" id="bmOk">确认封禁</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+<script>
+var W=window,D=document,LS=localStorage;
+var LN={zh:{
+'login.subtitle':'管理后台','login.phone':'手机号','login.password':'密码','login.submit':'登录',
+'nav.dashboard':'概览','nav.users':'用户管理','nav.merchants':'商家管理','nav.orders':'订单管理','nav.logs':'操作日志','nav.settings':'设置','nav.logout':'退出登录',
+'st.totalUsers':'总用户数','st.totalMerchants':'总商家数','st.activeMerchants':'活跃商家','st.totalOrders':'总订单数','st.totalRevenue':'总收入','st.todayOrders':'今日订单','st.todayRevenue':'今日收入',
+'tb.phone':'手机号','tb.name':'名称','tb.type':'类型','tb.role':'角色','tb.regTime':'注册时间','tb.status':'状态','tb.online':'在线','tb.rating':'评分','tb.actions':'操作','tb.orderNo':'订单号','tb.merchant':'商家','tb.amount':'金额','tb.time':'时间','tb.operator':'操作人','tb.detail':'详情',
+'co.searchPhone':'搜索手机号...','co.searchMerch':'搜索名称/手机号...','co.exportCSV':'导出CSV','co.allStatus':'全部状态','co.cancel':'取消',
+'s.pending':'待处理','s.accepted':'已接单','s.completed':'已完成','s.cancelled':'已取消','s.active':'正常','s.banned':'已封禁','s.yes':'是','s.no':'否',
+'md.ban':'封禁用户','md.unban':'解封用户','md.banM':'封禁商家','md.unbanM':'解封商家','md.reason':'封禁原因','md.confirmBan':'确认封禁','md.confirmUnban':'确认解封',
+'set.adminInfo':'管理员信息','set.lastLogin':'上次登录','set.exportData':'导出数据','set.exportOrders':'导出订单','set.exportMerch':'导出商家',
+'msg.loginOk':'登录成功','msg.logoutOk':'已退出登录','msg.opOk':'操作成功','msg.exportOk':'开始导出...','msg.err':'操作失败','msg.relogin':'请重新登录','msg.noData':'暂无数据',
+'time.now':'刚刚','time.min':'{n}分钟前','time.hr':'{n}小时前','time.day':'{n}天前','pg.info':'第 {p} / {t} 页'
+},en:{
+'login.subtitle':'Admin Dashboard','login.phone':'Phone','login.password':'Password','login.submit':'Login',
+'nav.dashboard':'Dashboard','nav.users':'Users','nav.merchants':'Merchants','nav.orders':'Orders','nav.logs':'Logs','nav.settings':'Settings','nav.logout':'Logout',
+'st.totalUsers':'Total Users','st.totalMerchants':'Total Merchants','st.activeMerchants':'Active Merchants','st.totalOrders':'Total Orders','st.totalRevenue':'Total Revenue','st.todayOrders':'Today Orders','st.todayRevenue':'Today Revenue',
+'tb.phone':'Phone','tb.name':'Name','tb.type':'Type','tb.role':'Role','tb.regTime':'Registered','tb.status':'Status','tb.online':'Online','tb.rating':'Rating','tb.actions':'Actions','tb.orderNo':'Order No','tb.merchant':'Merchant','tb.amount':'Amount','tb.time':'Time','tb.operator':'Operator','tb.detail':'Detail',
+'co.searchPhone':'Search phone...','co.searchMerch':'Search name/phone...','co.exportCSV':'Export CSV','co.allStatus':'All Status','co.cancel':'Cancel',
+'s.pending':'Pending','s.accepted':'Accepted','s.completed':'Completed','s.cancelled':'Cancelled','s.active':'Active','s.banned':'Banned','s.yes':'Yes','s.no':'No',
+'md.ban':'Ban User','md.unban':'Unban User','md.banM':'Ban Merchant','md.unbanM':'Unban Merchant','md.reason':'Ban Reason','md.confirmBan':'Confirm Ban','md.confirmUnban':'Confirm Unban',
+'set.adminInfo':'Admin Info','set.lastLogin':'Last Login','set.exportData':'Export Data','set.exportOrders':'Export Orders','set.exportMerch':'Export Merchants',
+'msg.loginOk':'Login successful','msg.logoutOk':'Logged out','msg.opOk':'Success','msg.exportOk':'Exporting...','msg.err':'Error','msg.relogin':'Please login again','msg.noData':'No data',
+'time.now':'Just now','time.min':'{n}m ago','time.hr':'{n}h ago','time.day':'{n}d ago','pg.info':'Page {p} / {t}'
+}};
+var lang='zh',curPg='dashboard',banCtx=null;
+function t(k,p){var s=LN[lang][k]||k;if(p)for(var x in p)s=s.replace('{'+x+'}',p[x]);return s}
+function fN(n){return n!=null?n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,','):'0'}
+function fC(n){return '\u00a5'+fN(Math.round(n||0))}
+function fT(d){if(!d)return'-';var s=Math.floor((Date.now()-new Date(d).getTime())/1e3);if(s<60)return t('time.now');if(s<3600)return t('time.min',{n:Math.floor(s/60)});if(s<86400)return t('time.hr',{n:Math.floor(s/3600)});if(s<604800)return t('time.day',{n:Math.floor(s/86400)});return new Date(d).toLocaleDateString()}
+function db(fn,ms){var tm;return function(){clearTimeout(tm);tm=setTimeout(fn,ms)}}
+function gT(){return LS.getItem('wcp_token')}
+function sT(v){LS.setItem('wcp_token',v)}
+function gU(){try{return JSON.parse(LS.getItem('wcp_user'))}catch(e){return null}}
+function sU(v){LS.setItem('wcp_user',JSON.stringify(v))}
+function clr(){LS.removeItem('wcp_token');LS.removeItem('wcp_user')}
+function $$(id){return D.getElementById(id)}
+async function api(url,opt){
+opt=opt||{};var h={'Content-Type':'application/json'};var tk=gT();
+if(tk)h['Authorization']='Bearer '+tk;if(opt.headers)for(var k in opt.headers)h[k]=opt.headers[k];
+var r=await fetch(url,Object.assign({},opt,{headers:h}));
+if(r.status===401){clr();showLogin();toast(t('msg.relogin'),'tno');throw new Error('401')}
+if(!r.ok){var e;try{e=await r.json()}catch(x){e={}}throw new Error(e.message||'API Error')}
+return r.json();
+}
+function toast(msg,cls){var el=$$('toast');el.textContent=msg;el.className='toast '+(cls||'tok')+' show';setTimeout(function(){el.classList.remove('show')},3000)}
+function showLogin(){$$('loginPage').style.display='flex';$$('appLayout').classList.remove('on')}
+function showApp(){$$('loginPage').style.display='none';$$('appLayout').classList.add('on');var u=gU();if(u){$$('aPhone').textContent=u.phone||'-';$$('aRole').textContent=u.role||'admin';$$('aLogin').textContent=fT(u.lastLogin||u.createdAt)}}
+function go(pg){curPg=pg;D.querySelectorAll('.pg').forEach(function(e){e.classList.remove('on')});D.querySelectorAll('.ni,.mi').forEach(function(e){e.classList.remove('on')});var el=$$('pg-'+pg);if(el)el.classList.add('on');D.querySelectorAll('[data-pg="'+pg+'"]').forEach(function(e){e.classList.add('on')});$$('sidebar').classList.remove('open');if(pg==='dashboard')loadStats();if(pg==='users')loadUsers();if(pg==='merchants')loadMerchants();if(pg==='orders')loadOrders();if(pg==='logs')loadLogs()}
+function updateLang(){D.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=t(el.getAttribute('data-i18n'))});D.querySelectorAll('[data-i18n-ph]').forEach(function(el){el.placeholder=t(el.getAttribute('data-i18n-ph'))});go(curPg)}
+function logout(){clr();showLogin();toast(t('msg.logoutOk'))}
+$$('loginForm').addEventListener('submit',async function(e){e.preventDefault();try{var d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({phone:$$('lPhone').value,password:$$('lPass').value})});sT(d.token);sU(d.user);toast(t('msg.loginOk'));showApp();loadStats()}catch(er){toast(er.message||t('msg.err'),'tno')}});
+async function loadStats(){try{var d=await api('/api/admin/stats');$$('vTU').textContent=fN(d.totalUsers);$$('vTM').textContent=fN(d.totalMerchants);$$('vAM').textContent=fN(d.activeMerchants);$$('vTO').textContent=fN(d.totalOrders);$$('vTR').textContent=fC(d.totalRevenue);$$('vDO').textContent=fN(d.todayOrders);$$('vDR').textContent=fC(d.todayRevenue)}catch(e){}}
+function rPg(pre,pg,tot,fn){var i=D.getElementById(pre+'PI'),b=D.getElementById(pre+'PB');if(!tot||tot<=1){i.textContent='';b.innerHTML='';return}i.textContent=t('pg.info',{p:pg,t:tot});var h='<button class="pbtn" onclick="'+fn+'('+(pg-1)+')"'+(pg<=1?' disabled':'')+'>‹</button>';for(var x=1;x<=tot;x++){if(x===1||x===tot||(x>=pg-2&&x<=pg+2))h+='<button class="pbtn'+(x===pg?' on':'')+'" onclick="'+fn+'('+x+')">'+x+'</button>';else if(x===pg-3||x===pg+3)h+='<button class="pbtn" disabled>…</button>'}h+='<button class="pbtn" onclick="'+fn+'('+(pg+1)+')"'+(pg>=tot?' disabled':'')+'>›</button>';b.innerHTML=h}
+async function loadUsers(pg){pg=pg||1;var q=$$('uSrch').value;try{var d=await api('/api/admin/users?page='+pg+'&limit=20&search='+encodeURIComponent(q));var rows=d.users||d.data||[];var tb=$$('uTB');if(!rows.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--tm)">'+t('msg.noData')+'</td></tr>'}else{tb.innerHTML=rows.map(function(u){var b=u.status==='banned';return'<tr><td>'+u.phone+'</td><td>'+(u.role||'user')+'</td><td>'+fT(u.createdAt)+'</td><td><span class="sb '+(b?'sb-no':'sb-ok')+'">'+(b?t('s.banned'):t('s.active'))+'</span></td><td><div class="ab"><button class="abtn '+(b?'ub':'bn')+'" onclick="doBanU(\''+u._id+'\','+(!b)+')">'+(b?'✓':'✕')+'</button></div></td></tr>'}).join('')}rPg('u',d.page||pg,d.totalPages||1,'loadUsers')}catch(e){}}
+$$('uSrch').addEventListener('input',db(function(){loadUsers(1)},400));
+async function loadMerchants(pg){pg=pg||1;var q=$$('mSrch').value;try{var d=await api('/api/admin/merchants?page='+pg+'&limit=20&search='+encodeURIComponent(q));var rows=d.merchants||d.data||[];var tb=$$('mTB');if(!rows.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--tm)">'+t('msg.noData')+'</td></tr>'}else{tb.innerHTML=rows.map(function(m){var b=m.status==='banned';return'<tr><td>'+(m.name||'-')+'</td><td>'+(m.type||'-')+'</td><td>'+(m.phone||'-')+'</td><td><span class="sb '+(m.isOnline?'sb-ok':'sb-wn')+'">'+(m.isOnline?t('s.yes'):t('s.no'))+'</span></td><td>'+(m.rating?m.rating.toFixed(1):'-')+'</td><td><div class="ab"><button class="abtn '+(b?'ub':'bn')+'" onclick="doBanM(\''+m._id+'\','+(!b)+')">'+(b?'✓':'✕')+'</button></div></td></tr>'}).join('')}rPg('m',d.page||pg,d.totalPages||1,'loadMerchants')}catch(e){}}
+$$('mSrch').addEventListener('input',db(function(){loadMerchants(1)},400));
+async function loadOrders(pg){pg=pg||1;var st=$$('oFlt').value;try{var d=await api('/api/admin/orders?page='+pg+'&limit=20'+(st?'&status='+st:''));var rows=d.orders||d.data||[];var tb=$$('oTB');if(!rows.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--tm)">'+t('msg.noData')+'</td></tr>'}else{tb.innerHTML=rows.map(function(o){var oid=(o.orderNo||o._id||'').slice(-6);var sc=o.status==='completed'?'sb-ok':o.status==='cancelled'?'sb-no':'sb-wn';return'<tr><td>'+oid+'</td><td>'+(o.merchantName||'-')+'</td><td>'+fC(o.amount)+'</td><td><span class="sb '+sc+'">'+(LN[lang]['s.'+o.status]||o.status)+'</span></td><td>'+fT(o.createdAt)+'</td></tr>'}).join('')}rPg('o',d.page||pg,d.totalPages||1,'loadOrders')}catch(e){}}
+$$('oFlt').addEventListener('change',function(){loadOrders(1)});
+async function loadLogs(pg){pg=pg||1;try{var d=await api('/api/admin/logs?page='+pg+'&limit=50');var rows=d.logs||d.data||[];var tb=$$('lTB');if(!rows.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--tm)">'+t('msg.noData')+'</td></tr>'}else{tb.innerHTML=rows.map(function(l){return'<tr><td>'+fT(l.createdAt)+'</td><td>'+(l.operator||l.adminPhone||'-')+'</td><td>'+(l.type||l.action||'-')+'</td><td>'+(l.detail||l.description||'-')+'</td></tr>'}).join('')}rPg('l',d.page||pg,d.totalPages||1,'loadLogs')}catch(e){}}
+function doBanU(id,ban){openBan('user',id,ban)}
+function doBanM(id,ban){openBan('merchant',id,ban)}
+function openBan(type,id,ban){banCtx={type:type,id:id,ban:ban};var tk=ban?(type==='user'?'md.ban':'md.banM'):(type==='user'?'md.unban':'md.unbanM');$$('bmTitle').textContent=t(tk);$$('bmOk').textContent=ban?t('md.confirmBan'):t('md.confirmUnban');$$('bmOk').className='btn '+(ban?'btn-d':'btn-s');$$('bmBody').style.display=ban?'block':'none';$$('bmReason').value='';$$('banModal').classList.add('on')}
+$$('bmCancel').addEventListener('click',function(){$$('banModal').classList.remove('on');banCtx=null});
+$$('banModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('on');banCtx=null}});
+$$('bmOk').addEventListener('click',async function(){if(!banCtx)return;var ep=banCtx.type==='user'?'users':'merchants';var act=banCtx.ban?'ban':'unban';var reason=banCtx.ban?$$('bmReason').value:'';try{await api('/api/admin/'+ep+'/'+banCtx.id+'/'+act,{method:'PATCH',body:JSON.stringify({reason:reason})});toast(t('msg.opOk'));$$('banModal').classList.remove('on');if(banCtx.type==='user')loadUsers();else loadMerchants()}catch(e){toast(e.message||t('msg.err'),'tno')}banCtx=null});
+function expFile(url,name){var tk=gT();fetch(url,{headers:{'Authorization':'Bearer '+tk}}).then(function(r){if(!r.ok)throw new Error('fail');return r.blob()}).then(function(b){var a=D.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href);toast(t('msg.exportOk'))}).catch(function(){toast(t('msg.err'),'tno')})}
+$$('expOrd').addEventListener('click',function(){expFile('/api/admin/export/orders','orders.csv')});
+$$('expOrd2').addEventListener('click',function(){expFile('/api/admin/export/orders','orders.csv')});
+$$('expMer').addEventListener('click',function(){expFile('/api/admin/export/merchants','merchants.csv')});
+D.querySelectorAll('.ni,.mi').forEach(function(el){el.addEventListener('click',function(){go(this.dataset.pg)})});
+$$('menuTog').addEventListener('click',function(){$$('sidebar').classList.toggle('open')});
+D.querySelectorAll('.lb').forEach(function(b){b.addEventListener('click',function(){lang=this.dataset.lang;D.querySelectorAll('.lb').forEach(function(x){x.classList.remove('on')});this.classList.add('on');updateLang()})});
+$$('sideLogout').addEventListener('click',logout);
+$$('setLogout').addEventListener('click',logout);
+if(gT()){showApp();loadStats()}else{showLogin()}
+</script>
 </body>
 </html>
