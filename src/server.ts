@@ -92,7 +92,7 @@ function emitOrderEvent(event: OrderEvent) {
 }
 
 /** SSE 心跳间隔（毫秒） */
-const SSE_HEARTBEAT_INTERVAL = 15000; // 15秒心跳，避免Railway/proxy超时断连
+const SSE_HEARTBEAT_INTERVAL = 10000; // 10秒心跳，更频繁避免Railway/proxy超时断连
 
 // ==================== Express ====================
 
