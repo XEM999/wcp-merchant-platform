@@ -3,1011 +3,1608 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NearBite — Discover Local Food</title>
+    <title>NearBite — 发现身边好味道</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍜</text></svg>">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #fafafa;
-            --bg-card: #ffffff;
-            --bg-input: #f3f4f6;
-            --text: #111827;
-            --text-2: #6b7280;
-            --text-3: #9ca3af;
-            --accent: #f97316;
-            --accent-light: #fff7ed;
-            --accent-dark: #ea580c;
-            --green: #22c55e;
-            --green-bg: #f0fdf4;
-            --red: #ef4444;
-            --red-bg: #fef2f2;
-            --blue: #3b82f6;
-            --purple: #8b5cf6;
-            --border: #e5e7eb;
-            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-            --shadow-lg: 0 4px 12px rgba(0,0,0,.1);
-            --radius: 16px;
-            --radius-sm: 10px;
+            --primary: #ff6b35;
+            --primary-dark: #e55a2b;
+            --primary-light: #fff4ef;
+            --bg: #ffffff;
+            --bg-gray: #f8f9fa;
+            --text: #1a1a1a;
+            --text-2: #666666;
+            --text-3: #999999;
+            --border: #e5e5e5;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
         }
-
-        * { margin:0; padding:0; box-sizing:border-box; }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg);
+            background: var(--bg-gray);
             color: var(--text);
             min-height: 100vh;
-            padding-bottom: 80px;
+            padding-bottom: 100px;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== Splash ===== */
-        .splash {
-            position:fixed; inset:0; z-index:99999;
-            background: linear-gradient(160deg, #fff7ed 0%, #ffedd5 40%, #fed7aa 100%);
-            display:flex; flex-direction:column; justify-content:center; align-items:center;
-            transition: opacity .5s, transform .5s;
-        }
-        .splash.hide { opacity:0; transform:scale(1.05); pointer-events:none; }
-        .splash-logo { font-size:80px; animation: bounce 1s ease infinite alternate; }
-        @keyframes bounce { to { transform:translateY(-8px); } }
-        .splash-brand { font-size:36px; font-weight:900; color:#ea580c; margin-top:12px; letter-spacing:-1px; }
-        .splash-tagline { font-size:14px; color:#9a3412; margin-top:6px; letter-spacing:1px; }
-        .splash-loader { width:120px; height:3px; background:#fdba74; border-radius:4px; margin-top:40px; overflow:hidden; }
-        .splash-loader::after { content:''; display:block; height:100%; width:40%; background:#ea580c; border-radius:4px; animation: slide .7s ease-in-out infinite; }
-        @keyframes slide { 0%{transform:translateX(-100%);} 100%{transform:translateX(350%);} }
-
         /* ===== Header ===== */
         .app-header {
-            position:sticky; top:0; z-index:500;
-            background: rgba(255,255,255,.92);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 12px 16px;
-            display:flex; align-items:center; justify-content:space-between;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             border-bottom: 1px solid var(--border);
         }
-        .header-left { display:flex; align-items:center; gap:10px; }
-        .header-logo { font-size:28px; }
-        .header-brand { font-size:20px; font-weight:800; color:var(--accent-dark); letter-spacing:-.5px; }
-        .lang-btn {
-            padding:6px 12px; border:1px solid var(--border); border-radius:20px;
-            background:white; font-size:12px; font-weight:600; cursor:pointer;
-            color:var(--text-2); transition:all .2s;
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            flex-shrink: 0;
         }
-        .lang-btn:hover { border-color:var(--accent); color:var(--accent); }
-
-        /* ===== Toast ===== */
-        .toast-container {
-            position:fixed; top:70px; left:50%; transform:translateX(-50%);
-            z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none;
+        .logo-icon { font-size: 24px; }
+        .search-box {
+            flex: 1;
+            position: relative;
         }
-        .toast {
-            background:white; color:var(--text); padding:12px 20px;
-            border-radius:var(--radius-sm); font-size:13px; font-weight:500;
-            box-shadow:var(--shadow-lg); pointer-events:auto; max-width:90vw; text-align:center;
-            animation: toastIn .3s ease, toastOut .3s ease 2.7s forwards;
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 36px;
+            background: var(--bg-gray);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
         }
-        .toast.success { border-left:4px solid var(--green); }
-        .toast.error { border-left:4px solid var(--red); }
-        .toast.info { border-left:4px solid var(--blue); }
-        @keyframes toastIn { from{opacity:0;transform:translateY(-12px);}to{opacity:1;transform:translateY(0);} }
-        @keyframes toastOut { to{opacity:0;transform:translateY(-12px);} }
-
-        /* ===== Loading ===== */
-        .loading-overlay { display:none; position:fixed; inset:0; background:rgba(255,255,255,.8); z-index:8000; justify-content:center; align-items:center; flex-direction:column; backdrop-filter:blur(4px); }
-        .loading-overlay.active { display:flex; }
-        .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .6s linear infinite; }
-        @keyframes spin { to{transform:rotate(360deg);} }
-        .loading-overlay .msg { margin-top:12px; font-size:13px; color:var(--text-2); }
-
-        /* ===== Tab Nav ===== */
-        .tab-nav {
-            position:fixed; bottom:0; left:0; right:0;
-            background:rgba(255,255,255,.95); backdrop-filter:blur(20px);
-            border-top:1px solid var(--border);
-            display:flex; z-index:1000; padding:6px 0 env(safe-area-inset-bottom, 4px);
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
         }
-        .tab-btn {
-            flex:1; padding:8px 0; background:none; border:none;
-            color:var(--text-3); font-size:10px; font-weight:600; cursor:pointer;
-            display:flex; flex-direction:column; align-items:center; gap:2px;
-            transition:all .2s; position:relative;
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
         }
-        .tab-btn .t-icon { font-size:22px; }
-        .tab-btn.active { color:var(--accent); }
-        .tab-btn.active::before {
-            content:''; position:absolute; top:0; left:30%; right:30%;
-            height:2px; border-radius:0 0 2px 2px; background:var(--accent);
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
         }
-
-        /* ===== Pages ===== */
-        .page { display:none; padding:16px; min-height:calc(100vh - 130px); animation:pageIn .3s ease; }
-        .page.active { display:block; }
-        @keyframes pageIn { from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;} }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-2);
+        }
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        .btn-sm { padding: 6px 10px; font-size: 12px; }
 
         /* ===== Location Bar ===== */
         .location-bar {
-            display:flex; align-items:center; gap:6px; margin-bottom:12px;
-            font-size:12px; color:var(--text-2); font-weight:500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            font-size: 12px;
+            color: var(--text-2);
+            background: white;
+            border-bottom: 1px solid var(--border);
         }
-        .dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-        .dot.ok { background:var(--green); box-shadow:0 0 6px rgba(34,197,94,.4); }
-        .dot.wait { background:#f59e0b; animation:pulse 1s infinite; }
-        .dot.fail { background:var(--red); }
-        @keyframes pulse { 50%{opacity:.4;} }
-
-        /* ===== Search ===== */
-        .search-bar { display:flex; gap:8px; margin-bottom:16px; }
-        .search-input {
-            flex:1; padding:12px 16px; background:var(--bg-input);
-            border:1px solid transparent; border-radius:var(--radius);
-            font-size:14px; color:var(--text); transition:all .2s;
-            font-family:inherit;
+        .loc-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
         }
-        .search-input:focus { border-color:var(--accent); outline:none; background:white; box-shadow:0 0 0 3px rgba(249,115,22,.1); }
-        .search-input::placeholder { color:var(--text-3); }
-        .icon-btn {
-            width:48px; height:48px; border:none; border-radius:var(--radius);
-            display:flex; align-items:center; justify-content:center;
-            font-size:18px; cursor:pointer; transition:transform .15s;
-        }
-        .icon-btn:active { transform:scale(.92); }
-        .icon-btn.primary { background:var(--accent); color:white; }
-        .icon-btn.secondary { background:var(--bg-input); color:var(--text-2); }
+        .loc-dot.loading { background: var(--warning); animation: pulse 1s infinite; }
+        .loc-dot.success { background: var(--success); }
+        .loc-dot.error { background: var(--danger); }
+        @keyframes pulse { 50% { opacity: 0.4; } }
 
         /* ===== Map ===== */
         #map {
-            height:240px; border-radius:var(--radius); margin-bottom:16px;
-            border:1px solid var(--border); overflow:hidden; box-shadow:var(--shadow);
+            height: 220px;
+            width: 100%;
+            z-index: 1;
         }
 
         /* ===== Section ===== */
-        .section-title { font-size:18px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-        .section-count { font-size:13px; font-weight:500; color:var(--text-3); }
+        .section {
+            padding: 16px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .section-count {
+            font-size: 13px;
+            color: var(--text-3);
+        }
 
         /* ===== Merchant Cards ===== */
-        .merchant-list { display:flex; flex-direction:column; gap:12px; }
+        .merchant-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
         .merchant-card {
-            background:var(--bg-card); border-radius:var(--radius); padding:16px;
-            border:1px solid var(--border); box-shadow:var(--shadow);
-            transition:transform .2s, box-shadow .2s; cursor:pointer;
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+            cursor: pointer;
         }
-        .merchant-card:active { transform:scale(.98); }
-        .mc-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
-        .mc-name { font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
-        .mc-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; background:var(--accent-light); }
-        .mc-dist { color:var(--accent); font-size:12px; font-weight:600; background:var(--accent-light); padding:4px 10px; border-radius:20px; white-space:nowrap; }
-        .mc-meta { color:var(--text-2); font-size:12px; margin-bottom:8px; }
-        .mc-rating { display:flex; align-items:center; gap:6px; margin-bottom:10px; }
-        .mc-stars { color:#f59e0b; font-size:13px; letter-spacing:1px; }
-        .mc-rating-num { color:var(--text); font-weight:700; font-size:14px; }
-        .mc-rating-cnt { color:var(--text-3); font-size:12px; }
-        .mc-actions { display:flex; gap:8px; }
-        .mc-btn {
-            padding:8px 14px; border:none; border-radius:8px;
-            font-size:12px; font-weight:600; cursor:pointer; transition:transform .15s;
-            font-family:inherit;
+        .merchant-card:active {
+            transform: scale(0.98);
         }
-        .mc-btn:active { transform:scale(.95); }
-        .mc-btn.orange { background:var(--accent-light); color:var(--accent-dark); }
-        .mc-btn.blue-light { background:#eff6ff; color:var(--blue); }
-        .card-menu { display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
-        .card-menu.show { display:block; animation:fadeIn .25s ease; }
-        .card-menu-row { display:flex; justify-content:space-between; padding:8px 0; font-size:14px; border-bottom:1px solid #f3f4f6; }
-        .card-menu-row:last-child { border-bottom:none; }
-        .card-menu-row .price { color:var(--accent-dark); font-weight:700; }
-        @keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+        .mc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .mc-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mc-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .mc-name {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .mc-type {
+            font-size: 12px;
+            color: var(--text-2);
+            margin-top: 2px;
+        }
+        .mc-distance {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .mc-rating {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .mc-stars {
+            color: var(--warning);
+            font-size: 14px;
+        }
+        .mc-rating-num {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .mc-review-count {
+            font-size: 12px;
+            color: var(--text-3);
+        }
+        .mc-desc {
+            font-size: 13px;
+            color: var(--text-2);
+            line-height: 1.4;
+        }
+        .mc-menu-preview {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .mc-menu-preview.show { display: block; }
+        .menu-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .menu-item-row:last-child { border-bottom: none; }
+        .menu-item-name { font-size: 14px; }
+        .menu-item-price {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .menu-item-add {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        /* ===== Modal ===== */
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:2000; padding:20px; overflow-y:auto; backdrop-filter:blur(4px); }
-        .modal.active { display:flex; align-items:flex-start; justify-content:center; animation:fadeIn .25s; }
+        /* ===== Cart ===== */
+        .cart-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .cart-btn:active { transform: scale(0.95); }
+        .cart-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--danger);
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cart-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+            z-index: 200;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            max-height: 70vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .cart-panel.open { transform: translateY(0); }
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .cart-title { font-size: 18px; font-weight: 700; }
+        .cart-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-3);
+        }
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 20px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .cart-item-name { font-size: 14px; }
+        .cart-item-price { color: var(--primary); font-weight: 600; font-size: 14px; }
+        .cart-item-qty {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .qty-num { font-weight: 600; min-width: 20px; text-align: center; }
+        .cart-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-gray);
+        }
+        .cart-note {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+            margin-bottom: 12px;
+        }
+        .pickup-options {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .pickup-opt {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: var(--radius);
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+        }
+        .pickup-opt.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .table-input {
+            display: none;
+            margin-bottom: 12px;
+        }
+        .table-input.show { display: block; }
+        .table-input input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .cart-total-price { color: var(--primary); font-size: 20px; }
+        .checkout-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .checkout-btn:disabled {
+            background: var(--text-3);
+            cursor: not-allowed;
+        }
+
+        /* ===== Order Status ===== */
+        .order-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .order-modal.open { display: flex; }
+        .order-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .order-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .order-header h2 { font-size: 20px; margin-bottom: 8px; }
+        .order-id { font-size: 12px; color: var(--text-3); }
+        .order-progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .order-progress::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+        }
+        .step-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .step-dot.active { background: var(--primary); color: white; }
+        .step-dot.done { background: var(--success); color: white; }
+        .step-label { font-size: 11px; color: var(--text-3); text-align: center; }
+        .step-label.active { color: var(--primary); font-weight: 600; }
+        .order-items-list {
+            background: var(--bg-gray);
+            border-radius: var(--radius);
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        .order-item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 14px;
+        }
+        .order-note {
+            font-size: 13px;
+            color: var(--text-2);
+            padding: 8px 12px;
+            background: var(--bg-gray);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        /* ===== Login Modal ===== */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal.open { display: flex; }
         .modal-content {
-            background:white; border-radius:20px; padding:24px;
-            max-width:500px; width:100%; margin-top:40px;
-            box-shadow:0 20px 60px rgba(0,0,0,.15);
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 100%;
+            max-width: 360px;
         }
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 { font-size: 20px; margin-bottom: 4px; }
+        .modal-header p { font-size: 13px; color: var(--text-2); }
         .modal-close {
-            float:right; background:var(--bg-input); border:none;
-            color:var(--text-2); font-size:18px; cursor:pointer;
-            width:36px; height:36px; border-radius:50%;
-            display:flex; align-items:center; justify-content:center;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-3);
         }
-        .modal-close:hover { background:var(--border); }
-
-        /* ===== Forms ===== */
-        .form-group { margin-bottom:16px; }
-        .form-label { display:block; margin-bottom:6px; color:var(--text-2); font-size:13px; font-weight:600; }
-        .form-input, .form-select {
-            width:100%; padding:12px 14px; background:var(--bg-input);
-            border:1px solid transparent; border-radius:var(--radius-sm);
-            color:var(--text); font-size:14px; transition:all .2s; font-family:inherit;
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-2);
         }
-        .form-input:focus, .form-select:focus { border-color:var(--accent); outline:none; background:white; box-shadow:0 0 0 3px rgba(249,115,22,.1); }
-        .form-btn {
-            width:100%; padding:14px; border:none; border-radius:var(--radius);
-            font-size:15px; font-weight:600; cursor:pointer; margin-bottom:10px;
-            transition:transform .15s; font-family:inherit;
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
         }
-        .form-btn:active { transform:scale(.98); }
-        .form-btn.primary { background:var(--accent); color:white; }
-        .form-btn.secondary { background:var(--bg-input); color:var(--text-2); }
-        .form-btn.green { background:var(--green); color:white; }
-        .form-btn.red { background:var(--red); color:white; }
-
-        /* ===== Seller ===== */
-        .seller-header {
-            display:flex; align-items:center; gap:14px; margin-bottom:20px; padding:20px;
-            background:white; border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow);
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
         }
-        .sh-icon { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:32px; background:var(--accent-light); }
-        .sh-name { font-size:18px; font-weight:700; }
-        .sh-type { font-size:12px; color:var(--text-2); margin-top:2px; }
-
-        .status-badge {
-            display:inline-flex; align-items:center; gap:6px;
-            padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600;
+        .form-toggle {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-2);
         }
-        .status-badge.online { background:var(--green-bg); color:var(--green); }
-        .status-badge.offline { background:var(--bg-input); color:var(--text-3); }
-
-        .toggle-btn {
-            width:100%; padding:20px; border:none; border-radius:var(--radius);
-            font-size:17px; font-weight:700; cursor:pointer; margin-bottom:24px;
-            transition:all .3s; font-family:inherit;
-        }
-        .toggle-btn.go-online { background:var(--green); color:white; box-shadow:0 4px 12px rgba(34,197,94,.3); }
-        .toggle-btn.go-offline { background:var(--red); color:white; box-shadow:0 4px 12px rgba(239,68,68,.3); }
-        .toggle-btn:active { transform:scale(.98); }
-
-        .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
-        .stat-card {
-            background:white; border-radius:var(--radius); padding:20px; text-align:center;
-            border:1px solid var(--border); box-shadow:var(--shadow);
-        }
-        .stat-val { font-size:28px; font-weight:800; }
-        .stat-val.green { color:var(--green); }
-        .stat-val.orange { color:var(--accent); }
-        .stat-label { font-size:11px; color:var(--text-3); margin-top:4px; text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
-
-        .menu-count { font-size:13px; color:var(--text-2); margin-bottom:10px; }
-        .menu-count span { color:var(--accent); font-weight:700; }
-
-        .menu-item {
-            display:flex; justify-content:space-between; align-items:center;
-            padding:14px; background:white; border-radius:var(--radius-sm); margin-bottom:8px;
-            border:1px solid var(--border);
-        }
-        .menu-item-name { font-size:14px; font-weight:600; }
-        .menu-item-price { color:var(--accent-dark); font-size:14px; font-weight:700; }
-        .menu-item-delete { background:none; border:none; color:var(--red); cursor:pointer; padding:8px; font-size:16px; }
-
-        .add-menu-form { display:flex; gap:8px; margin-top:16px; }
-        .add-menu-form input { flex:1; }
-        .add-menu-form button {
-            padding:12px 20px; background:var(--accent); border:none;
-            border-radius:var(--radius-sm); color:white; cursor:pointer; font-weight:600; font-family:inherit;
+        .form-toggle a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
         }
 
-        /* ===== Reviews ===== */
-        .star-select { display:flex; gap:6px; justify-content:center; margin:16px 0; }
-        .star-select .s { font-size:36px; cursor:pointer; color:#d1d5db; transition:all .15s; }
-        .star-select .s.on { color:#f59e0b; }
-        .star-select .s:hover { transform:scale(1.15); }
+        /* ===== Merchant Detail Modal ===== */
+        .detail-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 300;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .detail-modal.open { display: flex; }
+        .detail-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 100%;
+            max-width: 480px;
+            margin-top: 20px;
+        }
+        .detail-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .detail-icon { font-size: 48px; margin-bottom: 8px; }
+        .detail-name { font-size: 22px; font-weight: 700; }
+        .detail-type { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+        .detail-rating {
+            margin-top: 8px;
+            color: var(--warning);
+            font-size: 16px;
+        }
+        .detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .detail-info-item { font-size: 13px; color: var(--text-2); }
+        .detail-section { margin-top: 20px; }
+        .detail-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .review-form {
+            background: var(--bg-gray);
+            padding: 16px;
+            border-radius: var(--radius);
+            margin-top: 12px;
+        }
+        .star-picker {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .star-picker span {
+            font-size: 32px;
+            cursor: pointer;
+            color: #ddd;
+            transition: all 0.15s;
+        }
+        .star-picker span.active { color: var(--warning); }
+        .star-picker span:hover { transform: scale(1.15); }
         .review-textarea {
-            width:100%; min-height:80px; padding:12px; background:var(--bg-input);
-            border:1px solid transparent; border-radius:var(--radius-sm);
-            color:var(--text); font-size:14px; resize:vertical; margin-bottom:16px; font-family:inherit;
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 12px;
         }
-        .review-textarea:focus { border-color:var(--accent); outline:none; background:white; }
-
-        .review-card {
-            padding:14px; background:var(--bg-input); border-radius:var(--radius-sm); margin-bottom:8px;
+        .review-item {
+            background: var(--bg-gray);
+            padding: 12px;
+            border-radius: var(--radius);
+            margin-bottom: 8px;
         }
-        .rc-stars { color:#f59e0b; font-size:13px; margin-bottom:4px; }
-        .rc-text { color:var(--text-2); font-size:13px; line-height:1.5; }
+        .review-item-stars { color: var(--warning); font-size: 13px; margin-bottom: 4px; }
+        .review-item-text { font-size: 13px; color: var(--text-2); line-height: 1.5; }
 
-        .gps-hint {
-            display:flex; align-items:center; gap:6px; padding:12px 14px;
-            background:#fff7ed; border-radius:var(--radius-sm); margin-bottom:16px;
-            font-size:12px; color:var(--accent-dark); font-weight:500;
+        /* ===== Toast ===== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            background: white;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            font-size: 13px;
+            font-weight: 500;
+            pointer-events: auto;
+            animation: toastIn 0.3s ease;
+        }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.info { border-left: 4px solid var(--primary); }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== Empty state ===== */
-        .empty-state { text-align:center; padding:40px 20px; color:var(--text-3); }
-        .empty-state .em-icon { font-size:48px; margin-bottom:12px; }
-        .empty-state .em-text { font-size:14px; }
+        /* ===== Empty State ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-3);
+        }
+        .empty-icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-text { font-size: 14px; }
 
-        /* ===== Leaflet overrides ===== */
-        .leaflet-popup-content-wrapper { border-radius:12px!important; box-shadow:var(--shadow-lg)!important; }
-        .leaflet-popup-content { margin:12px 16px!important; font-family:'Inter',sans-serif!important; }
-        .popup-rich .pr-name { font-size:14px; font-weight:700; margin-bottom:2px; }
-        .popup-rich .pr-type { font-size:12px; color:var(--text-2); margin-bottom:4px; }
-        .popup-rich .pr-stars { color:#f59e0b; font-size:12px; margin-bottom:4px; }
-        .popup-rich .pr-dist { font-size:12px; color:var(--accent); font-weight:600; }
+        /* ===== Leaflet Popup ===== */
+        .leaflet-popup-content-wrapper { border-radius: 12px !important; }
+        .leaflet-popup-content { margin: 12px 14px !important; font-family: 'Inter', sans-serif !important; }
+        .popup-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+        .popup-type { font-size: 12px; color: var(--text-2); }
+        .popup-rating { color: var(--warning); font-size: 13px; margin-top: 4px; }
 
-        .footer-ver { position:fixed; bottom:56px; left:0; right:0; text-align:center; font-size:10px; color:var(--text-3); padding:4px; }
+        /* ===== Loading ===== */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.8);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .loading-overlay.show { display: flex; }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { margin-top: 12px; font-size: 14px; color: var(--text-2); }
     </style>
 </head>
 <body>
-    <!-- Splash -->
-    <div class="splash" id="splash">
-        <div class="splash-logo">🍜</div>
-        <div class="splash-brand">NearBite</div>
-        <div class="splash-tagline" data-i18n="splash_tagline">发现身边的好味道</div>
-        <div class="splash-loader"></div>
-    </div>
-
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div class="msg" id="loadingMsg">Loading...</div>
-    </div>
-
-    <div class="toast-container" id="toastBox"></div>
-
     <!-- Header -->
     <header class="app-header">
-        <div class="header-left">
-            <span class="header-logo">🍜</span>
-            <span class="header-brand">NearBite</span>
+        <a href="/" class="logo">
+            <span class="logo-icon">🍜</span>
+            <span>NearBite</span>
+        </a>
+        <div class="search-box">
+            <input type="text" id="searchInput" data-i18n-placeholder="search_placeholder" placeholder="搜索商户或菜品...">
         </div>
-        <button class="lang-btn" id="langBtn" onclick="toggleLang()">EN</button>
+        <div class="header-actions">
+            <a href="/merchant" class="btn btn-outline btn-sm" data-i18n="btn_merchant">我是商家</a>
+            <button class="btn btn-primary btn-sm" id="loginBtn" onclick="showLogin()" data-i18n="btn_login">登录</button>
+            <button class="btn btn-outline btn-sm" id="langBtn" onclick="toggleLang()">EN</button>
+        </div>
     </header>
 
-    <!-- Tab Nav -->
-    <nav class="tab-nav">
-        <button class="tab-btn active" data-tab="buyer">
-            <span class="t-icon">🔍</span><span data-i18n="tab_discover">发现</span>
-        </button>
-        <button class="tab-btn" data-tab="seller">
-            <span class="t-icon">🏪</span><span data-i18n="tab_merchant">商户</span>
-        </button>
-    </nav>
-
-    <!-- ===== Buyer Page ===== -->
-    <div id="buyer-page" class="page active">
-        <div class="location-bar" id="locBar">
-            <span class="dot wait" id="locDot"></span>
-            <span id="locText" data-i18n="loc_loading">正在获取位置…</span>
-        </div>
-
-        <div class="search-bar">
-            <input type="text" class="search-input" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="搜索商户或菜品...">
-            <button class="icon-btn primary" onclick="searchMerchants()">🔍</button>
-            <button class="icon-btn secondary" onclick="refreshNearby()">🔄</button>
-        </div>
-
-        <div id="map"></div>
-
-        <h3 class="section-title">
-            <span data-i18n="nearby_title">附近商户</span>
-            <span class="section-count" id="merchantCount"></span>
-        </h3>
-        <div class="merchant-list" id="merchant-list"></div>
+    <!-- Location Bar -->
+    <div class="location-bar">
+        <span class="loc-dot loading" id="locDot"></span>
+        <span id="locText" data-i18n="loc_loading">正在获取位置...</span>
     </div>
 
-    <!-- ===== Seller Page ===== -->
-    <div id="seller-page" class="page">
-        <div id="seller-login">
-            <div style="text-align:center;margin-bottom:32px;">
-                <div style="font-size:48px;margin-bottom:8px;">🏪</div>
-                <h2 class="section-title" style="justify-content:center;" data-i18n="seller_login_title">商家登录</h2>
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Nearby Section -->
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title" data-i18n="nearby_title">附近商户</h2>
+            <span class="section-count" id="merchantCount"></span>
+        </div>
+        <div class="merchant-list" id="merchantList"></div>
+    </div>
+
+    <!-- Cart Button -->
+    <button class="cart-btn" onclick="toggleCart()">
+        🛒
+        <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+    </button>
+
+    <!-- Cart Panel -->
+    <div class="cart-panel" id="cartPanel">
+        <div class="cart-header">
+            <span class="cart-title" data-i18n="cart_title">购物车</span>
+            <button class="cart-close" onclick="toggleCart()">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- Cart items rendered here -->
+        </div>
+        <div class="cart-footer">
+            <textarea class="cart-note" id="orderNote" data-i18n-placeholder="note_placeholder" placeholder="备注：如少辣、多葱等..."></textarea>
+            <div class="pickup-options">
+                <button class="pickup-opt active" data-method="pickup" onclick="setPickupMethod('pickup')" data-i18n="pickup_self">自取</button>
+                <button class="pickup-opt" data-method="table" onclick="setPickupMethod('table')" data-i18n="pickup_table">送桌</button>
+            </div>
+            <div class="table-input" id="tableInput">
+                <input type="text" id="tableNumber" data-i18n-placeholder="table_placeholder" placeholder="请输入桌号">
+            </div>
+            <div class="cart-total">
+                <span data-i18n="total">合计</span>
+                <span class="cart-total-price" id="cartTotal">$0</span>
+            </div>
+            <button class="checkout-btn" id="checkoutBtn" onclick="checkout()" data-i18n="btn_checkout">确认下单</button>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content" style="position:relative;">
+            <button class="modal-close" onclick="closeLogin()">&times;</button>
+            <div class="modal-header">
+                <h2 id="loginTitle" data-i18n="login_title">登录</h2>
+                <p id="loginSubtitle" data-i18n="login_subtitle">登录后可下单和评价</p>
             </div>
             <div class="form-group">
                 <label class="form-label" data-i18n="label_phone">手机号</label>
-                <input type="tel" class="form-input" id="login-phone" data-i18n-placeholder="ph_phone" placeholder="请输入手机号">
+                <input type="tel" class="form-input" id="phoneInput" data-i18n-placeholder="phone_placeholder" placeholder="请输入手机号">
             </div>
             <div class="form-group">
                 <label class="form-label" data-i18n="label_password">密码</label>
-                <input type="password" class="form-input" id="login-password" data-i18n-placeholder="ph_password" placeholder="请输入密码">
+                <input type="password" class="form-input" id="passwordInput" data-i18n-placeholder="password_placeholder" placeholder="请输入密码">
             </div>
-            <button class="form-btn primary" onclick="doLogin()" data-i18n="btn_login">登录</button>
-            <button class="form-btn secondary" onclick="doRegisterAccount()" data-i18n="btn_register">注册新账号</button>
-        </div>
-
-        <div id="register-merchant" style="display:none;">
-            <div style="text-align:center;margin-bottom:24px;">
-                <div style="font-size:48px;margin-bottom:8px;">📝</div>
-                <h2 class="section-title" style="justify-content:center;" data-i18n="reg_title">注册商户</h2>
-                <p style="color:var(--text-2);font-size:13px;" data-i18n="reg_subtitle">请填写商户信息完成注册</p>
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="label_shop_name">商户名称</label>
-                <input type="text" class="form-input" id="reg-name" data-i18n-placeholder="ph_shop_name" placeholder="例如：川味小馆">
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="label_type">商户类型</label>
-                <select class="form-select" id="reg-type">
-                    <option value="food_truck" data-i18n="type_food_truck">🚚 餐车 Food Truck</option>
-                    <option value="cafe" data-i18n="type_cafe">☕ 咖啡厅 Cafe</option>
-                    <option value="bakery" data-i18n="type_bakery">🍞 面包店 Bakery</option>
-                    <option value="other" data-i18n="type_other">📦 其他 Other</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="label_contact_phone">联系电话</label>
-                <input type="tel" class="form-input" id="reg-phone" placeholder="+64 ...">
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="label_address">地址描述</label>
-                <input type="text" class="form-input" id="reg-address" data-i18n-placeholder="ph_address" placeholder="例如：基督城市中心广场旁">
-            </div>
-            <div class="gps-hint">📍 <span data-i18n="gps_hint">注册时将自动获取您的GPS定位作为商户位置</span></div>
-            <button class="form-btn green" onclick="registerMerchant()" data-i18n="btn_reg_merchant">✅ 注册商户</button>
-            <button class="form-btn secondary" onclick="cancelRegister()" data-i18n="btn_back">返回</button>
-        </div>
-
-        <div id="seller-panel" style="display:none;">
-            <div class="seller-header">
-                <div class="sh-icon" id="shIcon">🏪</div>
-                <div>
-                    <div class="sh-name" id="shName">商户名称</div>
-                    <div class="sh-type" id="shType">类型</div>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-val green" id="statOrders">0</div>
-                    <div class="stat-label" data-i18n="stat_orders">今日订单</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-val orange" id="statRevenue">$0</div>
-                    <div class="stat-label" data-i18n="stat_revenue">今日收入</div>
-                </div>
-            </div>
-
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-                <div class="status-badge" id="status-badge" data-i18n="status_offline">离线</div>
-            </div>
-            <button class="toggle-btn go-online" id="toggle-btn" onclick="toggleStatus()" data-i18n="btn_go_online">🟢 上线营业</button>
-
-            <h3 class="section-title" data-i18n="menu_title">📋 菜单管理</h3>
-            <div class="menu-count" id="menuCount"></div>
-            <div id="menu-list"></div>
-
-            <div class="add-menu-form">
-                <input type="text" class="form-input" id="new-menu-name" data-i18n-placeholder="ph_dish_name" placeholder="菜品名称">
-                <input type="number" class="form-input" id="new-menu-price" data-i18n-placeholder="ph_price" placeholder="价格" style="width:80px;">
-                <button onclick="addMenuItem()" data-i18n="btn_add">添加</button>
-            </div>
-
-            <button class="form-btn secondary" style="margin-top:24px;" onclick="logout()" data-i18n="btn_logout">退出登录</button>
+            <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="submitAuth()" id="authBtn" data-i18n="btn_login">登录</button>
+            <p class="form-toggle">
+                <span id="toggleText" data-i18n="no_account">还没有账号？</span>
+                <a href="javascript:void(0)" onclick="toggleAuthMode()" id="toggleLink" data-i18n="btn_register">注册</a>
+            </p>
         </div>
     </div>
 
     <!-- Merchant Detail Modal -->
-    <div class="modal" id="merchant-modal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">&times;</button>
-            <div id="modal-icon" style="font-size:48px;text-align:center;margin-bottom:8px;"></div>
-            <h2 id="modal-name" style="font-size:20px;font-weight:700;text-align:center;margin-bottom:4px;"></h2>
-            <p id="modal-type" style="color:var(--text-2);text-align:center;margin-bottom:6px;font-size:13px;"></p>
-            <p id="modal-rating" style="color:#f59e0b;text-align:center;margin-bottom:6px;font-size:15px;"></p>
-            <p id="modal-addr" style="color:var(--text-2);text-align:center;font-size:12px;margin-bottom:2px;"></p>
-            <p id="modal-phone" style="color:var(--text-2);text-align:center;font-size:12px;margin-bottom:20px;"></p>
-            <h3 class="section-title" data-i18n="detail_menu">📋 菜单</h3>
-            <div id="modal-menu"></div>
-            <h3 class="section-title" style="margin-top:20px;" data-i18n="detail_reviews">💬 评价</h3>
-            <div id="modal-reviews"></div>
-        </div>
-    </div>
-
-    <!-- Review Modal -->
-    <div class="modal" id="review-modal">
-        <div class="modal-content" style="text-align:center;">
-            <button class="modal-close" onclick="closeReview()">&times;</button>
-            <h2 class="section-title" style="justify-content:center;" data-i18n="write_review">⭐ 写评价</h2>
-            <p id="review-for" style="color:var(--text-2);margin-bottom:16px;"></p>
-            <div class="star-select" id="starSelect">
-                <span class="s" data-v="1">★</span><span class="s" data-v="2">★</span>
-                <span class="s" data-v="3">★</span><span class="s" data-v="4">★</span>
-                <span class="s" data-v="5">★</span>
+    <div class="detail-modal" id="detailModal">
+        <div class="detail-content">
+            <button class="modal-close" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;" onclick="closeDetail()">&times;</button>
+            <div class="detail-header">
+                <div class="detail-icon" id="detailIcon"></div>
+                <div class="detail-name" id="detailName"></div>
+                <div class="detail-type" id="detailType"></div>
+                <div class="detail-rating" id="detailRating"></div>
             </div>
-            <textarea class="review-textarea" id="review-text" data-i18n-placeholder="ph_review" placeholder="分享您的体验…"></textarea>
-            <button class="form-btn green" onclick="submitReview()" data-i18n="btn_submit_review">提交评价</button>
+            <div class="detail-info" id="detailInfo"></div>
+            <div class="detail-section">
+                <h3 class="detail-section-title">📋 <span data-i18n="menu_title">菜单</span></h3>
+                <div id="detailMenu"></div>
+            </div>
+            <div class="detail-section">
+                <h3 class="detail-section-title">💬 <span data-i18n="reviews_title">评价</span></h3>
+                <div id="detailReviews"></div>
+                <div class="review-form" id="reviewForm" style="display:none;">
+                    <div class="star-picker" id="starPicker">
+                        <span data-star="1">★</span>
+                        <span data-star="2">★</span>
+                        <span data-star="3">★</span>
+                        <span data-star="4">★</span>
+                        <span data-star="5">★</span>
+                    </div>
+                    <textarea class="review-textarea" id="reviewText" data-i18n-placeholder="review_placeholder" placeholder="分享您的用餐体验..."></textarea>
+                    <button class="btn btn-primary" style="width:100%;" onclick="submitReview()" data-i18n="btn_submit_review">提交评价</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="footer-ver">NearBite v0.3.0</div>
+    <!-- Order Status Modal -->
+    <div class="order-modal" id="orderModal">
+        <div class="order-content">
+            <button class="modal-close" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;" onclick="closeOrder()">&times;</button>
+            <div class="order-header">
+                <h2 data-i18n="order_status">订单状态</h2>
+                <div class="order-id" id="orderId"></div>
+            </div>
+            <div class="order-progress" id="orderProgress">
+                <div class="progress-step">
+                    <div class="step-dot" id="step0">1</div>
+                    <div class="step-label" data-i18n="status_pending">待接单</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-dot" id="step1">2</div>
+                    <div class="step-label" data-i18n="status_accepted">已接单</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-dot" id="step2">3</div>
+                    <div class="step-label" data-i18n="status_preparing">制作中</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-dot" id="step3">4</div>
+                    <div class="step-label" data-i18n="status_ready">已完成</div>
+                </div>
+            </div>
+            <div class="order-items-list" id="orderItemsList"></div>
+            <div class="order-note" id="orderNoteDisplay" style="display:none;"></div>
+            <button class="btn btn-outline" style="width:100%;margin-top:12px;" onclick="closeOrder()" data-i18n="btn_close">关闭</button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Loading...</div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-    /* ===== i18n ===== */
-    const LANG = {
-        zh: {
-            splash_tagline: '发现身边的好味道',
-            tab_discover: '发现', tab_merchant: '商户',
-            loc_loading: '正在获取位置…', loc_ok: '📍 已定位', loc_fail: '定位失败，使用默认位置',
-            search_placeholder: '搜索商户或菜品...',
-            nearby_title: '附近商户', merchant_count: '{n} 家',
-            seller_login_title: '商家登录',
-            label_phone: '手机号', label_password: '密码',
-            ph_phone: '请输入手机号', ph_password: '请输入密码',
-            btn_login: '登录', btn_register: '注册新账号',
-            reg_title: '注册商户', reg_subtitle: '请填写商户信息完成注册',
-            label_shop_name: '商户名称', label_type: '商户类型',
-            label_contact_phone: '联系电话', label_address: '地址描述',
-            ph_shop_name: '例如：川味小馆', ph_address: '例如：基督城市中心广场旁',
-            gps_hint: '注册时将自动获取您的GPS定位作为商户位置',
-            btn_reg_merchant: '✅ 注册商户', btn_back: '返回',
-            stat_orders: '今日订单', stat_revenue: '今日收入',
-            status_online: '🟢 在线营业中', status_offline: '⏸️ 离线',
-            btn_go_online: '🟢 上线营业', btn_go_offline: '🔴 停止营业',
-            menu_title: '📋 菜单管理', menu_count: '当前菜品：{n} 道',
-            ph_dish_name: '菜品名称', ph_price: '价格', btn_add: '添加',
-            btn_logout: '退出登录',
-            detail_menu: '📋 菜单', detail_reviews: '💬 评价',
-            write_review: '⭐ 写评价', ph_review: '分享您的体验…',
-            btn_submit_review: '提交评价',
-            no_menu: '暂无菜单', no_reviews: '暂无评价',
-            toast_refreshed: '已刷新', toast_login_ok: '登录成功',
-            toast_reg_ok: '商户注册成功 🎉', toast_added: '已添加 ✅',
-            toast_deleted: '已删除', toast_review_ok: '评价已提交 ✅',
-            toast_online: '已上线营业 ✅', toast_offline: '已下线 ⏸️',
-            toast_logout: '已退出登录',
-            type_food_truck: '🚚 餐车', type_cafe: '☕ 咖啡厅', type_bakery: '🍞 面包店', type_other: '📦 其他',
-            empty_nearby: '附近没有在线商户',
-        },
-        en: {
-            splash_tagline: 'Discover local food near you',
-            tab_discover: 'Discover', tab_merchant: 'Merchant',
-            loc_loading: 'Getting location…', loc_ok: '📍 Located', loc_fail: 'Location failed, using default',
-            search_placeholder: 'Search merchants or dishes...',
-            nearby_title: 'Nearby', merchant_count: '{n} found',
-            seller_login_title: 'Merchant Login',
-            label_phone: 'Phone', label_password: 'Password',
-            ph_phone: 'Enter phone number', ph_password: 'Enter password',
-            btn_login: 'Login', btn_register: 'Create Account',
-            reg_title: 'Register Merchant', reg_subtitle: 'Fill in your business info to get started',
-            label_shop_name: 'Business Name', label_type: 'Business Type',
-            label_contact_phone: 'Contact Phone', label_address: 'Address',
-            ph_shop_name: 'e.g. Mike\'s Food Truck', ph_address: 'e.g. Cathedral Square, Christchurch',
-            gps_hint: 'Your GPS location will be used as your business location',
-            btn_reg_merchant: '✅ Register', btn_back: 'Back',
-            stat_orders: 'Orders Today', stat_revenue: 'Revenue Today',
-            status_online: '🟢 Open', status_offline: '⏸️ Closed',
-            btn_go_online: '🟢 Go Online', btn_go_offline: '🔴 Go Offline',
-            menu_title: '📋 Menu', menu_count: '{n} items',
-            ph_dish_name: 'Dish name', ph_price: 'Price', btn_add: 'Add',
-            btn_logout: 'Logout',
-            detail_menu: '📋 Menu', detail_reviews: '💬 Reviews',
-            write_review: '⭐ Write Review', ph_review: 'Share your experience…',
-            btn_submit_review: 'Submit Review',
-            no_menu: 'No menu items yet', no_reviews: 'No reviews yet',
-            toast_refreshed: 'Refreshed', toast_login_ok: 'Login successful',
-            toast_reg_ok: 'Merchant registered 🎉', toast_added: 'Added ✅',
-            toast_deleted: 'Deleted', toast_review_ok: 'Review submitted ✅',
-            toast_online: 'You are now online ✅', toast_offline: 'You are now offline ⏸️',
-            toast_logout: 'Logged out',
-            type_food_truck: '🚚 Food Truck', type_cafe: '☕ Cafe', type_bakery: '🍞 Bakery', type_other: '📦 Other',
-            empty_nearby: 'No merchants nearby',
-        }
-    };
+        // ===== i18n =====
+        const i18n = {
+            zh: {
+                search_placeholder: '搜索商户或菜品...',
+                btn_merchant: '我是商家',
+                btn_login: '登录',
+                btn_logout: '退出',
+                loc_loading: '正在获取位置...',
+                loc_success: '已定位',
+                loc_error: '定位失败，使用默认位置',
+                nearby_title: '附近商户',
+                merchant_count: '共 {n} 家',
+                cart_title: '购物车',
+                note_placeholder: '备注：如少辣、多葱等...',
+                pickup_self: '自取',
+                pickup_table: '送桌',
+                table_placeholder: '请输入桌号',
+                total: '合计',
+                btn_checkout: '确认下单',
+                login_title: '登录',
+                register_title: '注册',
+                login_subtitle: '登录后可下单和评价',
+                register_subtitle: '创建账号开始使用',
+                label_phone: '手机号',
+                label_password: '密码',
+                phone_placeholder: '请输入手机号',
+                password_placeholder: '请输入密码',
+                no_account: '还没有账号？',
+                have_account: '已有账号？',
+                btn_register: '注册',
+                menu_title: '菜单',
+                reviews_title: '评价',
+                review_placeholder: '分享您的用餐体验...',
+                btn_submit_review: '提交评价',
+                order_status: '订单状态',
+                status_pending: '待接单',
+                status_accepted: '已接单',
+                status_preparing: '制作中',
+                status_ready: '已完成',
+                btn_close: '关闭',
+                empty_nearby: '附近暂无在线商户',
+                empty_cart: '购物车是空的',
+                toast_login_success: '登录成功',
+                toast_register_success: '注册成功',
+                toast_order_success: '下单成功！',
+                toast_review_success: '评价已提交',
+                toast_added: '已添加到购物车',
+                no_menu: '暂无菜单',
+                no_reviews: '暂无评价',
+                write_review: '写评价'
+            },
+            en: {
+                search_placeholder: 'Search merchants or dishes...',
+                btn_merchant: 'I\'m a Merchant',
+                btn_login: 'Login',
+                btn_logout: 'Logout',
+                loc_loading: 'Getting location...',
+                loc_success: 'Located',
+                loc_error: 'Location failed, using default',
+                nearby_title: 'Nearby',
+                merchant_count: '{n} found',
+                cart_title: 'Cart',
+                note_placeholder: 'Note: e.g. less spicy...',
+                pickup_self: 'Pickup',
+                pickup_table: 'To Table',
+                table_placeholder: 'Enter table number',
+                total: 'Total',
+                btn_checkout: 'Place Order',
+                login_title: 'Login',
+                register_title: 'Register',
+                login_subtitle: 'Login to order and review',
+                register_subtitle: 'Create an account to get started',
+                label_phone: 'Phone',
+                label_password: 'Password',
+                phone_placeholder: 'Enter phone number',
+                password_placeholder: 'Enter password',
+                no_account: 'No account?',
+                have_account: 'Have an account?',
+                btn_register: 'Register',
+                menu_title: 'Menu',
+                reviews_title: 'Reviews',
+                review_placeholder: 'Share your experience...',
+                btn_submit_review: 'Submit Review',
+                order_status: 'Order Status',
+                status_pending: 'Pending',
+                status_accepted: 'Accepted',
+                status_preparing: 'Preparing',
+                status_ready: 'Ready',
+                btn_close: 'Close',
+                empty_nearby: 'No merchants nearby',
+                empty_cart: 'Cart is empty',
+                toast_login_success: 'Login successful',
+                toast_register_success: 'Registration successful',
+                toast_order_success: 'Order placed!',
+                toast_review_success: 'Review submitted',
+                toast_added: 'Added to cart',
+                no_menu: 'No menu available',
+                no_reviews: 'No reviews yet',
+                write_review: 'Write Review'
+            }
+        };
 
-    let currentLang = localStorage.getItem('lang') || 'zh';
+        let lang = localStorage.getItem('lang') || 'zh';
+        let isRegisterMode = false;
 
-    function t(key, vars) {
-        let s = (LANG[currentLang] && LANG[currentLang][key]) || (LANG.zh[key]) || key;
-        if (vars) Object.keys(vars).forEach(k => s = s.replace(`{${k}}`, vars[k]));
-        return s;
-    }
-
-    function applyLang() {
-        document.getElementById('langBtn').textContent = currentLang === 'zh' ? 'EN' : '中文';
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            el.textContent = t(el.dataset.i18n);
-        });
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-            el.placeholder = t(el.dataset.i18nPlaceholder);
-        });
-    }
-
-    function toggleLang() {
-        currentLang = currentLang === 'zh' ? 'en' : 'zh';
-        localStorage.setItem('lang', currentLang);
-        applyLang();
-        if (merchants.length) renderMerchants();
-    }
-
-    /* ===== Config ===== */
-    const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-        ? '/api' : '/api';
-    const DEFAULT_CENTER = { lat: -43.532, lng: 172.636 };
-    const TYPE_ICON = { food_truck:'🚚', cafe:'☕', bakery:'🍞', other:'📦' };
-
-    function typeName(type) {
-        const key = 'type_' + type;
-        return t(key) || type;
-    }
-
-    /* ===== State ===== */
-    let map = null, markers = [], merchants = [], currentMerchant = null;
-    let menuItems = [], userLoc = null, userLocMarker = null;
-    let reviewMerchantId = null, selectedStars = 0;
-
-    /* ===== Splash ===== */
-    setTimeout(() => { const sp=document.getElementById('splash'); sp.classList.add('hide'); setTimeout(()=>sp.remove(),500); }, 1200);
-
-    /* ===== Toast ===== */
-    function toast(msg, type='info') {
-        const el=document.createElement('div'); el.className='toast '+type; el.textContent=msg;
-        document.getElementById('toastBox').appendChild(el); setTimeout(()=>el.remove(),3200);
-    }
-
-    function showLoading(msg) { document.getElementById('loadingMsg').textContent=msg||'...'; document.getElementById('loadingOverlay').classList.add('active'); }
-    function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
-
-    /* ===== GPS ===== */
-    function getGPS() {
-        return new Promise(r => {
-            if(!navigator.geolocation) return r(null);
-            navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lng:p.coords.longitude}),()=>r(null),{enableHighAccuracy:true,timeout:8000});
-        });
-    }
-
-    async function initUserLocation() {
-        const dot=document.getElementById('locDot'), txt=document.getElementById('locText');
-        dot.className='dot wait'; txt.textContent=t('loc_loading');
-        const loc=await getGPS();
-        if(loc) { userLoc=loc; dot.className='dot ok'; txt.textContent=t('loc_ok')+` (${loc.lat.toFixed(3)}, ${loc.lng.toFixed(3)})`; if(map)map.setView([loc.lat,loc.lng],14); showUserMarker(); }
-        else { userLoc=DEFAULT_CENTER; dot.className='dot fail'; txt.textContent=t('loc_fail'); }
-    }
-
-    function showUserMarker() {
-        if(!map||!userLoc)return;
-        if(userLocMarker)map.removeLayer(userLocMarker);
-        userLocMarker=L.circleMarker([userLoc.lat,userLoc.lng],{radius:8,fillColor:'#f97316',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup('📍 You');
-    }
-
-    /* ===== Tabs ===== */
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.tab+'-page').classList.add('active');
-            if(btn.dataset.tab==='buyer'&&map) setTimeout(()=>map.invalidateSize(),120);
-        });
-    });
-
-    /* ===== Map ===== */
-    function initMap() {
-        if(map)return;
-        const c=userLoc||DEFAULT_CENTER;
-        map=L.map('map').setView([c.lat,c.lng],14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
-    }
-
-    /* ===== API ===== */
-    async function apiCall(endpoint, options={}) {
-        const token=localStorage.getItem('token');
-        const headers={'Content-Type':'application/json'};
-        if(token) headers['Authorization']='Bearer '+token;
-        const r=await fetch(API_BASE+endpoint, {...options, headers:{...headers,...options.headers}});
-        if(!r.ok) { const err=await r.json().catch(()=>({})); throw new Error(err.error||err.message||'Failed'); }
-        return r.json();
-    }
-
-    /* ===== Stars ===== */
-    function starsStr(r) { const f=Math.round(r); return '★'.repeat(f)+'☆'.repeat(5-f); }
-
-    /* ===== Mock Data ===== */
-    function getMockMerchants() {
-        return [
-            {id:1,name:'川味小馆',nameEn:'Sichuan Kitchen',type:'food_truck',lat:-43.529,lng:172.638,rating:4.5,reviewCount:28,distance:0.5,status:'online',phone:'+64 21 123 456',address:'Cathedral Square',
-             menu:[{name:'麻婆豆腐 Mapo Tofu',price:18},{name:'宫保鸡丁 Kung Pao Chicken',price:22},{name:'酸辣汤 Hot & Sour Soup',price:10}],
-             reviews:[{stars:5,text:'味道超正宗！Amazing authentic taste!'},{stars:4,text:'Kung Pao Chicken is great'}]},
-            {id:2,name:'寿司太郎',nameEn:'Sushi Taro',type:'food_truck',lat:-43.535,lng:172.634,rating:4.8,reviewCount:56,distance:0.8,status:'online',phone:'+64 21 234 567',address:'Riccarton',
-             menu:[{name:'三文鱼刺身 Salmon Sashimi',price:28},{name:'鳗鱼寿司 Eel Sushi',price:15}],
-             reviews:[{stars:5,text:'Super fresh! 推荐'}]},
-            {id:4,name:'咖啡小镇',nameEn:'Coffee Town',type:'cafe',lat:-43.533,lng:172.635,rating:4.6,reviewCount:42,distance:0.3,status:'online',phone:'+64 21 345 678',address:'New Regent Street',
-             menu:[{name:'拿铁 Latte',price:6},{name:'卡布奇诺 Cappuccino',price:6.5},{name:'牛角包 Croissant',price:5}],
-             reviews:[{stars:5,text:'Best latte in town!'}]},
-            {id:5,name:'甜蜜时光',nameEn:'Sweet Time',type:'bakery',lat:-43.531,lng:172.637,rating:4.7,reviewCount:33,distance:0.4,status:'online',phone:'+64 21 456 789',address:'Colombo Street',
-             menu:[{name:'法式可颂 Croissant',price:5.5},{name:'巧克力蛋糕 Chocolate Cake',price:12},{name:'肉桂卷 Cinnamon Roll',price:7}],
-             reviews:[{stars:5,text:'肉桂卷绝了！Cinnamon rolls are incredible!'}]}
-        ];
-    }
-
-    /* ===== Search / Refresh ===== */
-    async function searchMerchants() {
-        showLoading(currentLang==='zh'?'搜索中…':'Searching…');
-        const loc=userLoc||DEFAULT_CENTER;
-        try {
-            const data=await apiCall(`/merchants/nearby?lat=${loc.lat}&lng=${loc.lng}&radius=10`);
-            merchants=data.merchants||[];
-            if(!merchants.length) throw new Error('empty');
-        } catch(e) {
-            merchants=getMockMerchants().filter(m=>m.status==='online');
-        }
-        renderMerchants();
-        updateMapMarkers();
-        hideLoading();
-    }
-
-    async function refreshNearby() {
-        showLoading(currentLang==='zh'?'刷新位置…':'Refreshing…');
-        await initUserLocation();
-        hideLoading();
-        await searchMerchants();
-        toast(t('toast_refreshed'),'success');
-    }
-
-    /* ===== Render ===== */
-    function renderMerchants() {
-        const list=document.getElementById('merchant-list');
-        document.getElementById('merchantCount').textContent = t('merchant_count',{n:merchants.length});
-
-        if(!merchants.length) {
-            list.innerHTML=`<div class="empty-state"><div class="em-icon">🔍</div><div class="em-text">${t('empty_nearby')}</div></div>`;
-            return;
+        function t(key, vars) {
+            let str = i18n[lang][key] || i18n['zh'][key] || key;
+            if (vars) Object.keys(vars).forEach(k => str = str.replace(`{${k}}`, vars[k]));
+            return str;
         }
 
-        list.innerHTML = merchants.map(m => {
-            const icon = TYPE_ICON[m.type]||'📦';
-            const tname = typeName(m.type);
-            const dist = m.distance != null ? m.distance : '?';
-            const menuHtml = (m.menu||[]).map(i=>`<div class="card-menu-row"><span>${i.name}</span><span class="price">$${i.price}</span></div>`).join('') || `<div style="color:var(--text-3);font-size:13px;">${t('no_menu')}</div>`;
-            return `
-            <div class="merchant-card" onclick="showMerchantDetail(${m.id})">
-                <div class="mc-top">
-                    <div class="mc-name"><div class="mc-icon">${icon}</div>${m.name}</div>
-                    <span class="mc-dist">${dist}km</span>
+        function applyLang() {
+            document.getElementById('langBtn').textContent = lang === 'zh' ? 'EN' : '中文';
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                if (el.dataset.i18n) el.textContent = t(el.dataset.i18n);
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                if (el.dataset.i18nPlaceholder) el.placeholder = t(el.dataset.i18nPlaceholder);
+            });
+        }
+
+        function toggleLang() {
+            lang = lang === 'zh' ? 'en' : 'zh';
+            localStorage.setItem('lang', lang);
+            applyLang();
+            renderMerchants();
+        }
+
+        // ===== State =====
+        let map = null;
+        let markers = [];
+        let merchants = [];
+        let cart = [];
+        let currentMerchant = null;
+        let pickupMethod = 'pickup';
+        let selectedStars = 0;
+        let eventSource = null;
+
+        const TYPE_ICON = { food_truck: '🚚', cafe: '☕', bakery: '🍞', restaurant: '🍽️', other: '📦' };
+        const DEFAULT_CENTER = { lat: -43.532, lng: 172.636 };
+
+        // ===== Toast =====
+        function toast(msg, type = 'info') {
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.textContent = msg;
+            document.getElementById('toastContainer').appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+
+        // ===== Loading =====
+        function showLoading(msg) {
+            document.getElementById('loadingText').textContent = msg || '...';
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
+        // ===== API =====
+        async function api(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch('/api' + endpoint, {
+                ...options,
+                headers: { ...headers, ...options.headers }
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || err.message || 'Request failed');
+            }
+            return res.json();
+        }
+
+        // ===== GPS =====
+        async function getGPS() {
+            return new Promise(resolve => {
+                if (!navigator.geolocation) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                    pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    () => resolve(null),
+                    { enableHighAccuracy: true, timeout: 8000 }
+                );
+            });
+        }
+
+        async function initLocation() {
+            const dot = document.getElementById('locDot');
+            const text = document.getElementById('locText');
+            dot.className = 'loc-dot loading';
+            text.textContent = t('loc_loading');
+
+            const loc = await getGPS();
+            if (loc) {
+                userLoc = loc;
+                dot.className = 'loc-dot success';
+                text.textContent = `${t('loc_success')} (${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)})`;
+                if (map) map.setView([loc.lat, loc.lng], 14);
+                addUserMarker();
+            } else {
+                userLoc = DEFAULT_CENTER;
+                dot.className = 'loc-dot error';
+                text.textContent = t('loc_error');
+            }
+        }
+
+        function addUserMarker() {
+            if (!map || !userLoc) return;
+            L.circleMarker([userLoc.lat, userLoc.lng], {
+                radius: 8,
+                fillColor: '#ff6b35',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 1
+            }).addTo(map).bindPopup('📍 ' + (lang === 'zh' ? '你的位置' : 'You are here'));
+        }
+
+        let userLoc = null;
+
+        // ===== Map =====
+        function initMap() {
+            const center = userLoc || DEFAULT_CENTER;
+            map = L.map('map').setView([center.lat, center.lng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+        }
+
+        function updateMarkers() {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            merchants.forEach(m => {
+                const icon = TYPE_ICON[m.type] || '📦';
+                const customIcon = L.divIcon({
+                    html: `<div style="font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${icon}</div>`,
+                    className: '',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+                const marker = L.marker([m.location?.lat || m.lat, m.location?.lng || m.lng], { icon: customIcon }).addTo(map);
+                marker.bindPopup(`
+                    <div class="popup-name">${icon} ${m.name}</div>
+                    <div class="popup-type">${m.type}</div>
+                    <div class="popup-rating">${'★'.repeat(Math.round(m.rating || 0))}${'☆'.repeat(5 - Math.round(m.rating || 0))} ${m.rating || '-'}</div>
+                `);
+                markers.push(marker);
+            });
+
+            if (merchants.length) {
+                const group = L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+            addUserMarker();
+        }
+
+        // ===== Merchants =====
+        async function loadMerchants() {
+            showLoading(lang === 'zh' ? '加载中...' : 'Loading...');
+            const loc = userLoc || DEFAULT_CENTER;
+
+            try {
+                const data = await api(`/merchants/nearby?lat=${loc.lat}&lng=${loc.lng}&radius=10`);
+                merchants = data.merchants || [];
+            } catch (e) {
+                // Use mock data
+                merchants = [
+                    { id: 'm1', name: '川味小馆', nameEn: 'Sichuan Kitchen', type: 'food_truck', lat: -43.529, lng: 172.638, location: { lat: -43.529, lng: 172.638 }, rating: 4.5, reviewCount: 28, distance: 0.5, phone: '+64 21 123 456', address: 'Cathedral Square', description: '正宗川菜，麻辣鲜香', menuItems: [{ name: '麻婆豆腐', price: 18 }, { name: '宫保鸡丁', price: 22 }, { name: '酸辣汤', price: 10 }] },
+                    { id: 'm2', name: '寿司太郎', nameEn: 'Sushi Taro', type: 'food_truck', lat: -43.535, lng: 172.634, location: { lat: -43.535, lng: 172.634 }, rating: 4.8, reviewCount: 56, distance: 0.8, phone: '+64 21 234 567', address: 'Riccarton', description: '新鲜日本料理', menuItems: [{ name: '三文鱼刺身', price: 28 }, { name: '鳗鱼寿司', price: 15 }] },
+                    { id: 'm3', name: '咖啡小镇', nameEn: 'Coffee Town', type: 'cafe', lat: -43.533, lng: 172.635, location: { lat: -43.533, lng: 172.635 }, rating: 4.6, reviewCount: 42, distance: 0.3, phone: '+64 21 345 678', address: 'New Regent St', description: '精品咖啡与甜点', menuItems: [{ name: '拿铁', price: 6 }, { name: '卡布奇诺', price: 6.5 }, { name: '牛角包', price: 5 }] },
+                    { id: 'm4', name: '甜蜜时光', nameEn: 'Sweet Time', type: 'bakery', lat: -43.531, lng: 172.637, location: { lat: -43.531, lng: 172.637 }, rating: 4.7, reviewCount: 33, distance: 0.4, phone: '+64 21 456 789', address: 'Colombo St', description: '法式烘焙甜品', menuItems: [{ name: '可颂', price: 5.5 }, { name: '巧克力蛋糕', price: 12 }, { name: '肉桂卷', price: 7 }] }
+                ];
+            }
+
+            renderMerchants();
+            updateMarkers();
+            hideLoading();
+        }
+
+        function renderMerchants() {
+            const list = document.getElementById('merchantList');
+            document.getElementById('merchantCount').textContent = t('merchant_count', { n: merchants.length });
+
+            if (!merchants.length) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">${t('empty_nearby')}</div></div>`;
+                return;
+            }
+
+            list.innerHTML = merchants.map(m => {
+                const icon = TYPE_ICON[m.type] || '📦';
+                const dist = m.distance != null ? m.distance.toFixed(1) : '?';
+                const menu = m.menuItems || [];
+                const menuHtml = menu.length ? menu.map(item => `
+                    <div class="menu-item-row">
+                        <span class="menu-item-name">${item.name}</span>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="menu-item-price">$${item.price}</span>
+                            <button class="menu-item-add" onclick="addToCart('${m.id}', '${item.name}', ${item.price})">+</button>
+                        </div>
+                    </div>
+                `).join('') : `<div style="color:var(--text-3);padding:12px 0;">${t('no_menu')}</div>`;
+
+                return `
+                    <div class="merchant-card" onclick="showDetail('${m.id}')">
+                        <div class="mc-header">
+                            <div class="mc-info">
+                                <div class="mc-icon">${icon}</div>
+                                <div>
+                                    <div class="mc-name">${m.name}</div>
+                                    <div class="mc-type">${m.type}${m.address ? ' · ' + m.address : ''}</div>
+                                </div>
+                            </div>
+                            <div class="mc-distance">${dist} km</div>
+                        </div>
+                        <div class="mc-rating">
+                            <span class="mc-stars">${'★'.repeat(Math.round(m.rating || 0))}${'☆'.repeat(5 - Math.round(m.rating || 0))}</span>
+                            <span class="mc-rating-num">${m.rating || '-'}</span>
+                            <span class="mc-review-count">(${m.reviewCount || 0})</span>
+                        </div>
+                        <div class="mc-desc">${m.description || ''}</div>
+                        <div class="mc-menu-preview" id="menu-${m.id}" onclick="event.stopPropagation();">
+                            ${menuHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showDetail(id) {
+            const m = merchants.find(x => x.id === id);
+            if (!m) return;
+            currentMerchant = m;
+
+            document.getElementById('detailIcon').textContent = TYPE_ICON[m.type] || '📦';
+            document.getElementById('detailName').textContent = m.name;
+            document.getElementById('detailType').textContent = m.type + (m.address ? ' · ' + m.address : '');
+            document.getElementById('detailRating').textContent = '★'.repeat(Math.round(m.rating || 0)) + '☆'.repeat(5 - Math.round(m.rating || 0)) + ` ${m.rating || '-'} (${m.reviewCount || 0})`;
+
+            const info = [];
+            if (m.address) info.push(`📍 ${m.address}`);
+            if (m.phone) info.push(`📞 ${m.phone}`);
+            document.getElementById('detailInfo').innerHTML = info.map(i => `<div class="detail-info-item">${i}</div>`).join('');
+
+            const menu = m.menuItems || [];
+            document.getElementById('detailMenu').innerHTML = menu.length
+                ? menu.map(item => `
+                    <div class="menu-item-row">
+                        <span class="menu-item-name">${item.name}</span>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="menu-item-price">$${item.price}</span>
+                            <button class="menu-item-add" onclick="addToCart('${m.id}', '${item.name}', ${item.price});closeDetail();">+</button>
+                        </div>
+                    </div>
+                `).join('')
+                : `<div style="color:var(--text-3);padding:12px 0;">${t('no_menu')}</div>`;
+
+            // Reviews
+            loadReviews(id);
+
+            // Show review form if logged in
+            document.getElementById('reviewForm').style.display = localStorage.getItem('token') ? 'block' : 'none';
+
+            document.getElementById('detailModal').classList.add('open');
+        }
+
+        function closeDetail() {
+            document.getElementById('detailModal').classList.remove('open');
+        }
+
+        async function loadReviews(id) {
+            try {
+                const data = await api(`/merchants/${id}/reviews`);
+                const reviews = data.reviews || [];
+                document.getElementById('detailReviews').innerHTML = reviews.length
+                    ? reviews.map(r => `
+                        <div class="review-item">
+                            <div class="review-item-stars">${'★'.repeat(r.score)}${'☆'.repeat(5 - r.score)}</div>
+                            <div class="review-item-text">${r.comment}</div>
+                        </div>
+                    `).join('')
+                    : `<div style="color:var(--text-3);padding:12px 0;">${t('no_reviews')}</div>`;
+            } catch (e) {
+                document.getElementById('detailReviews').innerHTML = `<div style="color:var(--text-3);padding:12px 0;">${t('no_reviews')}</div>`;
+            }
+        }
+
+        // ===== Cart =====
+        function addToCart(merchantId, name, price) {
+            const item = cart.find(x => x.name === name);
+            if (item) {
+                item.qty++;
+            } else {
+                cart.push({ merchantId, name, price, qty: 1 });
+            }
+            updateCart();
+            toast(t('toast_added'), 'success');
+        }
+
+        function updateCart() {
+            const badge = document.getElementById('cartBadge');
+            const total = cart.reduce((sum, item) => sum + item.qty, 0);
+            badge.textContent = total;
+            badge.style.display = total ? 'flex' : 'none';
+
+            const itemsEl = document.getElementById('cartItems');
+            if (!cart.length) {
+                itemsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-text">${t('empty_cart')}</div></div>`;
+            } else {
+                itemsEl.innerHTML = cart.map((item, idx) => `
+                    <div class="cart-item">
+                        <div>
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-price">$${item.price}</div>
+                        </div>
+                        <div class="cart-item-qty">
+                            <button class="qty-btn" onclick="updateQty(${idx}, -1)">-</button>
+                            <span class="qty-num">${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQty(${idx}, 1)">+</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const totalPrice = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+            document.getElementById('cartTotal').textContent = `$${totalPrice.toFixed(2)}`;
+            document.getElementById('checkoutBtn').disabled = !cart.length;
+        }
+
+        function updateQty(idx, delta) {
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            updateCart();
+        }
+
+        function toggleCart() {
+            document.getElementById('cartPanel').classList.toggle('open');
+        }
+
+        function setPickupMethod(method) {
+            pickupMethod = method;
+            document.querySelectorAll('.pickup-opt').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.method === method);
+            });
+            document.getElementById('tableInput').classList.toggle('show', method === 'table');
+        }
+
+        // ===== Checkout =====
+        async function checkout() {
+            if (!cart.length) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showLogin();
+                return;
+            }
+
+            showLoading(lang === 'zh' ? '下单中...' : 'Placing order...');
+
+            const merchantId = cart[0].merchantId;
+            const items = cart.map(item => ({ name: item.name, qty: item.qty, price: item.price }));
+            const note = document.getElementById('orderNote').value;
+            const tableNumber = pickupMethod === 'table' ? document.getElementById('tableNumber').value : null;
+
+            try {
+                const data = await api('/orders', {
+                    method: 'POST',
+                    body: JSON.stringify({ merchantId, items, tableNumber, pickupMethod, note })
+                });
+                toast(t('toast_order_success'), 'success');
+                cart = [];
+                updateCart();
+                toggleCart();
+                showOrder(data.order);
+                subscribeOrder(data.order.id);
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+            hideLoading();
+        }
+
+        // ===== Order Status =====
+        function showOrder(order) {
+            document.getElementById('orderId').textContent = `#${order.id}`;
+            document.getElementById('orderItemsList').innerHTML = (order.items || []).map(item => `
+                <div class="order-item-row">
+                    <span>${item.name} x${item.qty}</span>
+                    <span>$${item.price * item.qty}</span>
                 </div>
-                <div class="mc-meta">${tname}${m.address?' · '+m.address:''}</div>
-                <div class="mc-rating">
-                    <span class="mc-stars">${starsStr(m.rating)}</span>
-                    <span class="mc-rating-num">${m.rating}</span>
-                    <span class="mc-rating-cnt">(${m.reviewCount||0})</span>
-                </div>
-                <div class="mc-actions" onclick="event.stopPropagation();">
-                    <button class="mc-btn orange" onclick="toggleCardMenu(${m.id})">📋 ${currentLang==='zh'?'菜单':'Menu'}</button>
-                    <button class="mc-btn blue-light" onclick="openReview(${m.id})">⭐ ${currentLang==='zh'?'评价':'Review'}</button>
-                </div>
-                <div class="card-menu" id="cmenu-${m.id}">${menuHtml}</div>
-            </div>`;
-        }).join('');
-    }
+            `).join('');
 
-    function toggleCardMenu(id) { const el=document.getElementById('cmenu-'+id); if(el)el.classList.toggle('show'); }
+            const noteEl = document.getElementById('orderNoteDisplay');
+            if (order.note) {
+                noteEl.textContent = `📝 ${order.note}`;
+                noteEl.style.display = 'block';
+            } else {
+                noteEl.style.display = 'none';
+            }
 
-    function updateMapMarkers() {
-        markers.forEach(m=>map.removeLayer(m)); markers=[];
-        merchants.forEach(m => {
-            const icon=TYPE_ICON[m.type]||'📦';
-            const ci=L.divIcon({html:`<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));">${icon}</div>`,className:'',iconSize:[30,30],iconAnchor:[15,15]});
-            const mk=L.marker([m.lat,m.lng],{icon:ci}).addTo(map);
-            mk.bindPopup(`<div class="popup-rich"><div class="pr-name">${icon} ${m.name}</div><div class="pr-type">${typeName(m.type)}</div><div class="pr-stars">${starsStr(m.rating)} ${m.rating}</div><div class="pr-dist">📍 ${m.distance||'?'}km</div></div>`);
-            markers.push(mk);
+            updateOrderProgress(order.status);
+            document.getElementById('orderModal').classList.add('open');
+        }
+
+        function updateOrderProgress(status) {
+            const statusMap = { pending: 0, accepted: 1, preparing: 2, ready: 3, picked_up: 3 };
+            const currentStep = statusMap[status] || 0;
+
+            for (let i = 0; i <= 3; i++) {
+                const dot = document.getElementById(`step${i}`);
+                const label = dot.nextElementSibling;
+                dot.classList.remove('active', 'done');
+                label.classList.remove('active');
+
+                if (i < currentStep) {
+                    dot.classList.add('done');
+                    dot.textContent = '✓';
+                } else if (i === currentStep) {
+                    dot.classList.add('active');
+                    label.classList.add('active');
+                }
+            }
+        }
+
+        function closeOrder() {
+            document.getElementById('orderModal').classList.remove('open');
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        }
+
+        function subscribeOrder(orderId) {
+            if (eventSource) eventSource.close();
+            eventSource = new EventSource(`/api/orders/${orderId}/stream?token=${localStorage.getItem('token')}`);
+            eventSource.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (data.type === 'order_status_changed' && data.data) {
+                    updateOrderProgress(data.data.status);
+                }
+            };
+        }
+
+        // ===== Auth =====
+        function showLogin() {
+            document.getElementById('loginModal').classList.add('open');
+        }
+
+        function closeLogin() {
+            document.getElementById('loginModal').classList.remove('open');
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('loginTitle').textContent = t(isRegisterMode ? 'register_title' : 'login_title');
+            document.getElementById('loginSubtitle').textContent = t(isRegisterMode ? 'register_subtitle' : 'login_subtitle');
+            document.getElementById('authBtn').textContent = t(isRegisterMode ? 'btn_register' : 'btn_login');
+            document.getElementById('toggleText').textContent = t(isRegisterMode ? 'have_account' : 'no_account');
+            document.getElementById('toggleLink').textContent = t(isRegisterMode ? 'btn_login' : 'btn_register');
+        }
+
+        async function submitAuth() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+
+            if (!phone || !password) {
+                toast(lang === 'zh' ? '请填写完整信息' : 'Please fill all fields', 'error');
+                return;
+            }
+
+            showLoading(lang === 'zh' ? '请稍候...' : 'Please wait...');
+
+            try {
+                const endpoint = isRegisterMode ? '/auth/register' : '/auth/login';
+                const data = await api(endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify({ phone, password })
+                });
+                localStorage.setItem('token', data.token);
+                toast(t(isRegisterMode ? 'toast_register_success' : 'toast_login_success'), 'success');
+                closeLogin();
+                updateAuthUI();
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+            hideLoading();
+        }
+
+        function updateAuthUI() {
+            const token = localStorage.getItem('token');
+            const loginBtn = document.getElementById('loginBtn');
+            if (token) {
+                loginBtn.textContent = t('btn_logout');
+                loginBtn.onclick = logout;
+            } else {
+                loginBtn.textContent = t('btn_login');
+                loginBtn.onclick = showLogin;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            toast(lang === 'zh' ? '已退出登录' : 'Logged out', 'info');
+            updateAuthUI();
+        }
+
+        // ===== Review =====
+        document.querySelectorAll('#starPicker span').forEach(el => {
+            el.addEventListener('click', () => {
+                selectedStars = parseInt(el.dataset.star);
+                document.querySelectorAll('#starPicker span').forEach((s, i) => {
+                    s.classList.toggle('active', i < selectedStars);
+                });
+            });
         });
-        if(merchants.length) { const g=L.featureGroup(markers); if(userLocMarker)g.addLayer(userLocMarker); map.fitBounds(g.getBounds().pad(0.15)); }
-        showUserMarker();
-    }
 
-    /* ===== Detail Modal ===== */
-    function showMerchantDetail(id) {
-        const m=merchants.find(x=>x.id===id); if(!m)return;
-        currentMerchant=m;
-        const icon=TYPE_ICON[m.type]||'📦';
-        document.getElementById('modal-icon').textContent=icon;
-        document.getElementById('modal-name').textContent=m.name;
-        document.getElementById('modal-type').textContent=typeName(m.type);
-        document.getElementById('modal-rating').textContent=starsStr(m.rating)+' '+m.rating+` (${m.reviewCount||0})`;
-        document.getElementById('modal-addr').textContent=m.address?'📍 '+m.address:'';
-        document.getElementById('modal-phone').textContent=m.phone?'📞 '+m.phone:'';
+        async function submitReview() {
+            if (!selectedStars) {
+                toast(lang === 'zh' ? '请选择评分' : 'Please select rating', 'error');
+                return;
+            }
+            const comment = document.getElementById('reviewText').value.trim();
+            if (!comment) {
+                toast(lang === 'zh' ? '请输入评价内容' : 'Please write a review', 'error');
+                return;
+            }
 
-        document.getElementById('modal-menu').innerHTML=(m.menu||[]).length
-            ? (m.menu||[]).map(i=>`<div class="menu-item"><div><div class="menu-item-name">${i.name}</div></div><div class="menu-item-price">$${i.price}</div></div>`).join('')
-            : `<p style="color:var(--text-3)">${t('no_menu')}</p>`;
+            showLoading(lang === 'zh' ? '提交中...' : 'Submitting...');
 
-        document.getElementById('modal-reviews').innerHTML=(m.reviews||[]).length
-            ? (m.reviews||[]).map(r=>`<div class="review-card"><div class="rc-stars">${starsStr(r.stars||5)}</div><div class="rc-text">${r.text||''}</div></div>`).join('')
-            : `<p style="color:var(--text-3)">${t('no_reviews')}</p>`;
-
-        document.getElementById('merchant-modal').classList.add('active');
-    }
-    function closeModal() { document.getElementById('merchant-modal').classList.remove('active'); }
-
-    /* ===== Review ===== */
-    function openReview(id) {
-        const m=merchants.find(x=>x.id===id); if(!m)return;
-        reviewMerchantId=id; selectedStars=0;
-        document.getElementById('review-for').textContent=m.name;
-        document.getElementById('review-text').value='';
-        document.querySelectorAll('#starSelect .s').forEach(s=>s.classList.remove('on'));
-        document.getElementById('review-modal').classList.add('active');
-    }
-    function closeReview() { document.getElementById('review-modal').classList.remove('active'); }
-
-    document.querySelectorAll('#starSelect .s').forEach(s => {
-        s.addEventListener('click',()=>{ selectedStars=parseInt(s.dataset.v); document.querySelectorAll('#starSelect .s').forEach((ss,i)=>ss.classList.toggle('on',i<selectedStars)); });
-    });
-
-    async function submitReview() {
-        if(!selectedStars){toast(currentLang==='zh'?'请选择评分':'Please rate','error');return;}
-        const text=document.getElementById('review-text').value.trim();
-        if(!text){toast(currentLang==='zh'?'请输入评价':'Please write a review','error');return;}
-        try { await apiCall(`/merchants/${reviewMerchantId}/reviews`,{method:'POST',body:JSON.stringify({score:selectedStars,comment:text})}); }
-        catch(e) { const m=merchants.find(x=>x.id===reviewMerchantId); if(m){if(!m.reviews)m.reviews=[];m.reviews.unshift({stars:selectedStars,text});m.reviewCount=(m.reviewCount||0)+1;} }
-        toast(t('toast_review_ok'),'success'); closeReview(); renderMerchants();
-    }
-
-    /* ===== Seller Auth ===== */
-    async function doLogin() {
-        const phone=document.getElementById('login-phone').value, pw=document.getElementById('login-password').value;
-        if(!phone||!pw){toast(currentLang==='zh'?'请填写手机号和密码':'Please fill in all fields','error');return;}
-        showLoading(currentLang==='zh'?'登录中…':'Logging in…');
-        try {
-            const data=await apiCall('/auth/login',{method:'POST',body:JSON.stringify({phone,password:pw})});
-            localStorage.setItem('token',data.token);
-            toast(t('toast_login_ok'),'success');
-            showRegisterMerchant();
-        } catch(e) {
-            localStorage.setItem('token','demo-token');
-            showRegisterMerchant();
-            toast(t('toast_login_ok')+' (demo)','info');
+            try {
+                await api(`/merchants/${currentMerchant.id}/reviews`, {
+                    method: 'POST',
+                    body: JSON.stringify({ score: selectedStars, comment })
+                });
+                toast(t('toast_review_success'), 'success');
+                document.getElementById('reviewText').value = '';
+                selectedStars = 0;
+                document.querySelectorAll('#starPicker span').forEach(s => s.classList.remove('active'));
+                loadReviews(currentMerchant.id);
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+            hideLoading();
         }
-        hideLoading();
-    }
 
-    async function doRegisterAccount() {
-        const phone=document.getElementById('login-phone').value, pw=document.getElementById('login-password').value;
-        if(!phone||!pw){toast(currentLang==='zh'?'请先填手机号和密码':'Please fill phone & password first','error');return;}
-        if(pw.length<6){toast(currentLang==='zh'?'密码至少6位':'Password min 6 chars','error');return;}
-        showLoading(currentLang==='zh'?'注册中…':'Registering…');
-        try {
-            const data=await apiCall('/auth/register',{method:'POST',body:JSON.stringify({phone,password:pw})});
-            localStorage.setItem('token',data.token);
-            toast(currentLang==='zh'?'注册成功！':'Registered!','success');
-            showRegisterMerchant();
-        } catch(e) {
-            toast(e.message,'error');
+        // ===== Search =====
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            const filtered = merchants.filter(m =>
+                m.name.toLowerCase().includes(q) ||
+                (m.description || '').toLowerCase().includes(q) ||
+                (m.type || '').toLowerCase().includes(q)
+            );
+            renderMerchants();
+        });
+
+        // ===== Init =====
+        async function init() {
+            applyLang();
+            updateAuthUI();
+            await initLocation();
+            initMap();
+            await loadMerchants();
+            updateCart();
         }
-        hideLoading();
-    }
 
-    function showRegisterMerchant() {
-        document.getElementById('seller-login').style.display='none';
-        document.getElementById('register-merchant').style.display='block';
-        document.getElementById('seller-panel').style.display='none';
-    }
-    function cancelRegister() {
-        localStorage.removeItem('token');
-        document.getElementById('seller-login').style.display='block';
-        document.getElementById('register-merchant').style.display='none';
-    }
-
-    async function registerMerchant() {
-        const name=document.getElementById('reg-name').value.trim();
-        const type=document.getElementById('reg-type').value;
-        const phone=document.getElementById('reg-phone').value.trim();
-        const address=document.getElementById('reg-address').value.trim();
-        if(!name){toast(currentLang==='zh'?'请输入商户名称':'Please enter business name','error');return;}
-        if(!phone){toast(currentLang==='zh'?'请输入电话':'Please enter phone','error');return;}
-
-        showLoading(currentLang==='zh'?'获取GPS…':'Getting GPS…');
-        const loc=await getGPS();
-        const lat=loc?loc.lat:DEFAULT_CENTER.lat, lng=loc?loc.lng:DEFAULT_CENTER.lng;
-
-        try {
-            const data=await apiCall('/merchants',{method:'POST',body:JSON.stringify({name,type,phone,address,location:{lat,lng}})});
-            const seller={id:data.merchant.id,name,type,phone,address,status:'offline'};
-            localStorage.setItem('seller',JSON.stringify(seller));
-        } catch(e) {
-            const seller={id:Date.now(),name,type,phone,address,status:'offline'};
-            localStorage.setItem('seller',JSON.stringify(seller));
-        }
-        hideLoading();
-        toast(t('toast_reg_ok'),'success');
-        document.getElementById('register-merchant').style.display='none';
-        showSellerPanel();
-    }
-
-    function showSellerPanel() {
-        document.getElementById('seller-login').style.display='none';
-        document.getElementById('register-merchant').style.display='none';
-        document.getElementById('seller-panel').style.display='block';
-        loadSellerData();
-    }
-
-    function loadSellerData() {
-        const seller=JSON.parse(localStorage.getItem('seller')||'{}');
-        updateSellerUI(seller);
-        loadMenu();
-    }
-
-    function updateSellerUI(seller) {
-        const badge=document.getElementById('status-badge'), btn=document.getElementById('toggle-btn');
-        const icon=TYPE_ICON[seller.type]||'🏪';
-        document.getElementById('shIcon').textContent=icon;
-        document.getElementById('shName').textContent=seller.name||'My Business';
-        document.getElementById('shType').textContent=typeName(seller.type)+(seller.address?' · '+seller.address:'');
-
-        if(seller.status==='online') {
-            badge.textContent=t('status_online'); badge.className='status-badge online';
-            btn.textContent=t('btn_go_offline'); btn.className='toggle-btn go-offline';
-        } else {
-            badge.textContent=t('status_offline'); badge.className='status-badge offline';
-            btn.textContent=t('btn_go_online'); btn.className='toggle-btn go-online';
-        }
-    }
-
-    async function toggleStatus() {
-        const seller=JSON.parse(localStorage.getItem('seller')||'{}');
-        const newStatus=seller.status==='online'?'offline':'online';
-        if(newStatus==='online') {
-            showLoading(currentLang==='zh'?'获取定位…':'Getting location…');
-            await getGPS(); hideLoading();
-        }
-        try { await apiCall(`/merchants/${seller.id}/status`,{method:'PATCH',body:JSON.stringify({online:newStatus==='online'})}); } catch(e){}
-        seller.status=newStatus;
-        localStorage.setItem('seller',JSON.stringify(seller));
-        updateSellerUI(seller);
-        toast(newStatus==='online'?t('toast_online'):t('toast_offline'),'success');
-    }
-
-    async function loadMenu() {
-        const seller=JSON.parse(localStorage.getItem('seller')||'{}');
-        try { const data=await apiCall(`/merchants/${seller.id}`); menuItems=(data.menuItems||data.menu||[]); } catch(e) { menuItems=[]; }
-        renderMenu();
-    }
-
-    function renderMenu() {
-        document.getElementById('menuCount').innerHTML=t('menu_count',{n:menuItems.length});
-        document.getElementById('menu-list').innerHTML=menuItems.map((item,i)=>`
-            <div class="menu-item">
-                <div><div class="menu-item-name">${item.name}</div></div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <div class="menu-item-price">$${item.price}</div>
-                    <button class="menu-item-delete" onclick="deleteMenuItem(${i})">🗑</button>
-                </div>
-            </div>`).join('');
-    }
-
-    async function addMenuItem() {
-        const name=document.getElementById('new-menu-name').value, price=document.getElementById('new-menu-price').value;
-        const seller=JSON.parse(localStorage.getItem('seller')||'{}');
-        if(!name||!price){toast(currentLang==='zh'?'请输入菜品和价格':'Enter name and price','error');return;}
-        menuItems.push({name,price:parseFloat(price)});
-        try { await apiCall(`/merchants/${seller.id}/menu`,{method:'PUT',body:JSON.stringify({items:menuItems})}); } catch(e){}
-        renderMenu();
-        document.getElementById('new-menu-name').value='';
-        document.getElementById('new-menu-price').value='';
-        toast(t('toast_added'),'success');
-    }
-
-    async function deleteMenuItem(idx) {
-        const seller=JSON.parse(localStorage.getItem('seller')||'{}');
-        menuItems.splice(idx,1);
-        try { await apiCall(`/merchants/${seller.id}/menu`,{method:'PUT',body:JSON.stringify({items:menuItems})}); } catch(e){}
-        renderMenu();
-        toast(t('toast_deleted'),'info');
-    }
-
-    function logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('seller');
-        document.getElementById('seller-login').style.display='block';
-        document.getElementById('register-merchant').style.display='none';
-        document.getElementById('seller-panel').style.display='none';
-        toast(t('toast_logout'),'info');
-    }
-
-    function checkSellerLogin() {
-        const token=localStorage.getItem('token'), seller=localStorage.getItem('seller');
-        if(token&&seller) { const s=JSON.parse(seller); if(s.name)showSellerPanel(); else showRegisterMerchant(); }
-    }
-
-    /* ===== Init ===== */
-    window.addEventListener('DOMContentLoaded', async () => {
-        applyLang();
-        initMap();
-        await initUserLocation();
-        showUserMarker();
-        searchMerchants();
-        checkSellerLogin();
-    });
+        init();
     </script>
 </body>
 </html>
