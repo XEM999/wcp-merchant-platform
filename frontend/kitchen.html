@@ -538,6 +538,149 @@
                 grid-template-columns: repeat(4, 1fr);
             }
         }
+
+        /* ===== Confirm Mode Buttons (Kitchen sized) ===== */
+        .confirm-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+
+        .confirm-btn-wrapper .order-btn {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Long press progress */
+        .confirm-btn-wrapper .progress-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .confirm-btn-wrapper .progress-ring svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .confirm-btn-wrapper .progress-ring circle {
+            fill: none;
+            stroke: rgba(255,255,255,0.3);
+            stroke-width: 6;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+        }
+
+        .confirm-btn-wrapper .progress-ring .progress {
+            stroke: rgba(255,255,255,0.8);
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 1.5s linear;
+        }
+
+        .confirm-btn-wrapper.pressing .progress-ring .progress {
+            stroke-dashoffset: 0;
+        }
+
+        /* Swipe confirm (Kitchen sized) */
+        .confirm-btn-wrapper.swipe-mode {
+            position: relative;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            min-height: 76px;
+        }
+
+        .confirm-btn-wrapper.swipe-mode .order-btn {
+            background: transparent !important;
+            color: transparent !important;
+        }
+
+        .confirm-btn-wrapper.swipe-mode .swipe-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            cursor: grab;
+            z-index: 2;
+            background: var(--bg-card);
+            border-radius: 16px;
+            transition: transform 0.1s ease-out;
+        }
+
+        .confirm-btn-wrapper.swipe-mode .swipe-slider .slider-thumb {
+            width: 52px;
+            height: 52px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+
+        .confirm-btn-wrapper.swipe-mode .swipe-slider .slider-text {
+            flex: 1;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text);
+            padding-right: 64px;
+        }
+
+        .confirm-btn-wrapper.swipe-mode.accept .swipe-slider {
+            background: var(--green);
+        }
+
+        .confirm-btn-wrapper.swipe-mode.prepare .swipe-slider {
+            background: var(--blue);
+        }
+
+        .confirm-btn-wrapper.swipe-mode.complete .swipe-slider {
+            background: var(--primary);
+        }
+
+        /* Double click (Kitchen sized) */
+        .confirm-btn-wrapper.doubleclick-mode .order-btn.pending-click {
+            background: var(--yellow) !important;
+            animation: pulseBtn 0.3s ease;
+        }
+
+        @keyframes pulseBtn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* QuickTap undo progress (Kitchen sized) */
+        .confirm-btn-wrapper.quicktap-mode .undo-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: var(--yellow);
+            width: 0;
+            transition: width 2s linear;
+            border-radius: 0 0 16px 16px;
+        }
+
+        .confirm-btn-wrapper.quicktap-mode.undoing .undo-progress {
+            width: 100%;
+        }
+
+        .confirm-btn-wrapper.quicktap-mode .order-btn.undoing {
+            background: var(--yellow) !important;
+        }
     </style>
 </head>
 <body>
@@ -626,7 +769,21 @@
             session_expired: '登录已过期，请重新登录',
             network_error: '网络错误，请重试',
             sse_connected: '实时连接已建立',
-            sse_disconnected: '连接断开，正在重连...'
+            sse_disconnected: '连接断开，正在重连...',
+            confirm_mode: '操作确认方式',
+            confirm_longpress: '长按确认',
+            confirm_swipe: '滑动确认',
+            confirm_doubleclick: '二次点击',
+            confirm_longpress_desc: '按住1.5秒确认',
+            confirm_swipe_desc: '滑动到底确认',
+            confirm_doubleclick_desc: '点两次确认',
+            confirm_prompt: '确认？',
+            slide_to_confirm: '滑动确认',
+            confirm_quicktap: '一键通过',
+            confirm_quicktap_desc: '点击确认，长按回退',
+            longpress_duration: '长按时长',
+            undo_action: '回退',
+            undoing: '回退中...'
         },
         en: {
             kitchen_portal: 'Kitchen Display Mode',
@@ -654,7 +811,21 @@
             session_expired: 'Session expired, please login again',
             network_error: 'Network error, please retry',
             sse_connected: 'Real-time connected',
-            sse_disconnected: 'Disconnected, reconnecting...'
+            sse_disconnected: 'Disconnected, reconnecting...',
+            confirm_mode: 'Confirm Mode',
+            confirm_longpress: 'Long Press',
+            confirm_swipe: 'Swipe',
+            confirm_doubleclick: 'Double Click',
+            confirm_longpress_desc: 'Hold 1.5s to confirm',
+            confirm_swipe_desc: 'Slide to confirm',
+            confirm_doubleclick_desc: 'Tap twice to confirm',
+            confirm_prompt: 'Confirm?',
+            slide_to_confirm: 'Slide to confirm',
+            confirm_quicktap: 'Quick Tap',
+            confirm_quicktap_desc: 'Tap to confirm, hold to undo',
+            longpress_duration: 'Hold Duration',
+            undo_action: 'Undo',
+            undoing: 'Undoing...'
         }
     };
 
@@ -723,6 +894,258 @@
             });
         } catch (e) {
             console.log('Audio not supported');
+        }
+    }
+
+    /* ===== Confirm Mode ===== */
+    function getConfirmMode() {
+        return localStorage.getItem('confirmMode') || 'quicktap';
+    }
+
+    function getLongpressDuration() {
+        return parseInt(localStorage.getItem('longpressDuration')) || 1500;
+    }
+
+    // Pending clicks for double-click mode
+    let pendingClicks = {};
+
+    function confirmAction(wrapper, orderId, status, btnClass) {
+        const mode = getConfirmMode();
+        const btn = wrapper.querySelector('.order-btn');
+
+        if (mode === 'longpress') {
+            setupLongPress(wrapper, btn, orderId, status);
+        } else if (mode === 'swipe') {
+            setupSwipe(wrapper, btn, orderId, status, btnClass);
+        } else if (mode === 'doubleclick') {
+            setupDoubleClick(btn, orderId, status);
+        } else if (mode === 'quicktap') {
+            setupQuickTap(wrapper, btn, orderId, status, btnClass);
+        } else {
+            executeOrderUpdate(orderId, status);
+        }
+    }
+
+    function setupLongPress(wrapper, btn, orderId, status) {
+        let timer = null;
+        let isPressed = false;
+        const duration = getLongpressDuration();
+
+        // Add progress ring if not exists
+        if (!wrapper.querySelector('.progress-ring')) {
+            const ring = document.createElement('div');
+            ring.className = 'progress-ring';
+            ring.innerHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/><circle class="progress" cx="50" cy="50" r="45"/></svg>';
+            wrapper.appendChild(ring);
+        }
+
+        // Update progress ring animation duration
+        const progressCircle = wrapper.querySelector('.progress-ring .progress');
+        if (progressCircle) {
+            progressCircle.style.transition = `stroke-dashoffset ${duration}ms linear`;
+        }
+
+        const onDown = (e) => {
+            e.preventDefault();
+            isPressed = true;
+            wrapper.classList.add('pressing');
+            timer = setTimeout(() => {
+                if (isPressed) {
+                    executeOrderUpdate(orderId, status);
+                }
+            }, duration);
+        };
+
+        const onUp = () => {
+            isPressed = false;
+            wrapper.classList.remove('pressing');
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+        };
+
+        btn.addEventListener('mousedown', onDown);
+        btn.addEventListener('touchstart', onDown, { passive: false });
+        btn.addEventListener('mouseup', onUp);
+        btn.addEventListener('touchend', onUp);
+        btn.addEventListener('mouseleave', onUp);
+        btn.addEventListener('touchcancel', onUp);
+    }
+
+    // Status undo mapping
+    const STATUS_UNDO_MAP = {
+        'accepted': 'pending',
+        'preparing': 'accepted',
+        'ready': 'preparing'
+    };
+
+    function setupQuickTap(wrapper, btn, orderId, status, btnClass) {
+        wrapper.classList.add('quicktap-mode');
+        
+        let undoTimer = null;
+        let isHolding = false;
+        const undoDuration = 2000;
+
+        // Add undo progress bar if not exists
+        if (!wrapper.querySelector('.undo-progress')) {
+            const progress = document.createElement('div');
+            progress.className = 'undo-progress';
+            wrapper.appendChild(progress);
+        }
+
+        const onClick = (e) => {
+            if (isHolding) return;
+            e.preventDefault();
+            // Quick tap - execute action
+            executeOrderUpdate(orderId, status);
+        };
+
+        const onDown = (e) => {
+            isHolding = false;
+            undoTimer = setTimeout(() => {
+                isHolding = true;
+                // Start undo animation
+                wrapper.classList.add('undoing');
+                btn.classList.add('undoing');
+                const originalText = btn.textContent;
+                btn.textContent = t('undoing');
+            }, 300);
+        };
+
+        const onUp = () => {
+            if (undoTimer) {
+                clearTimeout(undoTimer);
+                undoTimer = null;
+            }
+            
+            if (isHolding) {
+                // Held long enough - perform undo
+                const previousStatus = STATUS_UNDO_MAP[status];
+                if (previousStatus) {
+                    executeOrderUpdate(orderId, previousStatus);
+                }
+            }
+            
+            // Reset state
+            wrapper.classList.remove('undoing');
+            btn.classList.remove('undoing');
+            isHolding = false;
+        };
+
+        btn.addEventListener('click', onClick);
+        btn.addEventListener('mousedown', onDown);
+        btn.addEventListener('touchstart', onDown, { passive: true });
+        btn.addEventListener('mouseup', onUp);
+        btn.addEventListener('touchend', onUp);
+        btn.addEventListener('mouseleave', onUp);
+        btn.addEventListener('touchcancel', onUp);
+    }
+
+    function setupSwipe(wrapper, btn, orderId, status, btnClass) {
+        wrapper.classList.add('swipe-mode', btnClass);
+
+        // Create slider if not exists
+        if (!wrapper.querySelector('.swipe-slider')) {
+            const slider = document.createElement('div');
+            slider.className = 'swipe-slider';
+            slider.innerHTML = '<div class="slider-thumb">→</div><span class="slider-text">' + t('slide_to_confirm') + '</span>';
+            wrapper.appendChild(slider);
+
+            let startX = 0;
+            let currentX = 0;
+            const maxDistance = wrapper.offsetWidth - 64; // 64 = thumb width for kitchen
+
+            const onTouchStart = (e) => {
+                startX = e.touches ? e.touches[0].clientX : e.clientX;
+                slider.style.transition = 'none';
+            };
+
+            const onTouchMove = (e) => {
+                const x = e.touches ? e.touches[0].clientX : e.clientX;
+                const diff = Math.max(0, Math.min(maxDistance, x - startX));
+                currentX = diff;
+                slider.style.transform = `translateX(${diff}px)`;
+            };
+
+            const onTouchEnd = () => {
+                slider.style.transition = 'transform 0.2s ease';
+                const threshold = maxDistance * 0.8;
+
+                if (currentX >= threshold) {
+                    executeOrderUpdate(orderId, status);
+                } else {
+                    slider.style.transform = 'translateX(0)';
+                }
+                currentX = 0;
+            };
+
+            slider.addEventListener('touchstart', onTouchStart, { passive: true });
+            slider.addEventListener('touchmove', onTouchMove, { passive: true });
+            slider.addEventListener('touchend', onTouchEnd);
+            slider.addEventListener('mousedown', (e) => {
+                onTouchStart(e);
+                document.addEventListener('mousemove', onTouchMove);
+                document.addEventListener('mouseup', function onUp() {
+                    onTouchEnd();
+                    document.removeEventListener('mousemove', onTouchMove);
+                    document.removeEventListener('mouseup', onUp);
+                });
+            });
+        }
+    }
+
+    function setupDoubleClick(btn, orderId, status) {
+        const wrapper = btn.closest('.confirm-btn-wrapper');
+        if (!wrapper) return;
+
+        wrapper.classList.add('doubleclick-mode');
+
+        const key = orderId + '_' + status;
+
+        if (pendingClicks[key]) {
+            // Second click - execute
+            clearTimeout(pendingClicks[key].timer);
+            delete pendingClicks[key];
+            executeOrderUpdate(orderId, status);
+        } else {
+            // First click - show pending state
+            btn.classList.add('pending-click');
+            const originalText = btn.textContent;
+            btn.textContent = t('confirm_prompt');
+
+            const timer = setTimeout(() => {
+                // Timeout - reset
+                btn.classList.remove('pending-click');
+                btn.textContent = originalText;
+                delete pendingClicks[key];
+            }, 3000);
+
+            pendingClicks[key] = { timer, originalText };
+        }
+    }
+
+    async function executeOrderUpdate(orderId, status) {
+        try {
+            await apiCall('/orders/' + orderId + '/status', {
+                method: 'PATCH',
+                body: JSON.stringify({ status })
+            });
+
+            if (status === 'ready') {
+                // Remove from active orders
+                orders = orders.filter(o => o.id !== orderId);
+            } else {
+                // Update status
+                const order = orders.find(o => o.id === orderId);
+                if (order) {
+                    order.status = status;
+                }
+            }
+
+            renderOrders();
+        } catch (e) {
+            toast(e.message, 'error');
         }
     }
 
@@ -950,21 +1373,41 @@
                 </div>
             `;
         }).join('');
+
+        // Setup confirmation buttons after render
+        setupConfirmButtons();
+    }
+
+    function setupConfirmButtons() {
+        document.querySelectorAll('.confirm-btn-wrapper').forEach(wrapper => {
+            const btn = wrapper.querySelector('.order-btn');
+            if (!btn || btn.dataset.initialized) return;
+            btn.dataset.initialized = 'true';
+
+            const orderId = btn.dataset.order;
+            const status = btn.dataset.status;
+            const btnClass = btn.dataset.btnClass;
+
+            confirmAction(wrapper, orderId, status, btnClass);
+        });
     }
 
     function getOrderActions(order) {
+        const mode = getConfirmMode();
+        const wrapperClass = mode === 'swipe' ? 'confirm-btn-wrapper swipe-mode' : 'confirm-btn-wrapper';
+
         switch (order.status) {
             case 'pending':
                 return `
-                    <button class="order-btn accept" onclick="updateOrderStatus('${order.id}', 'accepted')">${t('order_accept')}</button>
+                    <div class="${wrapperClass}"><button class="order-btn accept" data-order="${order.id}" data-status="accepted" data-btn-class="accept">${t('order_accept')}</button></div>
                 `;
             case 'accepted':
                 return `
-                    <button class="order-btn prepare" onclick="updateOrderStatus('${order.id}', 'preparing')">${t('order_prepare')}</button>
+                    <div class="${wrapperClass}"><button class="order-btn prepare" data-order="${order.id}" data-status="preparing" data-btn-class="prepare">${t('order_prepare')}</button></div>
                 `;
             case 'preparing':
                 return `
-                    <button class="order-btn complete" onclick="updateOrderStatus('${order.id}', 'ready')">${t('order_complete')}</button>
+                    <div class="${wrapperClass}"><button class="order-btn complete" data-order="${order.id}" data-status="ready" data-btn-class="complete">${t('order_complete')}</button></div>
                 `;
             default:
                 return '';
