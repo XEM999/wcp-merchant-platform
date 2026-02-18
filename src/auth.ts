@@ -97,3 +97,38 @@ export async function optionalAuthMiddleware(req: Request, res: Response, next: 
   }
   next();
 }
+
+// ==================== 管理员中间件 ====================
+
+/**
+ * 管理员权限中间件
+ * 验证token后检查user.role === 'admin'
+ * 非admin返回403
+ */
+export async function adminMiddleware(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+  const user = (req as any).user;
+  
+  // 检查用户是否存在且角色为admin
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ error: '需要管理员权限' });
+  }
+  
+  next();
+}
+
+// ==================== 超级管理员中间件 ====================
+
+/**
+ * 超级管理员中间件（用于提升用户为admin等敏感操作）
+ * 目前使用固定手机号判断，上线后可改为更严格的权限系统
+ */
+export async function superAdminMiddleware(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
+  const user = (req as any).user;
+  
+  // 超级管理员判定：角色为admin且手机号为指定号码
+  if (!user || user.role !== 'admin' || user.phone !== '0210000000') {
+    return res.status(403).json({ error: '需要超级管理员权限' });
+  }
+  
+  next();
+}

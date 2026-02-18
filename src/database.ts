@@ -55,16 +55,26 @@ export interface User {
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY!;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('⚠️ Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables');
   console.error('Set them in Railway Variables or .env file');
 }
 
+// 使用service_role key绕过RLS，加db.schema选项确保正确
 const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
+  },
+  db: {
+    schema: 'public',
+  },
+  global: {
+    headers: {
+      'x-supabase-role': 'service_role',
+    },
   },
 });
 
