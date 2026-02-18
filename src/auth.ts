@@ -57,12 +57,19 @@ import { Request, Response, NextFunction } from 'express';
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  let token: string | undefined;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else if (req.query.token && typeof req.query.token === 'string') {
+    // SSE (EventSource) 不支持自定义header，允许query param传token
+    token = req.query.token;
+  }
+
+  if (!token) {
     res.status(401).json({ error: '缺少Authorization header' });
     return;
   }
-
-  const token = authHeader.slice(7);
   try {
     const payload = verifyToken(token);
     const user = await getUserById(payload.userId);
