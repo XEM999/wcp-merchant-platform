@@ -469,6 +469,53 @@ app.patch('/api/orders/:id/status', authMiddleware, async (req: Request, res: Re
 });
 
 /**
+ * GET /api/orders/merchant/stream
+ * SSE 实时推送新订单（商家监听）
+ * ⚠️ 必须在 /api/orders/:id/stream 之前注册，否则 "merchant" 会被当作 :id
+ */
+app.get('/api/orders/merchant/stream', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+
+  try {
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权订阅');
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    res.write(`data: ${JSON.stringify({ type: 'connected', merchantId })}\n\n`);
+
+    const listener = (event: OrderEvent) => {
+      if (event.merchantId === merchantId) {
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      }
+    };
+
+    orderEventBus.on(`merchant:${merchantId}`, listener);
+
+    const heartbeat = setInterval(() => {
+      res.write(': ping\n\n');
+    }, SSE_HEARTBEAT_INTERVAL);
+
+    const cleanup = () => {
+      orderEventBus.off(`merchant:${merchantId}`, listener);
+      clearInterval(heartbeat);
+    };
+
+    req.on('close', cleanup);
+    res.on('close', cleanup);
+
+  } catch (e: any) {
+    console.error('商家 SSE 订阅错误:', e);
+    return err(res, 500, '订阅失败');
+  }
+});
+
+/**
  * GET /api/orders/:id/stream
  * SSE 实时推送订单状态变化（买家监听）
  */
@@ -477,7 +524,6 @@ app.get('/api/orders/:id/stream', authMiddleware, async (req: Request, res: Resp
   const userId = (req as any).userId;
 
   try {
-    // 验证订单存在且属于用户
     const order = await getOrder(orderId);
     if (!order) {
       return err(res, 404, '订单不存在');
@@ -486,97 +532,35 @@ app.get('/api/orders/:id/stream', authMiddleware, async (req: Request, res: Resp
       return err(res, 403, '无权订阅此订单');
     }
 
-    // 设置 SSE 响应头
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    // 发送初始数据
     res.write(`data: ${JSON.stringify({ type: 'connected', order })}\n\n`);
 
-    // 创建事件监听器
     const listener = (event: OrderEvent) => {
       if (event.orderId === orderId) {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
       }
     };
 
-    // 订阅订单事件
     orderEventBus.on(`order:${orderId}`, listener);
 
-    // 心跳定时器
     const heartbeat = setInterval(() => {
       res.write(': ping\n\n');
     }, SSE_HEARTBEAT_INTERVAL);
 
-    // 清理函数
     const cleanup = () => {
       orderEventBus.off(`order:${orderId}`, listener);
       clearInterval(heartbeat);
     };
 
-    // 客户端断开连接时清理
     req.on('close', cleanup);
     res.on('close', cleanup);
 
   } catch (e: any) {
     console.error('SSE 订阅错误:', e);
-    return err(res, 500, '订阅失败');
-  }
-});
-
-/**
- * GET /api/orders/merchant/stream
- * SSE 实时推送新订单（商家监听）
- */
-app.get('/api/orders/merchant/stream', authMiddleware, async (req: Request, res: Response) => {
-  const userId = (req as any).userId;
-
-  try {
-    // 验证用户是否是商家
-    const merchantId = await getUserMerchantId(userId);
-    if (!merchantId) {
-      return err(res, 403, '您不是商家，无权订阅');
-    }
-
-    // 设置 SSE 响应头
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
-
-    // 发送初始连接确认
-    res.write(`data: ${JSON.stringify({ type: 'connected', merchantId })}\n\n`);
-
-    // 创建事件监听器
-    const listener = (event: OrderEvent) => {
-      // 只推送该商家的订单事件
-      if (event.merchantId === merchantId) {
-        res.write(`data: ${JSON.stringify(event)}\n\n`);
-      }
-    };
-
-    // 订阅商户事件
-    orderEventBus.on(`merchant:${merchantId}`, listener);
-
-    // 心跳定时器
-    const heartbeat = setInterval(() => {
-      res.write(': ping\n\n');
-    }, SSE_HEARTBEAT_INTERVAL);
-
-    // 清理函数
-    const cleanup = () => {
-      orderEventBus.off(`merchant:${merchantId}`, listener);
-      clearInterval(heartbeat);
-    };
-
-    // 客户端断开连接时清理
-    req.on('close', cleanup);
-    res.on('close', cleanup);
-
-  } catch (e: any) {
-    console.error('商家 SSE 订阅错误:', e);
     return err(res, 500, '订阅失败');
   }
 });
