@@ -478,6 +478,45 @@ export async function getReviews(merchantId: string): Promise<{ count: number; r
   };
 }
 
+// ==================== 评论管理（Admin） ====================
+
+export async function deleteReview(reviewId: string): Promise<{ merchantId: string; comment: string } | null> {
+  // 查评论
+  const { data: review, error: findErr } = await supabase
+    .from('reviews')
+    .select('*')
+    .eq('id', reviewId)
+    .single();
+
+  if (findErr || !review) return null;
+
+  // 删除
+  const { error: delErr } = await supabase
+    .from('reviews')
+    .delete()
+    .eq('id', reviewId);
+
+  if (delErr) throw delErr;
+
+  // 重新计算商户评分
+  const { data: remaining } = await supabase
+    .from('reviews')
+    .select('score')
+    .eq('merchant_id', review.merchant_id);
+
+  const scores = remaining || [];
+  const newRating = scores.length > 0
+    ? scores.reduce((sum: number, r: any) => sum + r.score, 0) / scores.length
+    : 0;
+
+  await supabase
+    .from('merchants')
+    .update({ rating: Math.round(newRating * 10) / 10, review_count: scores.length })
+    .eq('id', review.merchant_id);
+
+  return { merchantId: review.merchant_id, comment: review.comment };
+}
+
 // ==================== 订单类型定义 ====================
 
 /** 订单状态 */

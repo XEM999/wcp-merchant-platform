@@ -38,6 +38,7 @@ import {
   getAllOrdersForExport,
   getAllMerchantsForExport,
   initAdminAccount,
+  deleteReview,
 } from './database';
 import { register, login, authMiddleware, optionalAuthMiddleware, adminMiddleware, superAdminMiddleware } from './auth';
 
@@ -937,6 +938,36 @@ app.get('/api/admin/export/merchants', authMiddleware, adminMiddleware, async (r
   } catch (e: any) {
     console.error('导出商户数据错误:', e);
     return err(res, 500, '导出商户数据失败');
+  }
+});
+
+/**
+ * DELETE /api/admin/reviews/:id
+ * 删除恶意评论
+ */
+app.delete('/api/admin/reviews/:id', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const reviewId = req.params.id;
+    const { reason } = req.body || {};
+
+    const result = await deleteReview(reviewId);
+    if (!result) {
+      return err(res, 404, '评论不存在');
+    }
+
+    // 记录操作日志
+    await logAdminAction(
+      (req as any).userId,
+      'delete_review',
+      'review',
+      reviewId,
+      { merchant_id: result.merchantId, reason: reason || '管理员删除', original_comment: result.comment }
+    );
+
+    res.json({ message: '评论已删除', reviewId });
+  } catch (e: any) {
+    console.error('删除评论错误:', e);
+    return err(res, 500, '删除评论失败');
   }
 });
 
