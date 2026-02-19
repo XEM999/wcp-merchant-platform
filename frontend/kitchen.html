@@ -1283,12 +1283,13 @@
         try {
             const data = await apiCall('/auth/me');
             console.log('[AUTH] apiCall returned:', JSON.stringify(data));
-            if (data && data.id) {
+            // Fix: 放宽检查条件，支持 data.id 或 data.user_id
+            if (data && (data.id || data.user_id)) {
                 user = data;
-                console.log('[AUTH] Auth OK, user=' + data.id);
+                console.log('[AUTH] Auth OK, user=' + (data.id || data.user_id));
                 return true;
             }
-            console.log('[AUTH] data missing id, falling through');
+            console.log('[AUTH] data missing id, data=', JSON.stringify(data));
         } catch (e) {
             console.log('[AUTH] apiCall threw:', e.message);
             // 401 = token无效，显示登录
@@ -1335,7 +1336,8 @@
             wakeLock.release();
             wakeLock = null;
         }
-        showLoginPage();
+        // Fix: 退出厨房投屏后跳转商家后台
+        window.location.href = '/merchant';
     }
 
     /* ===== Merchant ===== */
