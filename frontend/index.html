@@ -208,6 +208,68 @@
             font-weight: 500;
         }
 
+        .radius-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .radius-label {
+            font-size: 13px;
+            color: var(--text-2);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .radius-slider {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--bg-input);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .radius-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(255,107,53,.4);
+            transition: transform .15s;
+        }
+
+        .radius-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .radius-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(255,107,53,.4);
+        }
+
+        .radius-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 36px;
+            text-align: right;
+        }
+
         .merchant-list {
             display: flex;
             flex-direction: column;
@@ -951,6 +1013,11 @@
             <span data-i18n="nearby_merchants">附近商户</span>
             <span class="section-count" id="merchantCount"></span>
         </h3>
+        <div class="radius-control">
+            <label class="radius-label"><span data-i18n="search_radius">搜索半径</span>:</label>
+            <input type="range" class="radius-slider" id="radiusSlider" min="1" max="50" value="5" step="1">
+            <span class="radius-value" id="radiusValue">5km</span>
+        </div>
         <div class="merchant-list" id="merchantList"></div>
     </div>
 
@@ -1108,7 +1175,8 @@
             select_merchant: '请先选择商户',
             order_id: '订单 #',
             back: '返回',
-            no_menu: '暂无菜单'
+            no_menu: '暂无菜单',
+            search_radius: '搜索半径'
         },
         en: {
             im_merchant: 'Merchant',
@@ -1160,7 +1228,8 @@
             select_merchant: 'Please select a merchant',
             order_id: 'Order #',
             back: 'Back',
-            no_menu: 'No menu available'
+            no_menu: 'No menu available',
+            search_radius: 'Search Radius'
         }
     };
 
@@ -1206,6 +1275,8 @@
     let currentOrder = null;
     let sseConnection = null;
     let pickupMethod = 'self';
+    let searchRadius = 5;
+    let radiusDebounceTimer = null;
 
     /* ===== Toast ===== */
     function toast(msg, type) {
@@ -1325,13 +1396,8 @@
         showLoading(currentLang === 'zh' ? '搜索中…' : 'Searching…');
         var loc = userLoc || DEFAULT_CENTER;
         try {
-            // 先搜10km，没结果则扩大到50km
-            var data = await apiCall('/merchants/nearby?lat=' + loc.lat + '&lng=' + loc.lng + '&radius=10');
+            var data = await apiCall('/merchants/nearby?lat=' + loc.lat + '&lng=' + loc.lng + '&radius=' + searchRadius);
             merchants = data.merchants || [];
-            if (!merchants.length) {
-                data = await apiCall('/merchants/nearby?lat=' + loc.lat + '&lng=' + loc.lng + '&radius=50');
-                merchants = data.merchants || [];
-            }
             if (!merchants.length) throw new Error('empty');
         } catch (e) {
             merchants = getMockMerchants().filter(function(m) { return m.status === 'online'; });
@@ -1950,6 +2016,20 @@
         updateUserUI();
         // 检查是否从二维码扫入
         setTimeout(handleQREntry, 500);
+        
+        // Radius slider event
+        var radiusSlider = document.getElementById('radiusSlider');
+        var radiusValue = document.getElementById('radiusValue');
+        if (radiusSlider) {
+            radiusSlider.addEventListener('input', function() {
+                searchRadius = parseInt(this.value, 10);
+                radiusValue.textContent = searchRadius + 'km';
+                clearTimeout(radiusDebounceTimer);
+                radiusDebounceTimer = setTimeout(function() {
+                    searchMerchants();
+                }, 500);
+            });
+        }
     });
     </script>
 </body>
