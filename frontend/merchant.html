@@ -1378,6 +1378,18 @@
                 </div>
             </div>
 
+            <!-- 厨房工位管理 -->
+            <div class="settings-group">
+                <div class="settings-item" onclick="showKitchenStationsModal()" style="cursor:pointer">
+                    <span class="settings-item-icon">📺</span>
+                    <div class="settings-item-text">
+                        <div class="settings-item-label" data-i18n="kitchen_stations">厨房工位管理</div>
+                        <div class="settings-item-desc" data-i18n="kitchen_stations_desc">设置厨房屏幕和工位</div>
+                    </div>
+                    <span class="settings-item-arrow">›</span>
+                </div>
+            </div>
+
             <div class="settings-group">
                 <div class="settings-item" onclick="switchToKitchen()">
                     <span class="settings-item-icon">📺</span>
@@ -1458,6 +1470,12 @@
                 <label class="form-label" data-i18n="item_desc">描述</label>
                 <textarea class="form-input" id="itemDesc" placeholder="简单描述..."></textarea>
             </div>
+            <!-- 工位选择 -->
+            <div class="form-group" id="stationSelectionGroup" style="display:none">
+                <label class="form-label" data-i18n="push_to_stations">推送到工位</label>
+                <div style="font-size:12px;color:var(--text-3);margin-bottom:8px" id="stationSelectionHint">不选择=推送到全部工位</div>
+                <div id="stationCheckboxes"></div>
+            </div>
             <div class="modal-footer">
                 <button class="form-btn secondary" onclick="closeMenuModal()" data-i18n="cancel">取消</button>
                 <button class="form-btn primary" onclick="saveMenuItem()" data-i18n="save">保存</button>
@@ -1501,6 +1519,30 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
         <div class="loading-msg" id="loadingMsg">Loading...</div>
+    </div>
+
+    <!-- Kitchen Stations Modal -->
+    <div class="modal-overlay" id="kitchenStationsModal" onclick="closeKitchenStationsModal(event)">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width:450px">
+            <div class="modal-title">
+                <span data-i18n="kitchen_stations">厨房工位管理</span>
+                <button class="modal-close" onclick="closeKitchenStationsModal()">✕</button>
+            </div>
+            <div style="margin-bottom:16px">
+                <div style="font-size:13px;color:var(--text-2);margin-bottom:8px" id="stationsListTitle">当前工位</div>
+                <div id="kitchenStationsList"></div>
+            </div>
+            <!-- 添加新工位 -->
+            <div style="display:flex;gap:8px;margin-bottom:16px">
+                <input type="text" id="newStationNameZh" class="form-input" style="flex:1" placeholder="中文名，如：饮品站">
+                <input type="text" id="newStationNameEn" class="form-input" style="flex:1" placeholder="English, e.g. Drinks">
+                <button class="form-btn primary" style="width:auto;padding:0 16px" onclick="addKitchenStation()">+</button>
+            </div>
+            <div class="modal-footer">
+                <button class="form-btn secondary" onclick="closeKitchenStationsModal()" data-i18n="cancel">取消</button>
+                <button class="form-btn primary" onclick="saveKitchenStations()" data-i18n="save">保存</button>
+            </div>
+        </div>
     </div>
 
     <!-- Toast -->
@@ -1616,7 +1658,12 @@
             method_disabled: '已禁用',
             method_saved: '取餐方式已保存',
             delete_method: '删除',
-            confirm_delete_method: '确定删除此取餐方式？'
+            confirm_delete_method: '确定删除此取餐方式？',
+            kitchen_stations: '厨房工位管理',
+            kitchen_stations_desc: '设置厨房屏幕和工位',
+            push_to_stations: '推送到工位',
+            qr_code: '点餐二维码',
+            qr_code_desc: '生成二维码让顾客扫码点餐'
         },
         en: {
             merchant_portal: 'Merchant Portal',
@@ -1725,7 +1772,12 @@
             method_disabled: 'Disabled',
             method_saved: 'Pickup methods saved',
             delete_method: 'Delete',
-            confirm_delete_method: 'Delete this pickup method?'
+            confirm_delete_method: 'Delete this pickup method?',
+            kitchen_stations: 'Kitchen Stations',
+            kitchen_stations_desc: 'Configure kitchen screens and stations',
+            push_to_stations: 'Push to Stations',
+            qr_code: 'QR Code',
+            qr_code_desc: 'Generate QR code for customer ordering'
         }
     };
 
@@ -2753,6 +2805,8 @@
         document.getElementById('itemDesc').value = '';
         resetImagePreview(null);
         document.getElementById('menuImageInput').value = '';
+        // 初始化工位选择
+        renderStationCheckboxes([]);
         document.getElementById('menuModal').classList.add('show');
     }
 
@@ -2768,7 +2822,43 @@
         document.getElementById('itemDesc').value = item.description || '';
         resetImagePreview(item.imageUrl || null);
         document.getElementById('menuImageInput').value = '';
+        // 初始化工位选择
+        renderStationCheckboxes(item.stationIds || []);
         document.getElementById('menuModal').classList.add('show');
+    }
+
+    // 渲染工位选择复选框
+    function renderStationCheckboxes(selectedIds) {
+        var group = document.getElementById('stationSelectionGroup');
+        var container = document.getElementById('stationCheckboxes');
+        var hint = document.getElementById('stationSelectionHint');
+        
+        var stations = merchant && merchant.kitchenStations ? merchant.kitchenStations : [];
+        
+        if (stations.length === 0) {
+            group.style.display = 'none';
+            return;
+        }
+        
+        group.style.display = 'block';
+        hint.textContent = currentLang === 'zh' ? '不选择=推送到全部工位' : 'None = push to all stations';
+        
+        container.innerHTML = stations.map(function(station) {
+            var checked = !selectedIds.length || selectedIds.includes(station.id) ? 'checked' : '';
+            var name = currentLang === 'zh' ? station.name_zh : station.name_en;
+            return '<label style="display:flex;align-items:center;padding:8px;background:var(--bg-input);border-radius:8px;margin-bottom:6px;cursor:pointer">' +
+                '<input type="checkbox" value="' + station.id + '" ' + checked + ' style="margin-right:10px;width:18px;height:18px">' +
+                '<span>' + name + '</span>' +
+            '</label>';
+        }).join('');
+    }
+
+    // 获取选中的工位ID
+    function getSelectedStationIds() {
+        var checkboxes = document.querySelectorAll('#stationCheckboxes input[type="checkbox"]:checked');
+        var ids = Array.from(checkboxes).map(function(cb) { return cb.value; });
+        // 如果没有选中任何工位，返回空数组表示推送到全部
+        return ids;
     }
 
     function closeMenuModal(event) {
@@ -2801,8 +2891,11 @@
             document.getElementById('imagePreviewContainer').classList.remove('loading');
         }
 
+        // 获取选中的工位ID
+        const stationIds = getSelectedStationIds();
+
         if (editingItem) {
-            Object.assign(editingItem, { name, price, category, description, imageUrl });
+            Object.assign(editingItem, { name, price, category, description, imageUrl, stationIds });
         } else {
             menuItems.push({
                 id: 'item_' + Date.now(),
@@ -2811,6 +2904,7 @@
                 category,
                 description,
                 imageUrl,
+                stationIds,
                 available: true
             });
         }
@@ -2855,7 +2949,60 @@
     }
 
     function switchToKitchen() {
-        window.location.href = '/kitchen';
+        // 检查是否有多个工位，如果有则弹窗让选择
+        const stations = merchant && merchant.kitchenStations ? merchant.kitchenStations : [];
+        
+        if (stations.length > 0) {
+            // 有工位，显示选择弹窗
+            showKitchenStationSelector(stations);
+        } else {
+            // 没有工位，直接跳转（显示所有订单）
+            window.location.href = '/kitchen?token=' + encodeURIComponent(localStorage.getItem('token'));
+        }
+    }
+
+    // 厨房工位选择弹窗
+    function showKitchenStationSelector(stations) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+        overlay.onclick = function(e) { if(e.target===overlay) document.body.removeChild(overlay); };
+        
+        var modal = document.createElement('div');
+        modal.style.cssText = 'background:#fff;border-radius:20px;padding:24px;max-width:350px;width:100%;text-align:center';
+        
+        var title = document.createElement('h3');
+        title.style.cssText = 'margin:0 0 16px;font-size:18px;color:#333';
+        title.textContent = currentLang === 'zh' ? '选择厨房屏幕' : 'Select Kitchen Screen';
+        
+        // 全部选项
+        var allBtn = document.createElement('button');
+        allBtn.style.cssText = 'width:100%;padding:16px;background:#ff6b35;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:12px';
+        allBtn.textContent = currentLang === 'zh' ? '📺 显示全部订单' : '📺 Show All Orders';
+        allBtn.onclick = function() {
+            window.location.href = '/kitchen?token=' + encodeURIComponent(localStorage.getItem('token'));
+        };
+        
+        var stationsDiv = document.createElement('div');
+        stationsDiv.style.cssText = 'text-align:left;max-height:300px;overflow-y:auto';
+        
+        stations.forEach(function(station) {
+            var btn = document.createElement('button');
+            btn.style.cssText = 'width:100%;padding:14px;background:#f5f5f5;border:none;border-radius:10px;font-size:14px;cursor:pointer;margin-bottom:8px;text-align:left';
+            btn.innerHTML = '<span style="font-size:18px;margin-right:8px">📺</span>' + 
+                (currentLang === 'zh' ? station.name_zh : station.name_en) + 
+                ' <span style="color:#999;font-size:12px">' + 
+                (currentLang === 'zh' ? station.name_en : station.name_zh) + '</span>';
+            btn.onclick = function() {
+                window.location.href = '/kitchen?token=' + encodeURIComponent(localStorage.getItem('token')) + '&station=' + encodeURIComponent(station.id);
+            };
+            stationsDiv.appendChild(btn);
+        });
+        
+        modal.appendChild(title);
+        modal.appendChild(allBtn);
+        modal.appendChild(stationsDiv);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
     }
 
     /* ===== Init ===== */
@@ -3156,6 +3303,95 @@
             merchant.pickupMethods = allMethods;
             toast(t('method_saved'), 'success');
             closePickupMethodsModal();
+        } catch (e) {
+            toast(e.message || (currentLang === 'zh' ? '保存失败' : 'Save failed'), 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // ===== 厨房工位管理 =====
+    var kitchenStationsData = [];
+
+    function showKitchenStationsModal() {
+        if (!merchant) {
+            toast(currentLang === 'zh' ? '请先注册商户' : 'Please register merchant first', 'error');
+            return;
+        }
+        kitchenStationsData = JSON.parse(JSON.stringify(merchant.kitchenStations || []));
+        renderKitchenStations();
+        document.getElementById('kitchenStationsModal').classList.add('show');
+    }
+
+    function closeKitchenStationsModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('kitchenStationsModal').classList.remove('show');
+    }
+
+    function renderKitchenStations() {
+        var container = document.getElementById('kitchenStationsList');
+        
+        if (!kitchenStationsData.length) {
+            container.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:20px;font-size:14px">' + 
+                (currentLang === 'zh' ? '暂无工位，点击下方添加' : 'No stations, click below to add') + '</div>';
+            return;
+        }
+
+        container.innerHTML = kitchenStationsData.map(function(station, index) {
+            var name = currentLang === 'zh' ? station.name_zh : station.name_en;
+            var altName = currentLang === 'zh' ? station.name_en : station.name_zh;
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg-input);border-radius:10px;margin-bottom:8px">' +
+                '<div>' +
+                    '<div style="font-weight:600;font-size:14px">' + name + '</div>' +
+                    '<div style="font-size:12px;color:var(--text-3)">' + altName + '</div>' +
+                '</div>' +
+                '<button onclick="deleteKitchenStation(' + index + ')" style="background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;padding:8px">✕</button>' +
+            '</div>';
+        }).join('');
+    }
+
+    function addKitchenStation() {
+        var nameZh = document.getElementById('newStationNameZh').value.trim();
+        var nameEn = document.getElementById('newStationNameEn').value.trim();
+        
+        if (!nameZh || !nameEn) {
+            toast(currentLang === 'zh' ? '请输入中文名和英文名' : 'Please enter both Chinese and English names', 'error');
+            return;
+        }
+        
+        var id = 'station_' + Date.now();
+        kitchenStationsData.push({
+            id: id,
+            name_zh: nameZh,
+            name_en: nameEn
+        });
+        
+        document.getElementById('newStationNameZh').value = '';
+        document.getElementById('newStationNameEn').value = '';
+        renderKitchenStations();
+    }
+
+    function deleteKitchenStation(index) {
+        if (confirm(currentLang === 'zh' ? '确定删除此工位？' : 'Delete this station?')) {
+            kitchenStationsData.splice(index, 1);
+            renderKitchenStations();
+        }
+    }
+
+    async function saveKitchenStations() {
+        if (!merchant) return;
+
+        try {
+            showLoading(currentLang === 'zh' ? '保存中...' : 'Saving...');
+            
+            var data = await apiCall('/merchant/kitchen-stations', {
+                method: 'PUT',
+                body: JSON.stringify({ stations: kitchenStationsData })
+            });
+            
+            merchant.kitchenStations = kitchenStationsData;
+            toast(currentLang === 'zh' ? '工位已保存' : 'Stations saved', 'success');
+            closeKitchenStationsModal();
         } catch (e) {
             toast(e.message || (currentLang === 'zh' ? '保存失败' : 'Save failed'), 'error');
         } finally {

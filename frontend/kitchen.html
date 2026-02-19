@@ -710,6 +710,7 @@
             <div class="header-left">
                 <span class="header-logo">👨‍🍳</span>
                 <span class="header-title">Kitchen Display</span>
+                <span id="stationLabel" style="font-size:18px;color:var(--primary);margin-left:8px;display:none"></span>
                 <div class="header-status">
                     <span class="status-dot" id="statusDot"></span>
                     <span id="statusText" data-i18n="online">在线</span>
@@ -842,9 +843,17 @@
     }
 
     /* ===== State ===== */
-    let token = localStorage.getItem('token');
+    let token = new URLSearchParams(window.location.search).get('token') || localStorage.getItem('token');
+    // 如果从URL获取到token，存入localStorage并清理URL
+    if (new URLSearchParams(window.location.search).get('token')) {
+        localStorage.setItem('token', token);
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+    let stationId = new URLSearchParams(window.location.search).get('station');
     let user = null;
     let merchant = null;
+    let kitchenStations = [];
+    let currentStationName = '';
     let orders = [];
     let sseConnection = null;
     let audioCtx = null;
@@ -1304,6 +1313,14 @@
             
             if (Array.isArray(merchants) && merchants.length > 0) {
                 merchant = merchants.find(m => m.ownerId === user.id || m.owner === user.id) || merchants[0];
+                // 获取工位信息
+                kitchenStations = merchant.kitchenStations || [];
+                if (stationId) {
+                    const station = kitchenStations.find(s => s.id === stationId);
+                    if (station) {
+                        currentStationName = currentLang === 'zh' ? station.name_zh : station.name_en;
+                    }
+                }
                 return true;
             }
             return false;
@@ -1445,7 +1462,11 @@
         if (!token || sseConnection) return;
 
         try {
-            const eventSource = new EventSource('/api/orders/merchant/stream?token=' + encodeURIComponent(token));
+            let sseUrl = '/api/orders/merchant/stream?token=' + encodeURIComponent(token);
+            if (stationId) {
+                sseUrl += '&station=' + encodeURIComponent(stationId);
+            }
+            const eventSource = new EventSource(sseUrl);
             
             eventSource.onopen = () => {
                 console.log('SSE connected');
@@ -1520,6 +1541,19 @@
         const hasMerchant = await loadMerchant();
         
         if (hasMerchant) {
+            // 显示工位名称
+            if (stationId && currentStationName) {
+                const label = document.getElementById('stationLabel');
+                if (label) {
+                    const station = kitchenStations.find(s => s.id === stationId);
+                    if (station) {
+                        label.textContent = '— ' + station.name_zh + ' / ' + station.name_en;
+                    } else {
+                        label.textContent = '— ' + currentStationName;
+                    }
+                    label.style.display = 'inline';
+                }
+            }
             showAppPage();
             await loadOrders();
             connectSSE();

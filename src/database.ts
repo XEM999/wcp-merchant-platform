@@ -11,6 +11,13 @@ export interface Location {
   lng: number;
 }
 
+// 厨房工位配置
+export interface KitchenStation {
+  id: string;        // UUID
+  name_zh: string;   // 如 "饮品站"
+  name_en: string;   // 如 "Drinks Station"
+}
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -19,6 +26,7 @@ export interface MenuItem {
   category?: string;
   available: boolean;
   imageUrl?: string;
+  stationIds?: string[];  // 该菜品推送到哪些工位（空=推送到全部屏幕）
 }
 
 export interface Review {
@@ -56,6 +64,8 @@ export interface Merchant {
   banReason?: string;
   // 取餐方式配置
   pickupMethods: PickupMethodConfig[];
+  // 厨房工位配置
+  kitchenStations: KitchenStation[];
 }
 
 export interface User {
@@ -238,6 +248,8 @@ function mapMerchantFromDb(data: any, menuItems: MenuItem[] = []): Merchant {
     banReason: data.ban_reason || undefined,
     // 取餐方式配置
     pickupMethods: data.pickup_methods || DEFAULT_PICKUP_METHODS,
+    // 厨房工位配置
+    kitchenStations: data.kitchen_stations || [],
   };
 }
 
@@ -300,6 +312,7 @@ export async function getMerchant(id: string): Promise<Merchant | undefined> {
     category: item.category,
     available: item.available,
     imageUrl: item.image_url || undefined,
+    stationIds: item.station_ids || undefined,
   }));
 
   return mapMerchantFromDb(merchant, items);
@@ -333,6 +346,7 @@ export async function getAllMerchants(): Promise<Merchant[]> {
       category: item.category,
       available: item.available,
       imageUrl: item.image_url || undefined,
+      stationIds: item.station_ids || undefined,
     });
   });
 
@@ -363,6 +377,7 @@ export async function updateMerchantStatus(id: string, online: boolean): Promise
     category: item.category,
     available: item.available,
     imageUrl: item.image_url || undefined,
+    stationIds: item.station_ids || undefined,
   }));
 
   return mapMerchantFromDb(merchant, items);
@@ -381,6 +396,7 @@ export async function updateMenu(id: string, items: Omit<MenuItem, 'id'>[]): Pro
       category: item.category || null,
       available: item.available !== false,
       sort_order: index,
+      station_ids: item.stationIds || null,
     }));
 
     const { error } = await supabase.from('menu_items').insert(menuData);
@@ -418,6 +434,7 @@ export async function getNearbyMerchants(center: Location, radiusKm: number): Pr
         category: item.category,
         available: item.available,
         imageUrl: item.image_url || undefined,
+        stationIds: item.station_ids || undefined,
       }));
 
       nearbyMerchants.push({
@@ -1200,6 +1217,7 @@ export async function getAllMerchantsAdmin(
       category: item.category,
       available: item.available,
       imageUrl: item.image_url || undefined,
+      stationIds: item.station_ids || undefined,
     });
   });
 
@@ -1786,5 +1804,106 @@ ALTER TABLE merchants ADD COLUMN IF NOT EXISTS pickup_methods JSONB DEFAULT '[{"
     }
   } catch (err) {
     console.log('检查pickup_methods列时出错（可忽略）:', err);
+  }
+}
+
+// ==================== 厨房工位操作 ====================
+
+/**
+ * 获取商户的厨房工位配置
+ * @param merchantId 商户ID
+ * @returns 工位列表
+ */
+export async function getMerchantKitchenStations(merchantId: string): Promise<KitchenStation[]> {
+  const { data, error } = await supabase
+    .from('merchants')
+    .select('kitchen_stations')
+    .eq('id', merchantId)
+    .single();
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data.kitchen_stations || [];
+}
+
+/**
+ * 更新商户的厨房工位配置
+ * @param merchantId 商户ID
+ * @param stations 工位列表
+ * @returns 是否成功
+ */
+export async function updateMerchantKitchenStations(
+  merchantId: string, 
+  stations: KitchenStation[]
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('merchants')
+    .update({ 
+      kitchen_stations: stations,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', merchantId);
+
+  if (error) {
+    console.error('更新厨房工位配置错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 确保merchants表有kitchen_stations列，以及menu_items表有station_ids列
+ */
+export async function ensureKitchenStationsColumn(): Promise<void> {
+  // 1. 检查 merchants.kitchen_stations
+  try {
+    const { error: testError } = await supabase
+      .from('merchants')
+      .select('kitchen_stations')
+      .limit(1);
+    
+    if (!testError) {
+      console.log('✅ kitchen_stations列已存在');
+    } else {
+      console.log('⚠️ kitchen_stations列可能不存在');
+      console.log('请在Supabase SQL编辑器中执行以下SQL:');
+      console.log(`
+ALTER TABLE merchants ADD COLUMN IF NOT EXISTS kitchen_stations JSONB DEFAULT '[]'::jsonb;
+      `.trim());
+      
+      try {
+        await supabase
+          .from('merchants')
+          .update({ kitchen_stations: [] })
+          .is('kitchen_stations', null)
+          .select();
+      } catch (e) {
+        // 忽略更新错误
+      }
+    }
+  } catch (err) {
+    console.log('检查kitchen_stations列时出错（可忽略）:', err);
+  }
+
+  // 2. 检查 menu_items.station_ids
+  try {
+    const { error: testError2 } = await supabase
+      .from('menu_items')
+      .select('station_ids')
+      .limit(1);
+    
+    if (!testError2) {
+      console.log('✅ menu_items.station_ids列已存在');
+    } else {
+      console.log('⚠️ menu_items.station_ids列可能不存在');
+      console.log('请在Supabase SQL编辑器中执行以下SQL:');
+      console.log(`
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS station_ids JSONB DEFAULT NULL;
+      `.trim());
+    }
+  } catch (err) {
+    console.log('检查menu_items.station_ids列时出错（可忽略）:', err);
   }
 }

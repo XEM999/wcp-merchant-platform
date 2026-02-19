@@ -58,6 +58,11 @@ import {
   updateMerchantPickupMethods,
   validatePickupMethod,
   ensurePickupMethodsColumn,
+  // 厨房工位相关
+  KitchenStation,
+  getMerchantKitchenStations,
+  updateMerchantKitchenStations,
+  ensureKitchenStationsColumn,
 } from './database';
 import { register, login, authMiddleware, optionalAuthMiddleware, adminMiddleware, superAdminMiddleware } from './auth';
 
@@ -353,6 +358,78 @@ app.put('/api/merchant/pickup-methods', authMiddleware, async (req: Request, res
     res.json({ message: '取餐方式已更新', methods });
   } catch (e: any) {
     console.error('更新取餐方式错误:', e);
+    return err(res, 500, '更新失败');
+  }
+});
+
+// --- 获取厨房工位 (需登录) ---
+app.get('/api/merchant/kitchen-stations', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const userId = (req as any).userId;
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权操作');
+    }
+
+    const stations = await getMerchantKitchenStations(merchantId);
+    res.json({ stations });
+  } catch (e: any) {
+    console.error('获取厨房工位错误:', e);
+    return err(res, 500, '获取失败');
+  }
+});
+
+// --- 更新厨房工位 (需登录) ---
+app.put('/api/merchant/kitchen-stations', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const userId = (req as any).userId;
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权操作');
+    }
+
+    const { stations } = req.body;
+    if (!Array.isArray(stations)) {
+      return err(res, 400, 'stations 必须是数组');
+    }
+
+    // 验证每个工位配置
+    for (const station of stations) {
+      if (!station.id || !station.name_zh || !station.name_en) {
+        return err(res, 400, '每个工位必须有 id, name_zh, name_en');
+      }
+    }
+
+    const success = await updateMerchantKitchenStations(merchantId, stations);
+    if (!success) {
+      return err(res, 500, '更新失败');
+    }
+
+    res.json({ message: '工位已更新', stations });
+  } catch (e: any) {
+    console.error('更新厨房工位错误:', e);
     return err(res, 500, '更新失败');
   }
 });
@@ -810,9 +887,11 @@ app.patch('/api/orders/:id/cancel', authMiddleware, async (req: Request, res: Re
  * GET /api/orders/merchant/stream
  * SSE 实时推送新订单（商家监听）
  * ⚠️ 必须在 /api/orders/:id/stream 之前注册，否则 "merchant" 会被当作 :id
+ * 查询参数: ?station=工位ID (可选)
  */
 app.get('/api/orders/merchant/stream', authMiddleware, async (req: Request, res: Response) => {
   const userId = (req as any).userId;
+  const stationId = req.query.station as string | undefined;
 
   try {
     const merchantId = await getUserMerchantId(userId);
@@ -825,10 +904,29 @@ app.get('/api/orders/merchant/stream', authMiddleware, async (req: Request, res:
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    res.write(`data: ${JSON.stringify({ type: 'connected', merchantId })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'connected', merchantId, stationId })}\n\n`);
 
     const listener = (event: OrderEvent) => {
       if (event.merchantId === merchantId) {
+        // 如果指定了station参数，过滤订单
+        if (stationId && event.data) {
+          const order = event.data;
+          // 检查订单是否有符合条件的菜品
+          // 如果菜品的stationIds为空，表示推送到所有工位
+          // 如果菜品的stationIds包含当前stationId，也推送
+          const hasRelevantItem = (order.items || []).some((item: any) => {
+            // stationIds为空或undefined，表示推送到所有工位
+            if (!item.stationIds || item.stationIds.length === 0) {
+              return true;
+            }
+            // stationIds包含当前工位
+            return item.stationIds.includes(stationId);
+          });
+          
+          if (!hasRelevantItem) {
+            return; // 不推送此订单
+          }
+        }
         res.write(`data: ${JSON.stringify(event)}\n\n`);
       }
     };
@@ -1487,6 +1585,9 @@ app.listen(PORT, async () => {
   
   // 确保 pickup_methods 列存在
   await ensurePickupMethodsColumn();
+  
+  // 确保 kitchen_stations 列存在
+  await ensureKitchenStationsColumn();
   
   // 确保 menu-images storage bucket 存在
   const { data: buckets } = await supabase.storage.listBuckets();
