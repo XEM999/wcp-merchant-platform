@@ -278,8 +278,11 @@ export async function createMerchant(data: {
       online: false,
       rating: 0,
       review_count: 0,
-      suspended: false,
+      account_status: 'free_trial',
+      plan: 'free',
+      commission_rate: 0.08,
       pickup_methods: DEFAULT_PICKUP_METHODS,
+      kitchen_stations: [],
     })
     .select()
     .single();
