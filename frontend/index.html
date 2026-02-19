@@ -1309,13 +1309,13 @@
     /* ===== Mock Data ===== */
     function getMockMerchants() {
         return [
-            { id: 1, name: '川味小馆', nameEn: 'Sichuan Kitchen', type: 'food_truck', lat: -43.529, lng: 172.638, rating: 4.5, reviewCount: 28, distance: 0.5, status: 'online', phone: '+64 21 123 456', address: 'Cathedral Square',
+            { id: 'mock-1', name: '川味小馆', nameEn: 'Sichuan Kitchen', type: 'food_truck', lat: -43.529, lng: 172.638, rating: 4.5, reviewCount: 28, distance: 0.5, status: 'online', phone: '+64 21 123 456', address: 'Cathedral Square',
              menu: [{ name: '麻婆豆腐 Mapo Tofu', price: 18 }, { name: '宫保鸡丁 Kung Pao Chicken', price: 22 }, { name: '酸辣汤 Hot & Sour Soup', price: 10 }] },
-            { id: 2, name: '寿司太郎', nameEn: 'Sushi Taro', type: 'food_truck', lat: -43.535, lng: 172.634, rating: 4.8, reviewCount: 56, distance: 0.8, status: 'online', phone: '+64 21 234 567', address: 'Riccarton',
+            { id: 'mock-2', name: '寿司太郎', nameEn: 'Sushi Taro', type: 'food_truck', lat: -43.535, lng: 172.634, rating: 4.8, reviewCount: 56, distance: 0.8, status: 'online', phone: '+64 21 234 567', address: 'Riccarton',
              menu: [{ name: '三文鱼刺身 Salmon Sashimi', price: 28 }, { name: '鳗鱼寿司 Eel Sushi', price: 15 }] },
-            { id: 3, name: '咖啡小镇', nameEn: 'Coffee Town', type: 'cafe', lat: -43.533, lng: 172.635, rating: 4.6, reviewCount: 42, distance: 0.3, status: 'online', phone: '+64 21 345 678', address: 'New Regent Street',
+            { id: 'mock-3', name: '咖啡小镇', nameEn: 'Coffee Town', type: 'cafe', lat: -43.533, lng: 172.635, rating: 4.6, reviewCount: 42, distance: 0.3, status: 'online', phone: '+64 21 345 678', address: 'New Regent Street',
              menu: [{ name: '拿铁 Latte', price: 6 }, { name: '卡布奇诺 Cappuccino', price: 6.5 }, { name: '牛角包 Croissant', price: 5 }] },
-            { id: 4, name: '甜蜜时光', nameEn: 'Sweet Time', type: 'bakery', lat: -43.531, lng: 172.637, rating: 4.7, reviewCount: 33, distance: 0.4, status: 'online', phone: '+64 21 456 789', address: 'Colombo Street',
+            { id: 'mock-4', name: '甜蜜时光', nameEn: 'Sweet Time', type: 'bakery', lat: -43.531, lng: 172.637, rating: 4.7, reviewCount: 33, distance: 0.4, status: 'online', phone: '+64 21 456 789', address: 'Colombo Street',
              menu: [{ name: '法式可颂 Croissant', price: 5.5 }, { name: '巧克力蛋糕 Chocolate Cake', price: 12 }, { name: '肉桂卷 Cinnamon Roll', price: 7 }] }
         ];
     }
@@ -1325,14 +1325,23 @@
         showLoading(currentLang === 'zh' ? '搜索中…' : 'Searching…');
         var loc = userLoc || DEFAULT_CENTER;
         try {
+            // 先搜10km，没结果则扩大到50km
             var data = await apiCall('/merchants/nearby?lat=' + loc.lat + '&lng=' + loc.lng + '&radius=10');
             merchants = data.merchants || [];
+            if (!merchants.length) {
+                data = await apiCall('/merchants/nearby?lat=' + loc.lat + '&lng=' + loc.lng + '&radius=50');
+                merchants = data.merchants || [];
+            }
             if (!merchants.length) throw new Error('empty');
         } catch (e) {
             merchants = getMockMerchants().filter(function(m) { return m.status === 'online'; });
         }
-        renderMerchants();
-        updateMapMarkers();
+        try {
+            renderMerchants();
+            updateMapMarkers();
+        } catch(renderErr) {
+            console.error('Render error:', renderErr);
+        }
         hideLoading();
     }
 
