@@ -1273,18 +1273,24 @@
 
     async function checkAuth(retries) {
         retries = retries || 0;
+        console.log('[AUTH] checkAuth called, retries=' + retries + ', token=' + (token ? 'yes(' + token.length + ')' : 'null'));
         if (!token) {
+            console.log('[AUTH] No token, showing login');
             showLoginPage();
             return false;
         }
 
         try {
             const data = await apiCall('/auth/me');
+            console.log('[AUTH] apiCall returned:', JSON.stringify(data));
             if (data && data.id) {
                 user = data;
+                console.log('[AUTH] Auth OK, user=' + data.id);
                 return true;
             }
+            console.log('[AUTH] data missing id, falling through');
         } catch (e) {
+            console.log('[AUTH] apiCall threw:', e.message);
             // 401 = token无效，显示登录
             if (e.message && e.message.includes('401')) {
                 showLoginPage();
@@ -1301,6 +1307,7 @@
             return false;
         }
         
+        console.log('[AUTH] Reached end of checkAuth, showing login');
         showLoginPage();
         return false;
     }
