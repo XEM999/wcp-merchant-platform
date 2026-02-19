@@ -1382,10 +1382,7 @@
     }
 
     function logout() {
-        localStorage.removeItem('token');
-        token = null;
-        user = null;
-        merchant = null;
+        // 只清理厨房的连接资源，不清token（保持商家后台登录状态）
         if (sseConnection) {
             sseConnection.close();
             sseConnection = null;
@@ -1394,7 +1391,7 @@
             wakeLock.release();
             wakeLock = null;
         }
-        // Fix: 退出厨房投屏后跳转商家后台
+        // 直接跳回商家后台
         window.location.href = '/merchant';
     }
 
