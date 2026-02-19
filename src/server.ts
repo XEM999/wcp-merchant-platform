@@ -178,7 +178,9 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api/auth/', authLimiter);
+// 只限制登录和注册，不限制 /api/auth/me（每次刷新页面都会调）
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // ==================== 输入消毒工具 ====================
 
