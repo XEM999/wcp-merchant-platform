@@ -53,6 +53,53 @@
             background: linear-gradient(135deg, var(--primary-light) 0%, white 100%);
         }
 
+        /* ===== Loading Page (light theme for merchant) ===== */
+        .loading-page {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-light) 0%, white 100%);
+            z-index: 10000;
+        }
+
+        .loading-page .loading-logo {
+            font-size: 64px;
+            margin-bottom: 16px;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .loading-page .loading-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 32px;
+        }
+
+        .loading-page .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        .loading-page .loading-text {
+            font-size: 14px;
+            color: var(--text-2);
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         .login-logo {
             font-size: 64px;
             margin-bottom: 16px;
@@ -1182,8 +1229,16 @@
     </style>
 </head>
 <body>
+    <!-- Loading Page (for no-token case, light theme) -->
+    <div class="loading-page" id="loadingPage" style="display: none;">
+        <div class="loading-logo">🏪</div>
+        <h1 class="loading-title">NearBite</h1>
+        <div class="loading-spinner"></div>
+        <p class="loading-text" data-i18n="loading">加载中...</p>
+    </div>
+
     <!-- Login Page -->
-    <div class="login-page" id="loginPage">
+    <div class="login-page" id="loginPage" style="display: none;">
         <div class="login-logo">🏪</div>
         <h1 class="login-title">NearBite</h1>
         <p class="login-subtitle" data-i18n="merchant_portal">商家管理后台</p>
@@ -2355,11 +2410,13 @@
     }
 
     function showLoginPage() {
+        document.getElementById('loadingPage').style.display = 'none';
         document.getElementById('loginPage').style.display = 'flex';
         document.getElementById('appContainer').classList.remove('active');
     }
 
     function showAppPage() {
+        document.getElementById('loadingPage').style.display = 'none';
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('appContainer').classList.add('active');
     }
@@ -3013,12 +3070,12 @@
 
     /* ===== Init ===== */
     async function initApp() {
-        showLoading(currentLang === 'zh' ? '加载中...' : 'Loading...');
+        // No showLoading here - app is already visible (optimistic auth)
+        // No showAppPage here - already called in DOMContentLoaded
 
         const hasMerchant = await loadMerchant();
         
         if (hasMerchant) {
-            showAppPage();
             await Promise.all([
                 loadOrders(),
                 loadMenu()
@@ -3027,7 +3084,7 @@
             connectSSE();
         }
 
-        hideLoading();
+        // Note: hideLoading() not needed - optimistic auth doesn't show loading overlay
     }
 
     // ===== QR Code 二维码功能 =====
@@ -3421,15 +3478,26 @@
         }
     }
 
-    // Entry point
+    // Entry point - Optimistic Auth
     document.addEventListener('DOMContentLoaded', async () => {
         applyLang();
         updateSoundUI();
         initConfirmModeUI();
         
-        const isAuth = await checkAuth();
-        if (isAuth) {
-            await initApp();
+        // Optimistic auth: if token exists, show app immediately
+        const savedToken = localStorage.getItem('token');
+        if (savedToken) {
+            token = savedToken;
+            // Show app immediately (optimistic load)
+            showAppPage();
+            // Verify auth in background
+            const isAuth = await checkAuth();
+            if (isAuth) {
+                await initApp();
+            }
+            // checkAuth failure will auto-call showLoginPage()
+        } else {
+            showLoginPage();
         }
     });
     </script>

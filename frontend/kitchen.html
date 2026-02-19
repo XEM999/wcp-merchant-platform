@@ -730,8 +730,8 @@
     </style>
 </head>
 <body>
-    <!-- Loading Page -->
-    <div class="loading-page" id="loadingPage">
+    <!-- Loading Page (hidden by default - optimistic auth) -->
+    <div class="loading-page" id="loadingPage" style="display: none;">
         <div class="loading-logo">👨‍🍳</div>
         <h1 class="loading-title">NearBite</h1>
         <div class="loading-spinner"></div>
@@ -1655,7 +1655,8 @@
 
     /* ===== Init ===== */
     async function initApp() {
-        showLoading(currentLang === 'zh' ? '加载中...' : 'Loading...');
+        // No showLoading here - app is already visible (optimistic auth)
+        // No showAppPage here - already called in DOMContentLoaded
 
         const hasMerchant = await loadMerchant();
         
@@ -1674,7 +1675,6 @@
                     }
                 }
             }
-            showAppPage();
             await loadOrders();
             connectSSE();
             await requestWakeLock();
@@ -1684,17 +1684,26 @@
                 window.location.href = '/merchant';
             }, 2000);
         }
-
-        hideLoading();
     }
 
-    // Entry point
+    // Entry point - Optimistic Auth
     document.addEventListener('DOMContentLoaded', async () => {
         applyLang();
         
-        const isAuth = await checkAuth();
-        if (isAuth) {
-            await initApp();
+        // Optimistic auth: if token exists, show app immediately
+        const savedToken = localStorage.getItem('token');
+        if (savedToken) {
+            token = savedToken;
+            // Show app immediately (optimistic load)
+            showAppPage();
+            // Verify auth in background
+            const isAuth = await checkAuth();
+            if (isAuth) {
+                await initApp();
+            }
+            // checkAuth failure will auto-call showLoginPage()
+        } else {
+            showLoginPage();
         }
     });
 
