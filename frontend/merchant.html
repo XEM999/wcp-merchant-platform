@@ -1273,6 +1273,18 @@
                 </div>
             </div>
 
+            <!-- 二维码点餐 -->
+            <div class="settings-group">
+                <div class="settings-item" onclick="showQRCode()" style="cursor:pointer">
+                    <span class="settings-item-icon">📱</span>
+                    <div class="settings-item-text">
+                        <div class="settings-item-label" data-i18n="qr_code">点餐二维码</div>
+                        <div class="settings-item-desc" data-i18n="qr_code_desc">生成二维码让顾客扫码点餐</div>
+                    </div>
+                    <span class="settings-item-arrow">›</span>
+                </div>
+            </div>
+
             <div class="settings-group">
                 <div class="settings-item" onclick="switchToKitchen()">
                     <span class="settings-item-icon">📺</span>
@@ -2628,6 +2640,125 @@
         }
 
         hideLoading();
+    }
+
+    // ===== QR Code 二维码功能 =====
+    function showQRCode() {
+        if (!merchant) {
+            showToast(currentLang === 'zh' ? '请先注册商户' : 'Please register merchant first', 'error');
+            return;
+        }
+        // 生成二维码URL：指向买家首页+商户ID
+        var baseUrl = window.location.origin;
+        var qrUrl = baseUrl + '/?merchant=' + merchant.id;
+        
+        // 创建弹窗
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+        overlay.onclick = function(e) { if(e.target===overlay) document.body.removeChild(overlay); };
+        
+        var modal = document.createElement('div');
+        modal.style.cssText = 'background:#fff;border-radius:20px;padding:30px;max-width:380px;width:100%;text-align:center';
+        
+        var title = document.createElement('h3');
+        title.style.cssText = 'margin:0 0 8px;font-size:20px;color:#333';
+        title.textContent = merchant.name;
+        
+        var subtitle = document.createElement('p');
+        subtitle.style.cssText = 'margin:0 0 20px;font-size:14px;color:#999';
+        subtitle.textContent = currentLang === 'zh' ? '顾客扫码即可点餐' : 'Scan to order';
+        
+        // QR码容器
+        var qrDiv = document.createElement('div');
+        qrDiv.id = 'qrCanvas';
+        qrDiv.style.cssText = 'margin:0 auto 20px;display:inline-block;padding:16px;background:#fff;border:2px solid #f0f0f0;border-radius:12px';
+        
+        // 桌号提示
+        var tableInfo = document.createElement('div');
+        tableInfo.style.cssText = 'background:#fff7ed;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:#ea580c';
+        tableInfo.innerHTML = currentLang === 'zh' 
+            ? '💡 <b>提示：</b>在桌面贴上桌号，顾客扫码后手动输入桌号即可' 
+            : '💡 <b>Tip:</b> Place table numbers on tables. Customers enter the number after scanning.';
+        
+        // 带桌号的URL（可选）
+        var tableInput = document.createElement('div');
+        tableInput.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:16px';
+        tableInput.innerHTML = '<span style="font-size:14px;white-space:nowrap">' + (currentLang==='zh'?'预设桌号:':'Table #:') + '</span>' +
+            '<input type="text" id="qrTableNum" placeholder="' + (currentLang==='zh'?'可选，如 A1':'Optional, e.g. A1') + '" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px" oninput="updateQR()">';
+        
+        // 操作按钮
+        var actions = document.createElement('div');
+        actions.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
+        actions.innerHTML = 
+            '<button onclick="downloadQR()" style="padding:10px 20px;background:#ff6b35;color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer">📥 ' + (currentLang==='zh'?'下载二维码':'Download QR') + '</button>' +
+            '<button onclick="printQR()" style="padding:10px 20px;background:#f0f0f0;color:#333;border:none;border-radius:10px;font-size:14px;cursor:pointer">🖨 ' + (currentLang==='zh'?'打印':'Print') + '</button>';
+        
+        modal.appendChild(title);
+        modal.appendChild(subtitle);
+        modal.appendChild(qrDiv);
+        modal.appendChild(tableInfo);
+        modal.appendChild(tableInput);
+        modal.appendChild(actions);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // 加载QRCode库并生成
+        if (!window.QRCode) {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
+            s.onload = function() { generateQR(qrUrl); };
+            document.head.appendChild(s);
+        } else {
+            generateQR(qrUrl);
+        }
+    }
+    
+    var qrInstance = null;
+    function generateQR(url) {
+        var container = document.getElementById('qrCanvas');
+        if (!container) return;
+        container.innerHTML = '';
+        qrInstance = new QRCode(container, {
+            text: url,
+            width: 200,
+            height: 200,
+            colorDark: '#1a1a1a',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
+    
+    function updateQR() {
+        if (!merchant) return;
+        var tableNum = document.getElementById('qrTableNum').value.trim();
+        var baseUrl = window.location.origin;
+        var qrUrl = baseUrl + '/?merchant=' + merchant.id;
+        if (tableNum) qrUrl += '&table=' + encodeURIComponent(tableNum);
+        generateQR(qrUrl);
+    }
+    
+    function downloadQR() {
+        var canvas = document.querySelector('#qrCanvas canvas');
+        if (!canvas) return;
+        var a = document.createElement('a');
+        a.download = 'NearBite_QR_' + (merchant ? merchant.name : 'code') + '.png';
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+    }
+    
+    function printQR() {
+        var canvas = document.querySelector('#qrCanvas canvas');
+        if (!canvas) return;
+        var win = window.open('', '_blank');
+        win.document.write('<html><head><title>NearBite QR</title></head><body style="text-align:center;padding:40px">');
+        win.document.write('<h2>' + (merchant ? merchant.name : 'NearBite') + '</h2>');
+        win.document.write('<img src="' + canvas.toDataURL('image/png') + '" style="width:300px;height:300px">');
+        win.document.write('<p style="font-size:18px;color:#666">' + (currentLang==='zh'?'扫码点餐':'Scan to Order') + '</p>');
+        var tableNum = document.getElementById('qrTableNum') ? document.getElementById('qrTableNum').value.trim() : '';
+        if (tableNum) win.document.write('<p style="font-size:48px;font-weight:bold;margin:20px 0">桌号 ' + tableNum + '</p>');
+        win.document.write('</body></html>');
+        win.document.close();
+        win.print();
     }
 
     // Entry point

@@ -1700,6 +1700,35 @@
         toast(currentLang === 'zh' ? '已退出登录' : 'Logged out', 'info');
     }
 
+    /* ===== QR Code / URL参数处理 ===== */
+    async function handleQREntry() {
+        var params = new URLSearchParams(window.location.search);
+        var merchantId = params.get('merchant');
+        var tableNum = params.get('table');
+        if (!merchantId) return;
+
+        // 扫码进入，自动加载该商户
+        try {
+            var resp = await fetch(API_BASE + '/merchants/' + merchantId);
+            if (!resp.ok) return;
+            var merchant = await resp.json();
+            if (tableNum) {
+                // 预填桌号
+                sessionStorage.setItem('qr_table_number', tableNum);
+            }
+            // 自动展开该商户的菜单
+            if (typeof openMerchant === 'function') {
+                openMerchant(merchant);
+            } else if (typeof showMerchantDetail === 'function') {
+                showMerchantDetail(merchant);
+            }
+            // 清除URL参数避免刷新重复触发
+            window.history.replaceState({}, '', window.location.pathname);
+        } catch(e) {
+            console.error('QR entry error:', e);
+        }
+    }
+
     /* ===== Init ===== */
     window.addEventListener('DOMContentLoaded', async function() {
         applyLang();
@@ -1709,6 +1738,8 @@
         searchMerchants();
         updateCartUI();
         updateUserUI();
+        // 检查是否从二维码扫入
+        setTimeout(handleQREntry, 500);
     });
     </script>
 </body>
