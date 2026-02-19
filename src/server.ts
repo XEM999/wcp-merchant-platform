@@ -5,6 +5,7 @@ import { EventEmitter } from 'events';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import xss from 'xss';
+import multer from 'multer';
 import {
   createMerchant,
   getMerchant,
@@ -47,9 +48,25 @@ import {
   getAllMerchantsForExport,
   initAdminAccount,
   deleteReview,
+  supabase,
   cancelOrder,
+  uploadMenuImage,
 } from './database';
 import { register, login, authMiddleware, optionalAuthMiddleware, adminMiddleware, superAdminMiddleware } from './auth';
+
+// ==================== Multer 配置 ====================
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 最大5MB
+  fileFilter: (_req, file, cb) => {
+    if (['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('只支持 JPG/PNG/WebP 图片'));
+    }
+  }
+});
 
 // ==================== 工具函数 ====================
 
@@ -386,6 +403,51 @@ app.put('/api/merchants/:id/menu', authMiddleware, async (req: Request, res: Res
   } catch (e: any) {
     console.error('菜单更新错误:', e);
     return err(res, 500, '更新失败');
+  }
+});
+
+// --- 上传菜品图片 (需登录) ---
+app.post('/api/upload/menu-image', authMiddleware, upload.single('image'), async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const userId = (req as any).userId;
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权上传');
+    }
+
+    const file = req.file;
+    if (!file) {
+      return err(res, 400, '请选择图片文件');
+    }
+
+    // 生成文件路径: {merchantId}/{timestamp}_{originalname}
+    const timestamp = Date.now();
+    const originalName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const ext = originalName.split('.').pop() || 'jpg';
+    const filePath = `${merchantId}/${timestamp}_${originalName}`;
+
+    // 上传到Supabase Storage
+    const publicUrl = await uploadMenuImage(file.buffer, filePath, file.mimetype);
+
+    res.json({ 
+      message: '图片上传成功', 
+      url: publicUrl,
+      filePath 
+    });
+  } catch (e: any) {
+    console.error('图片上传错误:', e);
+    return err(res, 500, e.message || '图片上传失败');
   }
 });
 
@@ -1348,6 +1410,13 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   // 初始化管理员账号
   await initAdminAccount();
+  
+  // 确保 menu-images storage bucket 存在
+  const { data: buckets } = await supabase.storage.listBuckets();
+  if (!buckets?.find(b => b.name === 'menu-images')) {
+    await supabase.storage.createBucket('menu-images', { public: true, fileSizeLimit: 5 * 1024 * 1024 });
+    console.log('📦 已创建 menu-images Storage Bucket');
+  }
   
   console.log(`🏪 NearBite API已启动: http://localhost:${PORT}`);
   console.log('');

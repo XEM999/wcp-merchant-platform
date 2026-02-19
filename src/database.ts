@@ -18,6 +18,7 @@ export interface MenuItem {
   description?: string;
   category?: string;
   available: boolean;
+  imageUrl?: string;
 }
 
 export interface Review {
@@ -293,6 +294,7 @@ export async function getMerchant(id: string): Promise<Merchant | undefined> {
     price: item.price,
     category: item.category,
     available: item.available,
+    imageUrl: item.image_url || undefined,
   }));
 
   return mapMerchantFromDb(merchant, items);
@@ -325,6 +327,7 @@ export async function getAllMerchants(): Promise<Merchant[]> {
       price: item.price,
       category: item.category,
       available: item.available,
+      imageUrl: item.image_url || undefined,
     });
   });
 
@@ -354,6 +357,7 @@ export async function updateMerchantStatus(id: string, online: boolean): Promise
     price: item.price,
     category: item.category,
     available: item.available,
+    imageUrl: item.image_url || undefined,
   }));
 
   return mapMerchantFromDb(merchant, items);
@@ -408,6 +412,7 @@ export async function getNearbyMerchants(center: Location, radiusKm: number): Pr
         price: item.price,
         category: item.category,
         available: item.available,
+        imageUrl: item.image_url || undefined,
       }));
 
       nearbyMerchants.push({
@@ -1174,6 +1179,7 @@ export async function getAllMerchantsAdmin(
       price: item.price,
       category: item.category,
       available: item.available,
+      imageUrl: item.image_url || undefined,
     });
   });
 
@@ -1629,4 +1635,27 @@ export async function initAdminAccount(): Promise<void> {
   } catch (err) {
     console.error('初始化管理员账号时出错:', err);
   }
+}
+
+// ==================== Supabase Storage 上传 ====================
+
+/**
+ * 上传菜品图片到Supabase Storage
+ * @param buffer 文件Buffer
+ * @param filePath 存储路径（如：merchantId/timestamp_filename.jpg）
+ * @param contentType 文件MIME类型
+ * @returns 公开URL
+ */
+export async function uploadMenuImage(buffer: Buffer, filePath: string, contentType: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('menu-images')
+    .upload(filePath, buffer, { contentType, upsert: true });
+
+  if (error) throw new Error('图片上传失败: ' + error.message);
+
+  const { data: urlData } = supabase.storage
+    .from('menu-images')
+    .getPublicUrl(filePath);
+
+  return urlData.publicUrl;
 }

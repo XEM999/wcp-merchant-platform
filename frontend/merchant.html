@@ -1098,6 +1098,87 @@
         .confirm-btn-wrapper.quicktap-mode .order-btn.undoing {
             background: var(--yellow) !important;
         }
+
+        /* ===== Menu Image Upload ===== */
+        .menu-item-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .menu-item-card {
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-item-card .menu-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .image-upload-section {
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .image-preview-container {
+            width: 120px;
+            height: 120px;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all .2s;
+            background: var(--bg-input);
+        }
+
+        .image-preview-container:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .image-preview-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-container .placeholder {
+            color: var(--text-3);
+            font-size: 13px;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .image-preview-container .placeholder-icon {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+
+        .image-upload-hint {
+            font-size: 12px;
+            color: var(--text-3);
+        }
+
+        .image-upload-loading {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.8);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-preview-container.loading .image-upload-loading {
+            display: flex;
+        }
     </style>
 </head>
 <body>
@@ -1334,6 +1415,20 @@
             <div class="modal-title">
                 <span id="menuModalTitle" data-i18n="add_item">添加菜品</span>
                 <button class="modal-close" onclick="closeMenuModal()">✕</button>
+            </div>
+            <div class="image-upload-section">
+                <div class="image-preview-container" id="imagePreviewContainer" onclick="document.getElementById('menuImageInput').click()">
+                    <div class="placeholder" id="imagePlaceholder">
+                        <div class="placeholder-icon">📷</div>
+                        <div>点击上传图片</div>
+                    </div>
+                    <img id="imagePreview" style="display:none" alt="菜品图片">
+                    <div class="image-upload-loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+                <div class="image-upload-hint">支持 JPG/PNG/WebP，最大 5MB</div>
+                <input type="file" id="menuImageInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleMenuImageSelect(this)">
             </div>
             <div class="form-group">
                 <label class="form-label" data-i18n="item_name">菜品名称</label>
@@ -2511,6 +2606,7 @@
                 <div class="menu-category-name">${cat}</div>
                 ${items.map(item => `
                     <div class="menu-item-card" data-item-id="${item.id}">
+                        ${item.imageUrl ? `<img class="menu-item-image" src="${item.imageUrl}" alt="${item.name}" onclick="editMenuItem('${item.id}')">` : ''}
                         <div class="menu-item-info">
                             <div class="menu-item-name">${item.name}</div>
                             <div class="menu-item-price">NZD $${item.price.toFixed(2)}</div>
@@ -2526,6 +2622,62 @@
         `).join('');
     }
 
+    // ===== 图片上传相关 =====
+    let pendingImageFile = null;
+
+    function resetImagePreview(imageUrl) {
+        pendingImageFile = null;
+        const preview = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('imagePlaceholder');
+        const container = document.getElementById('imagePreviewContainer');
+        container.classList.remove('loading');
+        if (imageUrl) {
+            preview.src = imageUrl;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+        } else {
+            preview.src = '';
+            preview.style.display = 'none';
+            placeholder.style.display = 'flex';
+        }
+    }
+
+    function handleMenuImageSelect(input) {
+        const file = input.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            toast(currentLang === 'zh' ? '图片不能超过5MB' : 'Image must be under 5MB', 'error');
+            input.value = '';
+            return;
+        }
+        pendingImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('imagePlaceholder');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        const resp = await fetch(API_BASE + '/upload/menu-image', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+            body: formData
+        });
+        if (!resp.ok) {
+            const e = await resp.json().catch(() => ({}));
+            throw new Error(e.error || '上传失败');
+        }
+        const data = await resp.json();
+        return data.url;
+    }
+
     function showAddMenuModal() {
         editingItem = null;
         document.getElementById('menuModalTitle').textContent = t('add_item');
@@ -2533,6 +2685,8 @@
         document.getElementById('itemPrice').value = '';
         document.getElementById('itemCategory').value = '';
         document.getElementById('itemDesc').value = '';
+        resetImagePreview(null);
+        document.getElementById('menuImageInput').value = '';
         document.getElementById('menuModal').classList.add('show');
     }
 
@@ -2546,6 +2700,8 @@
         document.getElementById('itemPrice').value = item.price;
         document.getElementById('itemCategory').value = item.category || '';
         document.getElementById('itemDesc').value = item.description || '';
+        resetImagePreview(item.imageUrl || null);
+        document.getElementById('menuImageInput').value = '';
         document.getElementById('menuModal').classList.add('show');
     }
 
@@ -2565,17 +2721,30 @@
             return;
         }
 
+        // 上传图片（如果有新选择的）
+        let imageUrl = editingItem ? (editingItem.imageUrl || '') : '';
+        if (pendingImageFile) {
+            try {
+                document.getElementById('imagePreviewContainer').classList.add('loading');
+                imageUrl = await uploadImage(pendingImageFile);
+            } catch (e) {
+                toast(e.message || (currentLang === 'zh' ? '图片上传失败' : 'Image upload failed'), 'error');
+                document.getElementById('imagePreviewContainer').classList.remove('loading');
+                return;
+            }
+            document.getElementById('imagePreviewContainer').classList.remove('loading');
+        }
+
         if (editingItem) {
-            // Update existing
-            Object.assign(editingItem, { name, price, category, description });
+            Object.assign(editingItem, { name, price, category, description, imageUrl });
         } else {
-            // Add new
             menuItems.push({
                 id: 'item_' + Date.now(),
                 name,
                 price,
                 category,
                 description,
+                imageUrl,
                 available: true
             });
         }
