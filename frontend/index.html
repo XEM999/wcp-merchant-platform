@@ -978,10 +978,14 @@
                 </div>
                 <div class="order-options">
                     <div class="option-label" data-i18n="pickup_method">取餐方式</div>
-                    <div class="option-row">
-                        <button class="option-btn active" data-method="self" onclick="selectPickup(this)" data-i18n="self_pickup">自取</button>
-                        <button class="option-btn" data-method="table" onclick="selectPickup(this)" data-i18n="delivery_table">送到桌</button>
+                    <div class="option-row" id="pickupMethodsContainer">
+                        <!-- 动态加载 -->
                     </div>
+                </div>
+                <!-- 桌号输入（动态显示） -->
+                <div class="order-options" id="tableInputRow" style="display:none">
+                    <div class="option-label" data-i18n="table_number">桌号</div>
+                    <input type="text" class="form-input" id="tableNumberInput" data-i18n-placeholder="table_placeholder" placeholder="请输入桌号" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
                 </div>
                 <input type="text" class="cart-note" id="cartNote" data-i18n-placeholder="order_note" placeholder="备注：桌号或特殊要求">
                 <button class="checkout-btn" onclick="submitOrder()" data-i18n="confirm_order">确认下单</button>
@@ -1068,8 +1072,10 @@
             cart_empty: '购物车是空的',
             total: '合计',
             pickup_method: '取餐方式',
-            self_pickup: '自取',
-            delivery_table: '送到桌',
+            table_number: '桌号',
+            table_placeholder: '请输入桌号',
+            self_pickup: '前台自取',
+            delivery_table: '送餐到桌',
             order_note: '备注：桌号或特殊要求',
             confirm_order: '确认下单',
             order_pending: '等待商家接单...',
@@ -1094,13 +1100,15 @@
             register: '注册',
             login_success: '登录成功',
             register_success: '注册成功',
-            order_success: '下单成功！',
-            added_to_cart: '已加入购物车',
+            order_success:',
+            added_to '下单成功！_cart: '已加入购物车',
             cart_updated: '购物车已更新',
             no_merchants_nearby: '附近没有在线商户',
             empty_cart_warning: '购物车是空的',
             select_merchant: '请先选择商户',
-            order_id: '订单 #'
+            order_id: '订单 #',
+            back: '返回',
+            no_menu: '暂无菜单'
         },
         en: {
             im_merchant: 'Merchant',
@@ -1116,6 +1124,8 @@
             cart_empty: 'Cart is empty',
             total: 'Total',
             pickup_method: 'Pickup Method',
+            table_number: 'Table #',
+            table_placeholder: 'Enter table number',
             self_pickup: 'Self Pickup',
             delivery_table: 'Delivery to Table',
             order_note: 'Note: Table# or special requests',
@@ -1148,7 +1158,9 @@
             no_merchants_nearby: 'No merchants nearby',
             empty_cart_warning: 'Cart is empty',
             select_merchant: 'Please select a merchant',
-            order_id: 'Order #'
+            order_id: 'Order #',
+            back: 'Back',
+            no_menu: 'No menu available'
         }
     };
 
@@ -1468,6 +1480,22 @@
 
     function showCartPanel() {
         document.getElementById('cartOverlay').classList.add('show');
+        
+        // 如果是从扫码进入的商户，需要获取该商户的取餐方式
+        if (currentMerchantId && merchantPickupMethods.length === 0) {
+            // 尝试获取取餐方式
+            fetch(API_BASE + '/merchants/' + currentMerchantId + '/pickup-methods')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    merchantPickupMethods = (data.methods || []).filter(function(m) { return m.enabled; });
+                    renderPickupMethods();
+                })
+                .catch(function() {
+                    renderPickupMethods();
+                });
+        } else {
+            renderPickupMethods();
+        }
     }
 
     function closeCartPanel(event) {
@@ -1479,6 +1507,42 @@
         document.querySelectorAll('.option-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
         pickupMethod = btn.dataset.method;
+        
+        // 检查是否需要桌号
+        var requireTable = btn.dataset.requireTable === 'true';
+        var tableInputRow = document.getElementById('tableInputRow');
+        if (tableInputRow) {
+            tableInputRow.style.display = requireTable ? 'flex' : 'none';
+            if (requireTable) {
+                // 检查sessionStorage是否有预填的桌号
+                var prefillTable = sessionStorage.getItem('qr_table_number');
+                if (prefillTable && !document.getElementById('cartNote').value) {
+                    document.getElementById('cartNote').value = currentLang === 'zh' ? '桌号：' + prefillTable : 'Table: ' + prefillTable;
+                    sessionStorage.removeItem('qr_table_number');
+                }
+            }
+        }
+    }
+
+    function renderPickupMethods() {
+        var container = document.querySelector('.option-row');
+        
+        // 如果已经有动态加载的方法，使用它们
+        var methods = merchantPickupMethods.length > 0 ? merchantPickupMethods : [
+            { id: 'self_pickup', label_zh: '前台自取', label_en: 'Self Pickup', requireTableNumber: false },
+            { id: 'table_delivery', label_zh: '送餐到桌', label_en: 'Table Delivery', requireTableNumber: true }
+        ];
+        
+        container.innerHTML = methods.map(function(m) {
+            var label = currentLang === 'zh' ? m.label_zh : m.label_en;
+            var isActive = pickupMethod === m.id ? 'active' : '';
+            return '<button class="option-btn ' + isActive + '" data-method="' + m.id + '" data-require-table="' + m.requireTableNumber + '" onclick="selectPickup(this)">' + label + '</button>';
+        }).join('');
+        
+        // 默认选中第一个启用的方式
+        if (!pickupMethod && methods.length > 0) {
+            pickupMethod = methods[0].id;
+        }
     }
 
     /* ===== Order ===== */
@@ -1492,6 +1556,17 @@
         if (!token) {
             showLoginModal();
             return;
+        }
+
+        // 获取桌号（如果选择了需要桌号的取餐方式）
+        var tableNumber = '';
+        var tableInputRow = document.getElementById('tableInputRow');
+        if (tableInputRow && tableInputRow.style.display !== 'none') {
+            tableNumber = document.getElementById('tableNumberInput').value.trim();
+            if (!tableNumber) {
+                toast(currentLang === 'zh' ? '请输入桌号' : 'Please enter table number', 'error');
+                return;
+            }
         }
 
         var note = document.getElementById('cartNote').value;
@@ -1508,6 +1583,7 @@
                     merchantId: currentMerchantId,
                     items: items,
                     pickupMethod: pickupMethod,
+                    tableNumber: tableNumber || null,
                     note: note
                 })
             });
@@ -1701,6 +1777,9 @@
     }
 
     /* ===== QR Code / URL参数处理 ===== */
+    var currentMerchantData = null; // 当前扫码进入的商户数据
+    var merchantPickupMethods = []; // 当前商户支持的取餐方式
+
     async function handleQREntry() {
         var params = new URLSearchParams(window.location.search);
         var merchantId = params.get('merchant');
@@ -1708,25 +1787,135 @@
         if (!merchantId) return;
 
         // 扫码进入，自动加载该商户
+        showLoading(currentLang === 'zh' ? '加载商户...' : 'Loading merchant...');
+        
         try {
+            // 获取商户详情
             var resp = await fetch(API_BASE + '/merchants/' + merchantId);
-            if (!resp.ok) return;
+            if (!resp.ok) {
+                hideLoading();
+                return;
+            }
             var merchant = await resp.json();
+            
+            // 保存商户数据
+            currentMerchantData = merchant;
+            
+            // 预填桌号
             if (tableNum) {
-                // 预填桌号
                 sessionStorage.setItem('qr_table_number', tableNum);
             }
-            // 自动展开该商户的菜单
-            if (typeof openMerchant === 'function') {
-                openMerchant(merchant);
-            } else if (typeof showMerchantDetail === 'function') {
-                showMerchantDetail(merchant);
+            
+            // 获取商户支持的取餐方式
+            try {
+                var methodsResp = await fetch(API_BASE + '/merchants/' + merchantId + '/pickup-methods');
+                if (methodsResp.ok) {
+                    var methodsData = await methodsResp.json();
+                    merchantPickupMethods = (methodsData.methods || []).filter(function(m) { return m.enabled; });
+                }
+            } catch(e) {
+                console.error('获取取餐方式失败:', e);
+                merchantPickupMethods = [
+                    { id: 'self_pickup', label_zh: '前台自取', label_en: 'Self Pickup', requireTableNumber: false },
+                    { id: 'table_delivery', label_zh: '送餐到桌', label_en: 'Table Delivery', requireTableNumber: true }
+                ];
             }
+            
+            // 显示商户菜单视图
+            showMerchantMenuView(merchant);
+            
             // 清除URL参数避免刷新重复触发
             window.history.replaceState({}, '', window.location.pathname);
+            
+            hideLoading();
         } catch(e) {
             console.error('QR entry error:', e);
+            hideLoading();
         }
+    }
+
+    function showMerchantMenuView(merchant) {
+        // 隐藏商户列表，显示商户菜单
+        document.getElementById('map-container').style.display = 'none';
+        document.getElementById('searchSection').style.display = 'none';
+        document.querySelector('.merchant-section').style.display = 'none';
+        
+        // 创建商户信息头
+        var headerHtml = '<div class="merchant-detail-header" style="background:white;padding:16px;border-bottom:1px solid var(--border)">' +
+            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+                '<div style="width:48px;height:48px;background:var(--primary-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px">🏪</div>' +
+                '<div style="flex:1">' +
+                    '<div style="font-size:18px;font-weight:700">' + merchant.name + '</div>' +
+                    '<div style="font-size:13px;color:var(--text-2)">' + (merchant.address || '') + '</div>' +
+                '</div>' +
+                '<button onclick="backToMerchantList()" style="padding:8px 16px;background:var(--bg-input);border:none;border-radius:20px;font-size:13px;cursor:pointer">' + (currentLang==='zh'?'返回':'Back') + '</button>' +
+            '</div>' +
+            '<div style="display:flex;gap:16px;font-size:13px;color:var(--text-2)">' +
+                '<span>⭐ ' + (merchant.rating || 0) + '</span>' +
+                '<span>📝 ' + (merchant.reviewCount || 0) + ' ' + (currentLang==='zh'?'评价':'reviews') + '</span>' +
+            '</div>' +
+        '</div>';
+        
+        // 插入商户详情头
+        var merchantSection = document.querySelector('.merchant-section');
+        merchantSection.innerHTML = headerHtml;
+        
+        // 设置当前商户ID
+        currentMerchantId = merchant.id;
+        
+        // 渲染菜单
+        renderMerchantMenu(merchant);
+        
+        // 显示商户区块
+        merchantSection.style.display = 'block';
+    }
+
+    function renderMerchantMenu(merchant) {
+        var list = document.getElementById('merchantList');
+        
+        if (!merchant.menuItems || merchant.menuItems.length === 0) {
+            list.innerHTML = '<div class="empty-state"><div class="em-icon">📝</div><div>' + (currentLang==='zh'?'暂无菜单':'No menu available') + '</div></div>';
+            return;
+        }
+
+        // 按分类组织菜单
+        var categories = {};
+        merchant.menuItems.forEach(function(item) {
+            var cat = item.category || (currentLang==='zh'?'其他':'Other');
+            if (!categories[cat]) categories[cat] = [];
+            categories[cat].push(item);
+        });
+
+        var menuHtml = Object.entries(categories).map(function(_a) {
+            var cat = _a[0];
+            var items = _a[1];
+            return '<div class="menu-category">' + cat + '</div>' + 
+                items.map(function(item) {
+                    return '<div class="menu-item">' +
+                        '<div class="menu-item-info">' +
+                            '<div class="menu-item-name">' + item.name + '</div>' +
+                            '<div class="menu-item-price">NZD $' + item.price.toFixed(2) + '</div>' +
+                        '</div>' +
+                        '<button class="menu-item-add" onclick="addToCart(\'' + merchant.id + '\', \'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ')">+</button>' +
+                    '</div>';
+                }).join('');
+        }).join('');
+
+        list.innerHTML = menuHtml;
+    }
+
+    function backToMerchantList() {
+        // 恢复商户列表视图
+        document.getElementById('map-container').style.display = 'block';
+        document.getElementById('searchSection').style.display = 'block';
+        
+        var merchantSection = document.querySelector('.merchant-section');
+        merchantSection.innerHTML = '<h3 class="section-title"><span data-i18n="nearby_merchants">附近商户</span><span class="section-count" id="merchantCount"></span></h3><div class="merchant-list" id="merchantList"></div>';
+        
+        currentMerchantData = null;
+        currentMerchantId = null;
+        
+        renderMerchants();
     }
 
     /* ===== Init ===== */

@@ -51,6 +51,13 @@ import {
   supabase,
   cancelOrder,
   uploadMenuImage,
+  // 取餐方式相关
+  PickupMethodConfig,
+  DEFAULT_PICKUP_METHODS,
+  getMerchantPickupMethods,
+  updateMerchantPickupMethods,
+  validatePickupMethod,
+  ensurePickupMethodsColumn,
 } from './database';
 import { register, login, authMiddleware, optionalAuthMiddleware, adminMiddleware, superAdminMiddleware } from './auth';
 
@@ -292,6 +299,61 @@ app.get('/api/merchants/:id', async (req: Request, res: Response) => {
   } catch (e: any) {
     console.error('商户详情查询错误:', e);
     return err(res, 500, '查询失败');
+  }
+});
+
+// --- 获取商户的取餐方式 (公开) ---
+app.get('/api/merchants/:id/pickup-methods', async (req: Request, res: Response) => {
+  try {
+    const methods = await getMerchantPickupMethods(req.params.id);
+    res.json({ methods });
+  } catch (e: any) {
+    console.error('获取取餐方式错误:', e);
+    return err(res, 500, '查询失败');
+  }
+});
+
+// --- 更新商户的取餐方式 (需登录) ---
+app.put('/api/merchant/pickup-methods', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const userId = (req as any).userId;
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权操作');
+    }
+
+    const { methods } = req.body;
+    if (!Array.isArray(methods)) {
+      return err(res, 400, 'methods 必须是数组');
+    }
+
+    // 验证每个取餐方式配置
+    for (const method of methods) {
+      if (!method.id || !method.label_zh || !method.label_en) {
+        return err(res, 400, '每个取餐方式必须有 id, label_zh, label_en');
+      }
+    }
+
+    const success = await updateMerchantPickupMethods(merchantId, methods);
+    if (!success) {
+      return err(res, 500, '更新失败');
+    }
+
+    res.json({ message: '取餐方式已更新', methods });
+  } catch (e: any) {
+    console.error('更新取餐方式错误:', e);
+    return err(res, 500, '更新失败');
   }
 });
 
@@ -538,13 +600,25 @@ app.post('/api/orders', authMiddleware, async (req: Request, res: Response) => {
       return err(res, 403, '商家账号已停权/到期，无法下单');
     }
 
+    // 验证取餐方式
+    const selectedPickupMethod = pickupMethod || 'self_pickup';
+    const validation = await validatePickupMethod(merchantId, selectedPickupMethod);
+    if (!validation.valid) {
+      return err(res, 400, '无效的取餐方式');
+    }
+
+    // 如果需要桌号但未提供，返回错误
+    if (validation.requireTableNumber && !tableNumber) {
+      return err(res, 400, '该取餐方式需要提供桌号');
+    }
+
     // 创建订单
     const order = await createOrder({
       merchantId,
       userId,
       items: items as OrderItem[],
       tableNumber: tableNumber || null,
-      pickupMethod: pickupMethod || 'self',
+      pickupMethod: selectedPickupMethod,
       note,
     });
 
@@ -1411,6 +1485,9 @@ app.listen(PORT, async () => {
   // 初始化管理员账号
   await initAdminAccount();
   
+  // 确保 pickup_methods 列存在
+  await ensurePickupMethodsColumn();
+  
   // 确保 menu-images storage bucket 存在
   const { data: buckets } = await supabase.storage.listBuckets();
   if (!buckets?.find(b => b.name === 'menu-images')) {
@@ -1425,6 +1502,8 @@ app.listen(PORT, async () => {
   console.log('  GET  /api/merchants - 商户列表');
   console.log('  GET  /api/merchants/nearby - 附近商户');
   console.log('  GET  /api/merchants/:id - 商户详情');
+  console.log('  GET  /api/merchants/:id/pickup-methods - 获取商户取餐方式');
+  console.log('  PUT  /api/merchant/pickup-methods - 更新取餐方式配置');
   console.log('  PATCH /api/merchants/:id/status - 上线/下线');
   console.log('  PUT  /api/merchants/:id/menu - 更新菜单');
   console.log('  POST /api/merchants/:id/reviews - 提交评价');

@@ -1366,6 +1366,18 @@
                 </div>
             </div>
 
+            <!-- 取餐方式管理 -->
+            <div class="settings-group">
+                <div class="settings-item" onclick="showPickupMethodsModal()" style="cursor:pointer">
+                    <span class="settings-item-icon">🥡</span>
+                    <div class="settings-item-text">
+                        <div class="settings-item-label" data-i18n="pickup_methods">取餐方式管理</div>
+                        <div class="settings-item-desc" data-i18n="pickup_methods_desc">设置顾客可选的取餐方式</div>
+                    </div>
+                    <span class="settings-item-arrow">›</span>
+                </div>
+            </div>
+
             <div class="settings-group">
                 <div class="settings-item" onclick="switchToKitchen()">
                     <span class="settings-item-icon">📺</span>
@@ -1449,6 +1461,38 @@
             <div class="modal-footer">
                 <button class="form-btn secondary" onclick="closeMenuModal()" data-i18n="cancel">取消</button>
                 <button class="form-btn primary" onclick="saveMenuItem()" data-i18n="save">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pickup Methods Modal -->
+    <div class="modal-overlay" id="pickupMethodsModal" onclick="closePickupMethodsModal(event)">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width:450px">
+            <div class="modal-title">
+                <span data-i18n="pickup_methods">取餐方式管理</span>
+                <button class="modal-close" onclick="closePickupMethodsModal()">✕</button>
+            </div>
+            <div id="pickupMethodsContent">
+                <!-- 预设选项 -->
+                <div style="margin-bottom:16px">
+                    <div style="font-size:13px;color:var(--text-2);margin-bottom:8px" data-i18n="preset_options">预设选项</div>
+                    <div id="presetPickupMethods"></div>
+                </div>
+                <!-- 自定义选项 -->
+                <div style="margin-bottom:16px">
+                    <div style="font-size:13px;color:var(--text-2);margin-bottom:8px" data-i18n="custom_options">自定义选项</div>
+                    <div id="customPickupMethods"></div>
+                </div>
+                <!-- 添加自定义 -->
+                <div style="display:flex;gap:8px;margin-bottom:16px">
+                    <input type="text" id="newMethodNameZh" class="form-input" style="flex:1" placeholder="中文名">
+                    <input type="text" id="newMethodNameEn" class="form-input" style="flex:1" placeholder="English Name">
+                    <button class="form-btn primary" style="width:auto;padding:0 16px" onclick="addCustomPickupMethod()">+</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="form-btn secondary" onclick="closePickupMethodsModal()" data-i18n="cancel">取消</button>
+                <button class="form-btn primary" onclick="savePickupMethods()" data-i18n="save">保存</button>
             </div>
         </div>
     </div>
@@ -1561,7 +1605,18 @@
             confirm_quicktap_desc: '点击确认，长按回退',
             longpress_duration: '长按时长',
             undo_action: '回退',
-            undoing: '回退中...'
+            undoing: '回退中...',
+            pickup_methods: '取餐方式管理',
+            pickup_methods_desc: '设置顾客可选的取餐方式',
+            preset_options: '预设选项',
+            custom_options: '自定义选项',
+            add_custom: '添加自定义',
+            require_table: '需要桌号',
+            method_enabled: '已启用',
+            method_disabled: '已禁用',
+            method_saved: '取餐方式已保存',
+            delete_method: '删除',
+            confirm_delete_method: '确定删除此取餐方式？'
         },
         en: {
             merchant_portal: 'Merchant Portal',
@@ -1659,7 +1714,18 @@
             confirm_quicktap_desc: 'Tap to confirm, hold to undo',
             longpress_duration: 'Hold Duration',
             undo_action: 'Undo',
-            undoing: 'Undoing...'
+            undoing: 'Undoing...',
+            pickup_methods: 'Pickup Methods',
+            pickup_methods_desc: 'Configure pickup options for customers',
+            preset_options: 'Preset Options',
+            custom_options: 'Custom Options',
+            add_custom: 'Add Custom',
+            require_table: 'Require Table #',
+            method_enabled: 'Enabled',
+            method_disabled: 'Disabled',
+            method_saved: 'Pickup methods saved',
+            delete_method: 'Delete',
+            confirm_delete_method: 'Delete this pickup method?'
         }
     };
 
@@ -2928,6 +2994,173 @@
         win.document.write('</body></html>');
         win.document.close();
         win.print();
+    }
+
+    // ===== 取餐方式管理 =====
+    var pickupMethodsData = [];
+    var customMethods = [];
+
+    var PRESET_METHODS = [
+        { id: 'self_pickup', label_zh: '前台自取', label_en: 'Self Pickup', requireTableNumber: false },
+        { id: 'table_delivery', label_zh: '送餐到桌', label_en: 'Table Delivery', requireTableNumber: true },
+        { id: 'door_pickup', label_zh: '门口等候', label_en: 'Door Pickup', requireTableNumber: false },
+        { id: 'delivery', label_zh: '外卖配送', label_en: 'Delivery', requireTableNumber: false }
+    ];
+
+    function showPickupMethodsModal() {
+        if (!merchant) {
+            toast(currentLang === 'zh' ? '请先注册商户' : 'Please register merchant first', 'error');
+            return;
+        }
+        pickupMethodsData = JSON.parse(JSON.stringify(merchant.pickupMethods || []));
+        
+        // 分离预设选项和自定义选项
+        customMethods = pickupMethodsData.filter(function(m) {
+            return !PRESET_METHODS.find(function(p) { return p.id === m.id; });
+        });
+        
+        renderPickupMethods();
+        document.getElementById('pickupMethodsModal').classList.add('show');
+    }
+
+    function closePickupMethodsModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('pickupMethodsModal').classList.remove('show');
+    }
+
+    function renderPickupMethods() {
+        var presetContainer = document.getElementById('presetPickupMethods');
+        var customContainer = document.getElementById('customPickupMethods');
+
+        // 渲染预设选项
+        presetContainer.innerHTML = PRESET_METHODS.map(function(preset) {
+            var existing = pickupMethodsData.find(function(m) { return m.id === preset.id; });
+            var enabled = existing ? existing.enabled : true;
+            return renderPickupMethodItem(preset.id, preset.label_zh, preset.label_en, enabled, preset.requireTableNumber, false);
+        }).join('');
+
+        // 渲染自定义选项
+        customContainer.innerHTML = customMethods.map(function(method, index) {
+            return renderPickupMethodItem(method.id, method.label_zh, method.label_en, method.enabled, method.requireTableNumber, true, index);
+        }).join('');
+    }
+
+    function renderPickupMethodItem(id, labelZh, labelEn, enabled, requireTableNumber, isCustom, index) {
+        var label = currentLang === 'zh' ? labelZh : labelEn;
+        var requireText = currentLang === 'zh' ? '需要桌号' : 'Requires Table #';
+        
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg-input);border-radius:10px;margin-bottom:8px">' +
+            '<div>' +
+                '<div style="font-weight:600;font-size:14px">' + label + '</div>' +
+                '<div style="font-size:12px;color:var(--text-3)">' + (requireTableNumber ? requireText : '') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:8px">' +
+                (requireTableNumber ? '<span style="font-size:12px;color:var(--primary)">🥡</span>' : '') +
+                '<div class="menu-item-toggle ' + (enabled ? 'on' : '') + '" data-id="' + id + '" data-is-custom="' + isCustom + '" data-index="' + (index !== undefined ? index : '') + '" onclick="togglePickupMethod(this)"></div>' +
+                (isCustom ? '<button onclick="deleteCustomMethod(' + index + ')" style="background:none;border:none;color:var(--red);font-size:12px;cursor:pointer">✕</button>' : '') +
+            '</div>' +
+        '</div>';
+    }
+
+    function togglePickupMethod(el) {
+        var id = el.dataset.id;
+        var isCustom = el.dataset.isCustom === 'true';
+        
+        if (isCustom) {
+            var index = parseInt(el.dataset.index);
+            if (customMethods[index]) {
+                customMethods[index].enabled = !customMethods[index].enabled;
+            }
+        } else {
+            var existing = pickupMethodsData.find(function(m) { return m.id === id; });
+            if (existing) {
+                existing.enabled = !existing.enabled;
+            } else {
+                var preset = PRESET_METHODS.find(function(p) { return p.id === id; });
+                if (preset) {
+                    pickupMethodsData.push({
+                        id: preset.id,
+                        label_zh: preset.label_zh,
+                        label_en: preset.label_en,
+                        enabled: true,
+                        requireTableNumber: preset.requireTableNumber
+                    });
+                }
+            }
+        }
+        renderPickupMethods();
+    }
+
+    function addCustomPickupMethod() {
+        var nameZh = document.getElementById('newMethodNameZh').value.trim();
+        var nameEn = document.getElementById('newMethodNameEn').value.trim();
+        
+        if (!nameZh || !nameEn) {
+            toast(currentLang === 'zh' ? '请输入中文名和英文名' : 'Please enter both Chinese and English names', 'error');
+            return;
+        }
+        
+        var id = 'custom_' + Date.now();
+        customMethods.push({
+            id: id,
+            label_zh: nameZh,
+            label_en: nameEn,
+            enabled: true,
+            requireTableNumber: false
+        });
+        
+        document.getElementById('newMethodNameZh').value = '';
+        document.getElementById('newMethodNameEn').value = '';
+        renderPickupMethods();
+    }
+
+    function deleteCustomMethod(index) {
+        if (confirm(currentLang === 'zh' ? '确定删除此取餐方式？' : 'Delete this pickup method?')) {
+            customMethods.splice(index, 1);
+            renderPickupMethods();
+        }
+    }
+
+    async function savePickupMethods() {
+        if (!merchant) return;
+
+        // 合并预设选项和自定义选项
+        var allMethods = pickupMethodsData.filter(function(m) {
+            return PRESET_METHODS.find(function(p) { return p.id === m.id; });
+        });
+        
+        // 添加不在列表中的预设选项（默认禁用）
+        PRESET_METHODS.forEach(function(preset) {
+            if (!allMethods.find(function(m) { return m.id === preset.id; })) {
+                allMethods.push({
+                    id: preset.id,
+                    label_zh: preset.label_zh,
+                    label_en: preset.label_en,
+                    enabled: false,
+                    requireTableNumber: preset.requireTableNumber
+                });
+            }
+        });
+        
+        // 添加自定义选项
+        allMethods = allMethods.concat(customMethods);
+
+        try {
+            showLoading(currentLang === 'zh' ? '保存中...' : 'Saving...');
+            
+            var data = await apiCall('/merchant/pickup-methods', {
+                method: 'PUT',
+                body: JSON.stringify({ methods: allMethods })
+            });
+            
+            merchant.pickupMethods = allMethods;
+            toast(t('method_saved'), 'success');
+            closePickupMethodsModal();
+        } catch (e) {
+            toast(e.message || (currentLang === 'zh' ? '保存失败' : 'Save failed'), 'error');
+        } finally {
+            hideLoading();
+        }
     }
 
     // Entry point

@@ -54,6 +54,8 @@ export interface Merchant {
   suspendedReason?: string;
   bannedAt?: Date;
   banReason?: string;
+  // 取餐方式配置
+  pickupMethods: PickupMethodConfig[];
 }
 
 export interface User {
@@ -234,6 +236,8 @@ function mapMerchantFromDb(data: any, menuItems: MenuItem[] = []): Merchant {
     suspendedReason: data.suspended_reason || undefined,
     bannedAt: data.banned_at ? new Date(data.banned_at) : undefined,
     banReason: data.ban_reason || undefined,
+    // 取餐方式配置
+    pickupMethods: data.pickup_methods || DEFAULT_PICKUP_METHODS,
   };
 }
 
@@ -263,6 +267,7 @@ export async function createMerchant(data: {
       rating: 0,
       review_count: 0,
       suspended: false,
+      pickup_methods: DEFAULT_PICKUP_METHODS,
     })
     .select()
     .single();
@@ -572,8 +577,23 @@ export async function deleteReview(reviewId: string): Promise<{ merchantId: stri
 /** 订单状态 */
 export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'picked_up' | 'rejected' | 'cancelled';
 
-/** 取餐方式 */
-export type PickupMethod = 'self' | 'table_delivery';
+/** 取餐方式配置 */
+export interface PickupMethodConfig {
+  id: string;                      // 如 'self_pickup', 'table_delivery', 'door_pickup', 'delivery', 或自定义
+  label_zh: string;                // 中文名
+  label_en: string;                // 英文名
+  enabled: boolean;                // 是否启用
+  requireTableNumber: boolean;     // 是否需要填桌号
+}
+
+/** 取餐方式（扩展为string，不再限制为联合类型） */
+export type PickupMethod = string;
+
+/** 默认取餐方式配置 */
+export const DEFAULT_PICKUP_METHODS: PickupMethodConfig[] = [
+  { id: 'self_pickup', label_zh: '前台自取', label_en: 'Self Pickup', enabled: true, requireTableNumber: false },
+  { id: 'table_delivery', label_zh: '送餐到桌', label_en: 'Table Delivery', enabled: true, requireTableNumber: true }
+];
 
 /** 订单项 */
 export interface OrderItem {
@@ -1658,4 +1678,113 @@ export async function uploadMenuImage(buffer: Buffer, filePath: string, contentT
     .getPublicUrl(filePath);
 
   return urlData.publicUrl;
+}
+
+// ==================== 取餐方式操作 ====================
+
+/**
+ * 获取商户的取餐方式配置
+ * @param merchantId 商户ID
+ * @returns 取餐方式配置列表
+ */
+export async function getMerchantPickupMethods(merchantId: string): Promise<PickupMethodConfig[]> {
+  const { data, error } = await supabase
+    .from('merchants')
+    .select('pickup_methods')
+    .eq('id', merchantId)
+    .single();
+
+  if (error || !data) {
+    return DEFAULT_PICKUP_METHODS;
+  }
+
+  return data.pickup_methods || DEFAULT_PICKUP_METHODS;
+}
+
+/**
+ * 更新商户的取餐方式配置
+ * @param merchantId 商户ID
+ * @param pickupMethods 取餐方式配置列表
+ * @returns 是否成功
+ */
+export async function updateMerchantPickupMethods(
+  merchantId: string, 
+  pickupMethods: PickupMethodConfig[]
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('merchants')
+    .update({ 
+      pickup_methods: pickupMethods,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', merchantId);
+
+  if (error) {
+    console.error('更新取餐方式配置错误:', error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 验证取餐方式是否有效
+ * @param merchantId 商户ID
+ * @param pickupMethodId 取餐方式ID
+ * @returns 是否有效，以及是否需要桌号
+ */
+export async function validatePickupMethod(
+  merchantId: string, 
+  pickupMethodId: string
+): Promise<{ valid: boolean; requireTableNumber: boolean }> {
+  const methods = await getMerchantPickupMethods(merchantId);
+  const method = methods.find(m => m.id === pickupMethodId && m.enabled);
+  
+  if (!method) {
+    return { valid: false, requireTableNumber: false };
+  }
+  
+  return { valid: true, requireTableNumber: method.requireTableNumber };
+}
+
+// ==================== 数据库迁移 ====================
+
+/**
+ * 确保merchants表有pickup_methods列
+ */
+export async function ensurePickupMethodsColumn(): Promise<void> {
+  try {
+    // 尝试查询一个商户的pickup_methods
+    const { error: testError } = await supabase
+      .from('merchants')
+      .select('pickup_methods')
+      .limit(1);
+    
+    if (!testError) {
+      // 列已存在
+      console.log('✅ pickup_methods列已存在');
+      return;
+    }
+    
+    // 如果列不存在，testError会包含相关信息
+    // 使用UPDATE来触发添加列（如果需要）
+    // 注意：Supabase PostgreSQL需要手动执行ALTER TABLE
+    console.log('⚠️ pickup_methods列可能不存在');
+    console.log('请在Supabase SQL编辑器中执行以下SQL:');
+    console.log(`
+ALTER TABLE merchants ADD COLUMN IF NOT EXISTS pickup_methods JSONB DEFAULT '[{"id":"self_pickup","label_zh":"前台自取","label_en":"Self Pickup","enabled":true,"requireTableNumber":false},{"id":"table_delivery","label_zh":"送餐到桌","label_en":"Table Delivery","enabled":true,"requireTableNumber":true}]'::jsonb;
+    `.trim());
+    
+    // 尝试更新一条记录来添加列（如果数据库支持）
+    try {
+      await supabase
+        .from('merchants')
+        .update({ pickup_methods: DEFAULT_PICKUP_METHODS })
+        .is('pickup_methods', null)
+        .select();
+    } catch (e) {
+      // 忽略更新错误
+    }
+  } catch (err) {
+    console.log('检查pickup_methods列时出错（可忽略）:', err);
+  }
 }
