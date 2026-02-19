@@ -689,11 +689,22 @@ app.post('/api/orders', authMiddleware, async (req: Request, res: Response) => {
       return err(res, 400, '该取餐方式需要提供桌号');
     }
 
+    // 为每个订单项添加 stationIds（用于厨房工位过滤）
+    const menuItems = merchant.menuItems || [];
+    const itemsWithStationIds = items.map(item => {
+      // 根据菜品名称查找对应的菜单项
+      const menuItem = menuItems.find(m => m.name === item.name);
+      return {
+        ...item,
+        stationIds: menuItem?.stationIds || undefined
+      };
+    });
+
     // 创建订单
     const order = await createOrder({
       merchantId,
       userId,
-      items: items as OrderItem[],
+      items: itemsWithStationIds as OrderItem[],
       tableNumber: tableNumber || null,
       pickupMethod: selectedPickupMethod,
       note,
@@ -908,8 +919,9 @@ app.get('/api/orders/merchant/stream', authMiddleware, async (req: Request, res:
 
     const listener = (event: OrderEvent) => {
       if (event.merchantId === merchantId) {
-        // 如果指定了station参数，过滤订单
-        if (stationId && event.data) {
+        // 只对 order_created 事件应用工位过滤
+        // order_status_changed 和 order_updated 事件应该广播到所有客户端，让它们自行更新
+        if (stationId && event.data && event.type === 'order_created') {
           const order = event.data;
           // 检查订单是否有符合条件的菜品
           // 如果菜品的stationIds为空，表示推送到所有工位
@@ -924,7 +936,7 @@ app.get('/api/orders/merchant/stream', authMiddleware, async (req: Request, res:
           });
           
           if (!hasRelevantItem) {
-            return; // 不推送此订单
+            return; // 不推送此订单创建事件
           }
         }
         res.write(`data: ${JSON.stringify(event)}\n\n`);

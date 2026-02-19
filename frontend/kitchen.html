@@ -1528,6 +1528,34 @@
     }
 
     function handleNewOrder(order) {
+        // 处理状态更新事件
+        if (order.type === 'order_status_changed' || order.type === 'order_updated') {
+            // 状态更新事件，order 变量实际上是事件对象
+            const eventData = order;
+            const actualOrder = eventData.data;
+            if (!actualOrder) return;
+            
+            // 检查订单是否在当前列表中
+            const existing = orders.find(o => o.id === actualOrder.id);
+            if (existing) {
+                // 更新订单状态
+                if (['pending', 'accepted', 'preparing'].includes(actualOrder.status)) {
+                    Object.assign(existing, actualOrder);
+                } else {
+                    // 订单已完成/取消，从列表中移除
+                    orders = orders.filter(o => o.id !== actualOrder.id);
+                }
+                renderOrders();
+            }
+            // 如果订单不在当前列表中，可能是其他工位的订单，忽略
+            return;
+        }
+        
+        // 处理新订单
+        if (order.type === 'order_created') {
+            order = order.data;
+        }
+        
         // Only handle active orders
         if (!['pending', 'accepted', 'preparing'].includes(order.status)) {
             // Remove if exists
@@ -1549,6 +1577,12 @@
                 flashScreen();
                 
                 // Show toast
+                toast(t('order_new'), 'info');
+            }
+        }
+        
+        renderOrders();
+    }
                 toast(t('order_new'), 'info');
             }
         }

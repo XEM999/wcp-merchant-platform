@@ -2847,7 +2847,9 @@
         hint.textContent = currentLang === 'zh' ? '不选择=推送到全部工位' : 'None = push to all stations';
         
         container.innerHTML = stations.map(function(station) {
-            var checked = !selectedIds.length || selectedIds.includes(station.id) ? 'checked' : '';
+            // 修复：只有当 selectedIds 包含该工位ID时才选中
+            // 空数组表示推送到全部工位，此时不选中任何特定工位
+            var checked = selectedIds.includes(station.id) ? 'checked' : '';
             var name = currentLang === 'zh' ? station.name_zh : station.name_en;
             return '<label style="display:flex;align-items:center;padding:8px;background:var(--bg-input);border-radius:8px;margin-bottom:6px;cursor:pointer">' +
                 '<input type="checkbox" value="' + station.id + '" ' + checked + ' style="margin-right:10px;width:18px;height:18px">' +

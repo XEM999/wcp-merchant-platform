@@ -621,6 +621,7 @@ export interface OrderItem {
   qty: number;       // 数量
   price: number;     // 单价
   note?: string;     // 商品备注
+  stationIds?: string[]; // 该菜品推送到哪些工位（用于厨房屏幕过滤）
 }
 
 /** 状态历史记录 */
