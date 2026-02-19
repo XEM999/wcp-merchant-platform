@@ -38,6 +38,52 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* ===== Loading Page ===== */
+        .loading-page {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            z-index: 10000;
+        }
+
+        .loading-logo {
+            font-size: 80px;
+            margin-bottom: 16px;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .loading-title {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin-bottom: 24px;
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: var(--text-2);
+        }
+
         /* Flash animation for new orders */
         body.flash {
             animation: screenFlash 0.5s ease-in-out 3;
@@ -684,8 +730,16 @@
     </style>
 </head>
 <body>
+    <!-- Loading Page -->
+    <div class="loading-page" id="loadingPage">
+        <div class="loading-logo">👨‍🍳</div>
+        <h1 class="loading-title">NearBite</h1>
+        <div class="loading-spinner"></div>
+        <p class="loading-text" data-i18n="loading">加载中...</p>
+    </div>
+
     <!-- Login Page -->
-    <div class="login-page" id="loginPage">
+    <div class="login-page" id="loginPage" style="display: none;">
         <div class="login-logo">👨‍🍳</div>
         <h1 class="login-title">NearBite Kitchen</h1>
         <p class="login-subtitle" data-i18n="kitchen_portal">厨房挂屏模式</p>
@@ -745,6 +799,7 @@
     /* ===== i18n ===== */
     const LANG = {
         zh: {
+            loading: '加载中...',
             kitchen_portal: '厨房挂屏模式',
             phone: '手机号',
             password: '密码',
@@ -787,6 +842,7 @@
             undoing: '回退中...'
         },
         en: {
+            loading: 'Loading...',
             kitchen_portal: 'Kitchen Display Mode',
             phone: 'Phone',
             password: 'Password',
@@ -1314,11 +1370,13 @@
     }
 
     function showLoginPage() {
+        document.getElementById('loadingPage').style.display = 'none';
         document.getElementById('loginPage').style.display = 'flex';
         document.getElementById('appContainer').classList.remove('active');
     }
 
     function showAppPage() {
+        document.getElementById('loadingPage').style.display = 'none';
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('appContainer').classList.add('active');
     }
