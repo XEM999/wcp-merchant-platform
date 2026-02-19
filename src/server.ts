@@ -163,7 +163,7 @@ app.use(cors({
 // 全局速率限制
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000,  // 1分钟
-  max: 100,             // 每IP 100次
+  max: 500,             // 每IP 500次（SSE+页面切换会消耗大量请求）
   message: { error: '请求过于频繁，请稍后重试' },
   standardHeaders: true,
   legacyHeaders: false,
