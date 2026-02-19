@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NearBite Admin</title>
+<link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/vant@4/lib/index.css"/>
+<script src="https://fastly.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
+<style>
+:root{--p:#ff6b35;--pl:#ff8a5c;--pd:#e55a2b;--bg:#f7f8fa;--c:#fff;--h:#f0f0f0;--t1:#333;--t2:#666;--t3:#999;--bd:#eee;--ok:#52c41a;--no:#ff4d4f;--wn:#faad14}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+#app{min-height:100vh}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pd),var(--p))}
+.login-box{background:var(--c);padding:2.5rem;border-radius:16px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.login-logo{text-align:center;margin-bottom:2rem}
+.login-logo h1{font-size:2rem;color:var(--p)}
+.login-logo p{color:var(--t2);margin-top:.5rem}
+.admin-layout{display:flex;min-height:100vh}
+.admin-sidebar{width:220px;background:var(--c);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;overflow-y:auto}
+.sidebar-header{padding:1.25rem;border-bottom:1px solid var(--bd)}
+.sidebar-header h2{color:var(--p);font-size:1.25rem}
+.sidebar-nav{flex:1;padding:.5rem 0}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.875rem 1.25rem;color:var(--t2);cursor:pointer;transition:all .2s;font-size:.9rem;border-left:3px solid transparent}
+.nav-item:hover{background:var(--h);color:var(--t1)}
+.nav-item.active{background:rgba(255,107,53,.1);color:var(--p);border-left-color:var(--p)}
+.nav-item .nav-icon{font-size:1.2rem;width:1.5rem;text-align:center}
+.sidebar-footer{padding:1rem 1.25rem;border-top:1px solid var(--bd)}
+.user-info{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg);border-radius:8px;margin-bottom:.75rem}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.875rem}
+.user-name{font-weight:500;font-size:.875rem}
+.user-role{font-size:.75rem;color:var(--t3)}
+.lang-toggle{display:flex;background:var(--bg);border-radius:6px;overflow:hidden;cursor:pointer}
+.lang-toggle span{flex:1;text-align:center;padding:.4rem;font-size:.75rem;transition:all .2s}
+.lang-toggle span.active{background:var(--p);color:#fff}
+.admin-main{flex:1;margin-left:220px;padding:1.5rem;min-height:100vh}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
+.page-title{font-size:1.5rem;font-weight:600}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--c);padding:1.25rem;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.stat-icon{font-size:1.5rem;margin-bottom:.5rem}
+.stat-label{color:var(--t2);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+.stat-value{font-size:1.75rem;font-weight:700;color:var(--p);margin-top:.25rem}
+.content-card{background:var(--c);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
+.card-header{display:flex;justify-content:space-between;align-items:center;padding:1rem;border-bottom:1px solid var(--bd);flex-wrap:wrap;gap:.75rem}
+.search-box{display:flex;gap:.5rem;flex-wrap:wrap}
+.search-box input{padding:.5rem 1rem;border:1px solid var(--bd);border-radius:6px;font-size:.875rem;width:200px}
+.search-box input:focus{outline:none;border-color:var(--p)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:.75rem 1rem;text-align:left;border-bottom:1px solid var(--bd)}
+th{background:var(--bg);color:var(--t2);font-weight:500;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+td{font-size:.875rem}
+tbody tr:hover{background:var(--h)}
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:1rem;border-top:1px solid var(--bd)}
+.pagination-info{color:var(--t2);font-size:.875rem}
+.pagination-btns{display:flex;gap:.5rem}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--c);border-top:1px solid var(--bd);z-index:100}
+.mobile-nav-items{display:flex;justify-content:space-around;padding:.4rem 0}
+.mobile-nav-item{display:flex;flex-direction:column;align-items:center;padding:.4rem;color:var(--t2);cursor:pointer;font-size:.6rem;gap:.15rem}
+.mobile-nav-item.active{color:var(--p)}
+.mobile-nav-item .nav-icon{font-size:1.2rem}
+.badge{display:inline-block;padding:.2rem .6rem;border-radius:4px;font-size:.75rem;font-weight:500}
+.badge-ok{background:rgba(82,196,26,.1);color:var(--ok)}
+.badge-no{background:rgba(255,77,79,.1);color:var(--no)}
+.badge-wn{background:rgba(250,173,20,.1);color:var(--wn)}
+.badge-bl{background:rgba(255,107,53,.1);color:var(--p)}
+.btn-group{display:flex;gap:.25rem;flex-wrap:wrap}
+@media(max-width:768px){
+.admin-sidebar{display:none}
+.admin-main{margin-left:0;padding:1rem;padding-bottom:5rem}
+.mobile-nav{display:block}
+.stats-grid{grid-template-columns:repeat(2,1fr)}
+.card-header{flex-direction:column;align-items:stretch}
+.search-box{width:100%}
+.search-box input{flex:1}
+table{font-size:.75rem}th,td{padding:.5rem}
+.page-header{flex-direction:column;align-items:flex-start}
+.btn-group{flex-direction:column}
+.btn-group .van-button{width:100%}
+}
+@media(max-width:480px){.stats-grid{grid-template-columns:1fr}}
+.setting-section{background:var(--c);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:1.5rem;margin-bottom:1rem}
+.setting-section h3{margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--bd)}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0}
+.setting-row .label{color:var(--t2)}.setting-row .value{font-weight:500}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Login Page -->
+  <div v-if="!isLoggedIn" class="login-wrap">
+    <div class="login-box">
+      <div class="login-logo"><h1>🍔 NearBite</h1><p>{{ t('adminPanel') }}</p></div>
+      <van-form @submit="handleLogin">
+        <van-cell-group inset>
+          <van-field v-model="loginForm.phone" name="phone" :label="t('phone')" :placeholder="t('phone')" :rules="[{ required: true, message: t('phone') }]" />
+          <van-field v-model="loginForm.password" type="password" name="password" :label="t('password')" :placeholder="t('password')" :rules="[{ required: true, message: t('password') }]" />
+        </van-cell-group>
+        <div style="margin: 16px;">
+          <van-button round block type="primary" native-type="submit" color="#ff6b35" :loading="loggingIn">
+            {{ t('login') }}
+          </van-button>
+        </div>
+      </van-form>
+    </div>
+  </div>
+
+  <!-- Admin Layout -->
+  <div v-else class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header"><h2>🍔 NearBite</h2></div>
+      <nav class="sidebar-nav">
+        <div class="nav-item" :class="{active:currentPage==='dashboard'}" @click="goTo('dashboard')">
+          <span class="nav-icon">📊</span><span>{{ t('nav_dashboard') }}</span>
+        </div>
+        <div class="nav-item" :class="{active:currentPage==='users'}" @click="goTo('users')">
+          <span class="nav-icon">👥</span><span>{{ t('nav_users') }}</span>
+        </div>
+        <div class="nav-item" :class="{active:currentPage==='merchants'}" @click="goTo('merchants')">
+          <span class="nav-icon">🏪</span><span>{{ t('nav_merchants') }}</span>
+        </div>
+        <div class="nav-item" :class="{active:currentPage==='orders'}" @click="goTo('orders')">
+          <span class="nav-icon">📋</span><span>{{ t('nav_orders') }}</span>
+        </div>
+        <div class="nav-item" :class="{active:currentPage==='logs'}" @click="goTo('logs')">
+          <span class="nav-icon">📝</span><span>{{ t('nav_logs') }}</span>
+        </div>
+        <div class="nav-item" :class="{active:currentPage==='settings'}" @click="goTo('settings')">
+          <span class="nav-icon">⚙️</span><span>{{ t('nav_settings') }}</span>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">{{ userName[0] }}</div>
+          <div><div class="user-name">{{ userName }}</div><div class="user-role">{{ t('admin') }}</div></div>
+        </div>
+        <div class="lang-toggle" @click="toggleLang">
+          <span :class="{active:lang==='zh'}">中文</span>
+          <span :class="{active:lang==='en'}">EN</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <!-- Dashboard -->
+      <div v-show="currentPage==='dashboard'">
+        <div class="page-header">
+          <h1 class="page-title">{{ t('nav_dashboard') }}</h1>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">{{ t('s_users') }}</div><div class="stat-value">{{ stats.totalUsers }}</div></div>
+          <div class="stat-card"><div class="stat-icon">🏪</div><div class="stat-label">{{ t('s_merchants') }}</div><div class="stat-value">{{ stats.totalMerchants }}</div></div>
+          <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-label">{{ t('s_orders') }}</div><div class="stat-value">{{ stats.totalOrders }}</div></div>
+          <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">{{ t('s_revenue') }}</div><div class="stat-value">${{ fmtNum(stats.totalRevenue) }}</div></div>
+          <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">{{ t('s_todayOrders') }}</div><div class="stat-value">{{ stats.todayOrders }}</div></div>
+          <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-label">{{ t('s_todayRevenue') }}</div><div class="stat-value">${{ fmtNum(stats.todayRevenue) }}</div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">{{ t('s_active') }}</div><div class="stat-value">{{ stats.activeMerchants }}</div></div>
+        </div>
+      </div>
+
+      <!-- Users -->
+      <div v-show="currentPage==='users'">
+        <div class="page-header">
+          <h1 class="page-title">{{ t('nav_users') }}</h1>
+        </div>
+        <div class="content-card">
+          <div class="card-header">
+            <div class="search-box">
+              <input v-model="userSearch" :placeholder="t('ph_searchUser')" @keyup.enter="searchUsers" style="width:200px;padding:.5rem 1rem;border:1px solid var(--bd);border-radius:6px;font-size:.875rem;" />
+              <van-button type="primary" size="small" color="#ff6b35" @click="searchUsers">{{ t('search') }}</van-button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>{{ t('phone') }}</th><th>{{ t('role') }}</th><th>{{ t('registered') }}</th><th>{{ t('status') }}</th><th>{{ t('actions') }}</th></tr></thead>
+              <tbody>
+                <tr v-for="u in users" :key="u._id">
+                  <td>{{ u.phone || '-' }}</td>
+                  <td>{{ u.role || 'user' }}</td>
+                  <td>{{ relTime(u.createdAt) }}</td>
+                  <td><span class="badge" :class="getUserBadgeClass(u)">{{ getUserStatusText(u) }}</span></td>
+                  <td>
+                    <div class="btn-group">
+                      <van-button v-if="u.suspended" size="small" type="success" @click="unsuspendUser(u._id)">{{ t('unsuspend') }}</van-button>
+                      <van-button v-else size="small" type="default" @click="openSuspend('user',u._id)">{{ t('suspendUser') }}</van-button>
+                      <van-button v-if="u.banned" size="small" type="success" @click="unbanUser(u._id)">{{ t('unban') }}</van-button>
+                      <van-button v-else size="small" type="danger" @click="openBan('user',u._id)">{{ t('banUser') }}</van-button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <div class="pagination-info">{{ t('pageOf').replace('{p}',userPage).replace('{t}',userTotalPages) }}</div>
+            <div class="pagination-btns">
+              <van-button size="small" :disabled="userPage<=1" @click="userPrev">{{ t('prev') }}</van-button>
+              <van-button size="small" :disabled="userPage>=userTotalPages" @click="userNext">{{ t('next') }}</van-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Merchants -->
+      <div v-show="currentPage==='merchants'">
+        <div class="page-header">
+          <h1 class="page-title">{{ t('nav_merchants') }}</h1>
+        </div>
+        <div class="content-card">
+          <div class="card-header">
+            <div class="search-box">
+              <input v-model="merchantSearch" :placeholder="t('ph_searchMerchant')" @keyup.enter="searchMerchants" style="width:200px;padding:.5rem 1rem;border:1px solid var(--bd);border-radius:6px;font-size:.875rem;" />
+              <van-button type="primary" size="small" color="#ff6b35" @click="searchMerchants">{{ t('search') }}</van-button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>{{ t('name') }}</th><th>{{ t('type') }}</th><th>{{ t('phone') }}</th><th>{{ t('status') }}</th><th>{{ t('plan') }}</th><th>{{ t('commission') }}</th><th>{{ t('><th>{{ trating') }}</th('actions') }}</th></tr><tbody>
+                </thead>
+              <tr v-for=" :key="m._id">
+                  <td>{{ mm in merchants".name || m.businessName || '-' }}</td>
+                  <td>{{ m.type || m.cuisine || '-' }}</td>
+                  <td>{{ m.phone || '-' }}</td>
+                  <td><span class="badge" :class="(m)">{{ getgetMerchantBadgeClassMerchantStatusText(m) }}</span></td>
+                  <td><span classclass="m.plan="badge" :==='pro'?'badge-bl':'badge-ok'">{{ m.plan==='pro'?t('plan_pro'):t('plan_free') }}</span></td>
+                  <td>{{ m.commission || m.commissionRate || 8 }}%</td>
+                  <td>{{ m.rating ? Number(m.rating).toFixed(1) : '-' }}</td>
+                  <td>
+                    <div class="btn-group">
+                      <van-button v-if="m.suspended" size="small" type="success" @click="unsuspendMerchant(m._id)">{{ t('unsuspend') }}</van-button>
+                      <van-button v-else size="small" type="default" @click="openSuspend('merchant',m._id)">{{ t('suspendMerchant') }}</van-button>
+                      <van-button v-if="m.banned" size="small" type="success" @click="unbanMerchant(m._id)">{{ t('unban') }}</van-button>
+                      <van-button v-else size="small" type="danger" @click="openBan('merchant',m._id)">{{ t('banMerchant') }}</van-button>
+                      <van-button size="small" type="primary" color="#ff6b35" @click="openPlan(m._id,m.plan)">{{ t('changePlan') }}</van-button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <div class="pagination-info">{{ t('pageOf').replace('{p}',merchantPage).replace('{t}',merchantTotalPages) }}</div>
+            <div class="pagination-btns">
+              <van-button size="small" :disabled="merchantPage<=1" @click="merchantPrev">{{ t('prev') }}</van-button>
+              <van-button size="small" :disabled="merchantPage>=merchantTotalPages" @click="merchantNext">{{ t('next') }}</van-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders -->
+      <div v-show="currentPage==='orders'">
+        <div class="page-header">
+          <h1 class="page-title">{{ t('nav_orders') }}</h1>
+          <van-button type="primary" size="small" color="#ff6b35" @click="exportCSV('orders')">{{ t('exportOrders') }}</van-button>
+        </div>
+        <div class="content-card">
+          <div class="card-header">
+            <div class="search-box">
+              <select v-model="orderFilter" @change="loadOrders" style="padding:.5rem 1rem;border:1px solid var(--bd);border-radius:6px;font-size:.875rem;background:#fff;">
+                <option value="">{{ lang==='zh'?'全部状态':'All Status' }}</option>
+                <option value="pending">{{ t('st_pending') }}</option>
+                <option value="preparing">{{ t('st_preparing') }}</option>
+                <option value="ready">{{ t('st_ready') }}</option>
+                <option value="completed">{{ t('st_completed') }}</option>
+                <option value="cancelled">{{ t('st_cancelled') }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>{{ t('orderId') }}</th><th>{{ t('merchant') }}</th><th>{{ t('amount') }}</th><th>{{ t('status') }}</th><th>{{ t('time') }}</th></tr></thead>
+              <tbody>
+                <tr v-for="o in orders" :key="o._id">
+                  <td>{{ (o.orderId || o.orderNumber || o._id || '').slice(-6) }}</td>
+                  <td>{{ o.merchantName || o.merchant || '-' }}</td>
+                  <td>${{ fmtNum(o.amount || o.total) }}</td>
+                  <td><span class="badge" :class="getOrderBadgeClass(o.status)">{{ t('st_'+o.status) }}</span></td>
+                  <td>{{ relTime(o.createdAt) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <div class="pagination-info">{{ t('pageOf').replace('{p}',orderPage).replace('{t}',orderTotalPages) }}</div>
+            <div class="pagination-btns">
+              <van-button size="small" :disabled="orderPage<=1" @click="orderPrev">{{ t('prev') }}</van-button>
+              <van-button size="small" :disabled="orderPage>=orderTotalPages" @click="orderNext">{{ t('next') }}</van-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logs -->
+      <div v-show="currentPage==='logs'">
+        <div class="page-header">
+          <h1 class="page-title">{{ t('nav_logs') }}</h1>
+        </div>
+        <div class="content-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>{{ t('time') }}</th><th>{{ t('operator') }}</th><th>{{ t('type') }}</th><th>{{ t('detail') }}</th></tr></thead>
+              <tbody>
+                <tr v-for="l in logs" :key="l._id">
+                  <td>{{ relTime(l.createdAt) }}</td>
+                  <td>{{ l.operator || l.admin || l.userName || '-' }}</td>
+                  <td>{{ l.type || l.action || '-' }}</td>
+                  <td>{{ l.detail || l.description || l.message || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <div class="pagination-info">{{ t('pageOf').replace('{p}',logPage).replace('{t}',logTotalPages) }}</div>
+            <div class="pagination-btns">
+              <van-button size="small" :disabled="logPage<=1" @click="logPrev">{{ t('prev') }}</van-button>
+              <van-button size="small" :disabled="logPage>=logTotalPages" @click="logNext">{{ t('next') }}</van-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div v-show="currentPage==='settings'">
+        <div class="page-header">
+          <h1 class="page-title">{{ t('nav_settings') }}</h1>
+        </div>
+        <div class="setting-section">
+          <h3>{{ t('adminInfo') }}</h3>
+          <div class="setting-row"><span class="label">{{ t('phone') }}</span><span class="value">{{ userPhone }}</span></div>
+          <div class="setting-row"><span class="label">{{ t('role') }}</span><span class="value">{{ t('admin') }}</span></div>
+        </div>
+        <div class="setting-section">
+          <h3>{{ t('dataExport') }}</h3>
+          <div class="setting-row"><span class="label">{{ t('nav_orders') }}</span><van-button size="small" type="primary" color="#ff6b35" @click="exportCSV('orders')">{{ t('export') }}</van-button></div>
+          <div class="setting-row"><span class="label">{{ t('nav_merchants') }}</span><van-button size="small" type="primary" color="#ff6b35" @click="exportCSV('merchants')">{{ t('export') }}</van-button></div>
+        </div>
+        <div class="setting-section">
+          <h3>{{ t('account') }}</h3>
+          <van-button type="danger" block @click="doLogout">{{ t('logout') }}</van-button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Mobile Nav -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav-items">
+        <div class="mobile-nav-item" :class="{active:currentPage==='dashboard'}" @click="goTo('dashboard')">
+          <span class="nav-icon">📊</span><span>{{ t('nav_dashboard') }}</span>
+        </div>
+        <div class="mobile-nav-item" :class="{active:currentPage==='users'}" @click="goTo('users')">
+          <span class="nav-icon">👥</span><span>{{ t('nav_users') }}</span>
+        </div>
+        <div class="mobile-nav-item" :class="{active:currentPage==='merchants'}" @click="goTo('merchants')">
+          <span class="nav-icon">🏪</span><span>{{ t('nav_merchants') }}</span>
+        </div>
+        <div class="mobile-nav-item" :class="{active:currentPage==='orders'}" @click="goTo('orders')">
+          <span class="nav-icon">📋</span><span>{{ t('nav_orders') }}</span>
+        </div>
+        <div class="mobile-nav-item" :class="{active:currentPage==='logs'}" @click="goTo('logs')">
+          <span class="nav-icon">📝</span><span>{{ t('nav_logs') }}</span>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Ban Modal -->
+  <van-dialog v-model:show="showBanModal" :title="banTitle" show-cancel-button @confirm="confirmBan">
+    <van-field v-model="banReason" type="textarea" :placeholder="t('banReason')" rows="3" style="margin:16px 0;" />
+  </van-dialog>
+
+  <!-- Suspend Modal -->
+  <van-dialog v-model:show="showSuspendModal" :title="suspendTitle" show-cancel-button @confirm="confirmSuspend">
+    <van-field v-model="suspendReason" type="textarea" :placeholder="t('suspendReason')" rows="3" style="margin:16px 0;" />
+  </van-dialog>
+
+  <!-- Plan Modal -->
+  <van-dialog v-model:show="showPlanModal" :title="t('changePlan')" show-cancel-button @confirm="confirmPlan">
+    <van-radio-group v-model="selectedPlan" style="padding:16px;">
+      <van-radio name="free" shape="square" style="margin-bottom:12px;">{{ t('planFree') }} - {{ t('planFreeDesc') }}</van-radio>
+      <van-radio name="pro" shape="square">Pro - {{ t('planProDesc') }}</van-radio>
+    </van-radio-group>
+  </van-dialog>
+</div>
+
+<script>
+const{createApp,ref,computed,onMounted,watch}=Vue;
+const{Button,Form,Field,CellGroup,Cell,Dialog,Toast,RadioGroup,Radio}=vant;
+
+const LANG={
+zh:{
+adminPanel:'管理后台',login:'登录',phone:'手机号',password:'密码',
+nav_dashboard:'概览',nav_users:'用户',nav_merchants:'商家',nav_orders:'订单',nav_logs:'操作日志',nav_settings:'设置',
+admin:'管理员',search:'搜索',
+s_users:'总用户',s_merchants:'总商家',s_orders:'总订单',s_revenue:'总收入',s_todayOrders:'今日订单',s_todayRevenue:'今日收入',s_active:'在线商家',
+role:'角色',registered:'注册时间',status:'状态',actions:'操作',name:'名称',type:'类型',rating:'评分',plan:'套餐',commission:'提成',
+orderId:'订单号',merchant:'商家',amount:'金额',time:'时间',operator:'操作人',detail:'详情',
+adminInfo:'管理员信息',dataExport:'数据导出',export:'导出',exportOrders:'导出订单CSV',account:'账号',logout:'退出登录',
+banUser:'封禁用户',banMerchant:'封禁商家',unban:'解封',banReason:'封禁原因',cancel:'取消',confirm:'确认',
+suspendUser:'停权用户',suspendMerchant:'停权商家',unsuspend:'解停',suspendReason:'停权原因',
+changePlan:'调整套餐',planFree:'免费版',planFreeDesc:'基础功能',planProDesc:'高级功能',
+prev:'上一页',next:'下一页',
+st_active:'正常',st_banned:'已封禁',st_suspended:'已停权',st_online:'在线',st_offline:'离线',
+st_free_trial:'免费试用',st_expired:'已到期',
+plan_free:'免费版',plan_pro:'Pro版',
+st_pending:'待处理',st_preparing:'准备中',st_ready:'待取餐',st_completed:'已完成',st_cancelled:'已取消',
+justNow:'刚刚',mAgo:'{n}分钟前',hAgo:'{n}小时前',dAgo:'{n}天前',
+noData:'暂无数据',loading:'加载中...',
+pageOf:'第 {p} 页 / 共 {t} 页',
+confirmBan:'确认封禁？',confirmUnban:'确认解封？',
+confirmSuspend:'确认停权？',confirmUnsuspend:'确认解停？',
+confirmPlan:'确认更换套餐？',
+opSuccess:'操作成功',opFail:'操作失败',loginFail:'登录失败，请检查账号密码',
+ph_searchUser:'搜索手机号...',ph_searchMerchant:'搜索商家名称...'
+},
+en:{
+adminPanel:'Admin Panel',login:'Login',phone:'Phone',password:'Password',
+nav_dashboard:'Dashboard',nav_users:'Users',nav_merchants:'Merchants',nav_orders:'Orders',nav_logs:'Logs',nav_settings:'Settings',
+admin:'Admin',search:'Search',
+s_users:'Total Users',s_merchants:'Total Merchants',s_orders:'Total Orders',s_revenue:'Total Revenue',s_todayOrders:"Today's Orders",s_todayRevenue:"Today's Revenue",s_active:'Active Merchants',
+role:'Role',registered:'Registered',status:'Status',actions:'Actions',name:'Name',type:'Type',rating:'Rating',plan:'Plan',commission:'Commission',
+orderId:'Order ID',merchant:'Merchant',amount:'Amount',time:'Time',operator:'Operator',detail:'Detail',
+adminInfo:'Admin Info',dataExport:'Data Export',export:'Export',exportOrders:'Export Orders CSV',account:'Account',logout:'Logout',
+banUser:'Ban User',banMerchant:'Ban Merchant',unban:'Unban',banReason:'Ban Reason',cancel:'Cancel',confirm:'Confirm',
+suspendUser:'Suspend User',suspendMerchant:'Suspend Merchant',unsuspend:'Unsuspend',suspendReason:'Suspend Reason',
+changePlan:'Change Plan',planFree:'Free',planFreeDesc:'Basic features',planProDesc:'Advanced features',
+prev:'Prev',next:'Next',
+st_active:'Active',st_banned:'Banned',st_suspended:'Suspended',st_online:'Online',st_offline:'Offline',
+st_free_trial:'Free Trial',st_expired:'Expired',
+plan_free:'Free',plan_pro:'Pro',
+st_pending:'Pending',st_preparing:'Preparing',st_ready:'Ready',st_completed:'Completed',st_cancelled:'Cancelled',
+justNow:'Just now',mAgo:'{n}m ago',hAgo:'{n}h ago',dAgo:'{n}d ago',
+noData:'No data',loading:'Loading...',
+pageOf:'Page {p} of {t}',
+confirmBan:'Confirm ban?',confirmUnban:'Confirm unban?',
+confirmSuspend:'Confirm suspend?',confirmUnsuspend:'Confirm unsuspend?',
+confirmPlan:'Confirm plan change?',
+opSuccess:'Success',opFail:'Failed',loginFail:'Login failed. Check credentials.',
+ph_searchUser:'Search phone...',ph_searchMerchant:'Search merchant name...'
+}
+};
+
+createApp({
+  components:{Button,Form,Field,CellGroup,Cell,Dialog,Toast,RadioGroup,Radio},
+  setup(){
+    const lang=ref(localStorage.getItem('nb_lang')||'zh');
+    const token=ref(localStorage.getItem('nb_token'));
+    const user=ref(JSON.parse(localStorage.getItem('nb_user')||'null'));
+    const currentPage=ref('dashboard');
+    const loggingIn=ref(false);
+    const loginForm=ref({phone:'',password:''});
+    const isLoggedIn=computed(()=>!!token.value);
+    const userName=computed(()=>user.value?.name||user.value?.phone||'Admin');
+    const userPhone=computed(()=>user.value?.phone||'-');
+
+    const stats=ref({totalUsers:0,totalMerchants:0,totalOrders:0,totalRevenue:0,todayOrders:0,todayRevenue:0,activeMerchants:0});
+    const users=ref([]),merchants=ref([]),orders=ref([]),logs=ref([]);
+    const userPage=ref(1),userTotalPages=ref(1);
+    const merchantPage=ref(1),merchantTotalPages=ref(1);
+    const orderPage=ref(1),orderTotalPages=ref(1);
+    const logPage=ref(1),logTotalPages=ref(1);
+    const userSearch=ref(''),merchantSearch=ref(''),orderFilter=ref('');
+
+    const showBanModal=ref(false),showSuspendModal=ref(false),showPlanModal=ref(false);
+    const banTitle=ref(''),banReason=ref(''),banCtx=ref(null);
+    const suspendTitle=ref(''),suspendReason=ref(''),suspendCtx=ref(null);
+    const selectedPlan=ref('free'),planCtx=ref(null);
+
+    const t=(k)=>{const v=LANG[lang.value]?.[k];return v!==undefined?v:k;};
+    const fmtNum=(n)=>n==null?'0':Number(n).toLocaleString();
+    const fmtMoney=(n)=>'$'+fmtNum(n!=null?Math.round(n):0);
+
+    const relTime=(d)=>{
+      if(!d)return'-';
+      const ms=Date.now()-new Date(d).getTime();
+      if(ms<0)ms=0;
+      const m

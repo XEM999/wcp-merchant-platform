@@ -2,366 +2,283 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>NearBite Admin</title>
-<link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/vant@4/lib/index.css"/>
-<script src="https://fastly.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
-<script src="https://fastly.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--p:#ff6b35;--pl:#ff8a5c;--pd:#e55a2b;--bg:#f7f8fa;--c:#fff;--h:#f0f0f0;--t1:#333;--t2:#666;--t3:#999;--bd:#eee;--ok:#52c41a;--no:#ff4d4f;--wn:#faad14}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
-#app{min-height:100vh}
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pd),var(--p))}
-.login-box{background:var(--c);padding:2.5rem;border-radius:16px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+:root{--p:#1e40af;--pl:#3b82f6;--pd:#1e3a8a;--bg:#0f172a;--c:#1e293b;--h:#334155;--t1:#f1f5f9;--t2:#94a3b8;--bd:#475569;--ok:#22c55e;--no:#ef4444;--wn:#f59e0b;--or:#f97316}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+a{color:var(--pl);text-decoration:none}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pd),var(--bg))}
+.login-box{background:var(--c);padding:2.5rem;border-radius:16px;width:100%;max-width:400px;box-shadow:0 25px 50px -12px rgba(0,0,0,.5)}
 .login-logo{text-align:center;margin-bottom:2rem}
-.login-logo h1{font-size:2rem;color:var(--p)}
+.login-logo h1{font-size:1.75rem;color:var(--pl)}
 .login-logo p{color:var(--t2);margin-top:.5rem}
-.admin-layout{display:flex;min-height:100vh}
-.admin-sidebar{width:220px;background:var(--c);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;overflow-y:auto}
-.sidebar-header{padding:1.25rem;border-bottom:1px solid var(--bd)}
-.sidebar-header h2{color:var(--p);font-size:1.25rem}
-.sidebar-nav{flex:1;padding:.5rem 0}
-.nav-item{display:flex;align-items:center;gap:.75rem;padding:.875rem 1.25rem;color:var(--t2);cursor:pointer;transition:all .2s;font-size:.9rem;border-left:3px solid transparent}
-.nav-item:hover{background:var(--h);color:var(--t1)}
-.nav-item.active{background:rgba(255,107,53,.1);color:var(--p);border-left-color:var(--p)}
-.nav-item .nav-icon{font-size:1.2rem;width:1.5rem;text-align:center}
-.sidebar-footer{padding:1rem 1.25rem;border-top:1px solid var(--bd)}
-.user-info{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg);border-radius:8px;margin-bottom:.75rem}
-.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.875rem}
-.user-name{font-weight:500;font-size:.875rem}
-.user-role{font-size:.75rem;color:var(--t3)}
-.lang-toggle{display:flex;background:var(--bg);border-radius:6px;overflow:hidden;cursor:pointer}
-.lang-toggle span{flex:1;text-align:center;padding:.4rem;font-size:.75rem;transition:all .2s}
-.lang-toggle span.active{background:var(--p);color:#fff}
-.admin-main{flex:1;margin-left:220px;padding:1.5rem;min-height:100vh}
-.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
-.page-title{font-size:1.5rem;font-weight:600}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
-.stat-card{background:var(--c);padding:1.25rem;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.stat-icon{font-size:1.5rem;margin-bottom:.5rem}
-.stat-label{color:var(--t2);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
-.stat-value{font-size:1.75rem;font-weight:700;color:var(--p);margin-top:.25rem}
-.content-card{background:var(--c);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
-.card-header{display:flex;justify-content:space-between;align-items:center;padding:1rem;border-bottom:1px solid var(--bd);flex-wrap:wrap;gap:.75rem}
-.search-box{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-.search-input{padding:.5rem 1rem;border:1px solid var(--bd);border-radius:6px;font-size:.875rem;width:200px}
-.search-input:focus{outline:none;border-color:var(--p)}
-.filter-select{padding:.5rem 1rem;border:1px solid var(--bd);border-radius:6px;font-size:.875rem;background:#fff}
-.table-wrap{overflow-x:auto}
+.fg{margin-bottom:1.25rem}
+.fg label{display:block;margin-bottom:.5rem;color:var(--t2);font-size:.875rem}
+.fg input,.fg select,.fg textarea{width:100%;padding:.75rem 1rem;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--t1);font-size:1rem;font-family:inherit}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--pl)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border:none;border-radius:8px;font-size:.875rem;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-p{background:var(--pl);color:#fff}.btn-p:hover{background:var(--p)}
+.btn-d{background:var(--no);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-s{background:var(--ok);color:#fff}.btn-s:hover{background:#16a34a}
+.btn-o{background:var(--bd);color:var(--t1)}.btn-o:hover{background:var(--h)}
+.btn-w{width:100%}
+.btn-sm{padding:.375rem .75rem;font-size:.75rem}
+.btn-xs{padding:.25rem .5rem;font-size:.7rem}
+.app{display:none;min-height:100vh}
+.app.on{display:flex}
+.side{width:240px;background:var(--c);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;overflow-y:auto}
+.side-head{padding:1.5rem;border-bottom:1px solid var(--bd)}
+.side-head h2{color:var(--pl);font-size:1.25rem}
+.side-nav{flex:1;padding:1rem 0}
+.ni{display:flex;align-items:center;gap:.75rem;padding:.875rem 1.5rem;color:var(--t2);cursor:pointer;transition:all .2s;border-left:3px solid transparent;font-size:.9rem}
+.ni:hover{background:var(--h);color:var(--t1)}
+.ni.on{background:rgba(59,130,246,.1);color:var(--pl);border-left-color:var(--pl)}
+.ni em{font-style:normal;font-size:1.1rem;width:1.5rem;text-align:center}
+.side-foot{padding:1rem 1.5rem;border-top:1px solid var(--bd)}
+.um{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg);border-radius:8px}
+.ua{width:36px;height:36px;border-radius:50%;background:var(--pl);display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0}
+.ui{flex:1;min-width:0}
+.ui .n{font-weight:500;font-size:.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ui .r{font-size:.75rem;color:var(--t2)}
+.lt{display:flex;margin-top:1rem;background:var(--bg);border-radius:6px;overflow:hidden;cursor:pointer}
+.lt span{flex:1;text-align:center;padding:.4rem;font-size:.75rem;transition:all .2s}
+.lt span.on{background:var(--pl);color:#fff}
+.main{flex:1;margin-left:240px;padding:1.5rem;min-height:100vh}
+.pg{display:none}.pg.on{display:block}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
+.ph h1{font-size:1.5rem;font-weight:600}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
+.sc{background:var(--c);padding:1.25rem;border-radius:12px;border:1px solid var(--bd)}
+.sc .ico{font-size:1.5rem;margin-bottom:.5rem}
+.sc .lb{color:var(--t2);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+.sc .vl{font-size:1.75rem;font-weight:700;color:var(--pl);margin-top:.25rem}
+.tc{background:var(--c);border-radius:12px;border:1px solid var(--bd);overflow:hidden}
+.th{display:flex;justify-content:space-between;align-items:center;padding:1rem;border-bottom:1px solid var(--bd);flex-wrap:wrap;gap:.75rem}
+.sb{display:flex;gap:.5rem}
+.sb input{padding:.5rem 1rem;background:var(--bg);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:.875rem;width:200px}
+.sb input:focus{outline:none;border-color:var(--pl)}
+.fs{padding:.5rem 1rem;background:var(--bg);border:1px solid var(--bd);border-radius:6px;color:var(--t1);font-size:.875rem}
 table{width:100%;border-collapse:collapse}
 th,td{padding:.75rem 1rem;text-align:left;border-bottom:1px solid var(--bd)}
 th{background:var(--bg);color:var(--t2);font-weight:500;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
 td{font-size:.875rem}
 tbody tr:hover{background:var(--h)}
-.pagination{display:flex;justify-content:space-between;align-items:center;padding:1rem;border-top:1px solid var(--bd)}
-.pagination-info{color:var(--t2);font-size:.875rem}
-.pagination-btns{display:flex;gap:.5rem}
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--c);border-top:1px solid var(--bd);z-index:100}
-.mobile-nav-items{display:flex;justify-content:space-around;padding:.4rem 0}
-.mobile-nav-item{display:flex;flex-direction:column;align-items:center;padding:.4rem;color:var(--t2);cursor:pointer;font-size:.6rem;gap:.15rem}
-.mobile-nav-item.active{color:var(--p)}
-.mobile-nav-item .nav-icon{font-size:1.2rem}
-.badge{display:inline-block;padding:.2rem .6rem;border-radius:4px;font-size:.75rem;font-weight:500}
-.badge-ok{background:rgba(82,196,26,.1);color:var(--ok)}
-.badge-no{background:rgba(255,77,79,.1);color:var(--no)}
-.badge-wn{background:rgba(250,173,20,.1);color:var(--wn)}
-.badge-bl{background:rgba(255,107,53,.1);color:var(--p)}
+.badge{display:inline-block;padding:.2rem .6rem;border-radius:9999px;font-size:.75rem;font-weight:500}
+.b-ok{background:rgba(34,197,94,.1);color:var(--ok)}
+.b-no{background:rgba(239,68,68,.1);color:var(--no)}
+.b-wn{background:rgba(245,158,11,.1);color:var(--wn)}
+.b-or{background:rgba(249,115,22,.1);color:var(--or)}
+.b-bl{background:rgba(59,130,246,.1);color:var(--pl)}
+.pg-bar{display:flex;justify-content:space-between;align-items:center;padding:1rem;border-top:1px solid var(--bd)}
+.pg-info{color:var(--t2);font-size:.875rem}
+.pg-btns{display:flex;gap:.5rem}
+.pg-btns button{padding:.5rem .875rem;background:var(--bg);border:1px solid var(--bd);border-radius:6px;color:var(--t1);cursor:pointer;font-size:.875rem}
+.pg-btns button:hover:not(:disabled){background:var(--h)}
+.pg-btns button:disabled{opacity:.4;cursor:not-allowed}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center}
+.mo.on{display:flex}
+.modal{background:var(--c);padding:1.5rem;border-radius:12px;width:100%;max-width:400px;margin:1rem}
+.modal h3{margin-bottom:1rem;font-size:1.125rem}
+.modal-acts{display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem}
+.radio-group{display:flex;flex-direction:column;gap:.75rem}
+.radio-item{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--bg);border-radius:8px;cursor:pointer;transition:all .2s}
+.radio-item:hover{background:var(--h)}
+.radio-item input{display:none}
+.radio-item .check{width:20px;height:20px;border:2px solid var(--bd);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.radio-item input:checked+.check{border-color:var(--pl)}
+.radio-item input:checked+.check::after{content:'●';color:var(--pl);font-size:12px}
+.radio-item .txt{flex:1}
+.radio-item .txt .n{font-weight:500}
+.radio-item .txt .d{font-size:.75rem;color:var(--t2)}
+.ss{background:var(--c);padding:1.5rem;border-radius:12px;border:1px solid var(--bd);margin-bottom:1rem}
+.ss h3{margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--bd)}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0}
+.sr .lb{color:var(--t2)}.sr .vl{font-weight:500}
+.mn{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--c);border-top:1px solid var(--bd);z-index:100}
+.mn-items{display:flex;justify-content:space-around;padding:.4rem 0}
+.mi{display:flex;flex-direction:column;align-items:center;padding:.4rem;color:var(--t2);cursor:pointer;font-size:.6rem;gap:.15rem}
+.mi.on{color:var(--pl)}
+.mi em{font-style:normal;font-size:1.2rem}
+.ld{display:flex;align-items:center;justify-content:center;padding:3rem;color:var(--t2)}
+.sp{width:20px;height:20px;border:3px solid var(--bd);border-top-color:var(--pl);border-radius:50%;animation:spin 1s linear infinite;margin-right:.75rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;top:1rem;right:1rem;padding:.875rem 1.25rem;border-radius:8px;color:#fff;font-size:.875rem;z-index:2000;transform:translateX(calc(100% + 2rem));transition:transform .3s ease}
+.toast.show{transform:translateX(0)}
+.toast-ok{background:var(--ok)}.toast-no{background:var(--no)}
 .btn-group{display:flex;gap:.25rem;flex-wrap:wrap}
-.empty-row{text-align:center;padding:2rem;color:var(--t2)}
 @media(max-width:768px){
-.admin-sidebar{display:none}
-.admin-main{margin-left:0;padding:1rem;padding-bottom:5rem}
-.mobile-nav{display:block}
-.stats-grid{grid-template-columns:repeat(2,1fr)}
-.card-header{flex-direction:column;align-items:stretch}
-.search-box{width:100%}
-.search-input{flex:1}
-table{font-size:.75rem}th,td{padding:.5rem}
-.page-header{flex-direction:column;align-items:flex-start}
+.side{display:none}
+.main{margin-left:0;padding:1rem;padding-bottom:5rem}
+.mn{display:block}
+.sg{grid-template-columns:repeat(2,1fr)}
+.th{flex-direction:column;align-items:stretch}
+.sb{width:100%}.sb input{flex:1}
+table{font-size:.75rem}th,td{padding:.5rem .5rem}
+.ph{flex-direction:column;align-items:flex-start}
 .btn-group{flex-direction:column}
-.btn-group .van-button{width:100%}
+.btn-group .btn{width:100%;justify-content:center}
 }
-@media(max-width:480px){.stats-grid{grid-template-columns:1fr}}
-.setting-section{background:var(--c);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:1.5rem;margin-bottom:1rem}
-.setting-section h3{margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--bd)}
-.setting-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0}
-.setting-row .label{color:var(--t2)}.setting-row .value{font-weight:500}
+@media(max-width:480px){.sg{grid-template-columns:1fr}}
+.overflow-x{overflow-x:auto}
 </style>
 </head>
 <body>
 
-<div id="app">
-  <!-- Login Page -->
-  <div v-if="!isLoggedIn" class="login-wrap">
-    <div class="login-box">
-      <div class="login-logo"><h1>🍔 NearBite</h1><p>{{ t('adminPanel') }}</p></div>
-      <van-form @submit="handleLogin">
-        <van-cell-group inset>
-          <van-field v-model="loginForm.phone" name="phone" :label="t('phone')" :placeholder="t('phone')" :rules="[{ required: true, message: t('phone') }]" />
-          <van-field v-model="loginForm.password" type="password" name="password" :label="t('password')" :placeholder="t('password')" :rules="[{ required: true, message: t('password') }]" />
-        </van-cell-group>
-        <div style="margin: 16px;">
-          <van-button round block type="primary" native-type="submit" color="#ff6b35" :loading="loggingIn">{{ t('login') }}</van-button>
-        </div>
-      </van-form>
-    </div>
+<div id="loginPage" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo"><h1>🍔 NearBite</h1><p data-i18n="adminPanel">管理后台</p></div>
+    <form id="loginForm">
+      <div class="fg"><label data-i18n="phone">手机号</label><input type="tel" id="lPhone" placeholder="0210000000" required></div>
+      <div class="fg"><label data-i18n="password">密码</label><input type="password" id="lPass" required></div>
+      <button type="submit" class="btn btn-p btn-w" data-i18n="login">登录</button>
+    </form>
   </div>
-
-  <!-- Admin Layout -->
-  <div v-else class="admin-layout">
-    <aside class="admin-sidebar">
-      <div class="sidebar-header"><h2>🍔 NearBite</h2></div>
-      <nav class="sidebar-nav">
-        <div class="nav-item" :class="{active:currentPage==='dashboard'}" @click="goTo('dashboard')"><span class="nav-icon">📊</span><span>{{ t('nav_dashboard') }}</span></div>
-        <div class="nav-item" :class="{active:currentPage==='users'}" @click="goTo('users')"><span class="nav-icon">👥</span><span>{{ t('nav_users') }}</span></div>
-        <div class="nav-item" :class="{active:currentPage==='merchants'}" @click="goTo('merchants')"><span class="nav-icon">🏪</span><span>{{ t('nav_merchants') }}</span></div>
-        <div class="nav-item" :class="{active:currentPage==='orders'}" @click="goTo('orders')"><span class="nav-icon">📋</span><span>{{ t('nav_orders') }}</span></div>
-        <div class="nav-item" :class="{active:currentPage==='logs'}" @click="goTo('logs')"><span class="nav-icon">📝</span><span>{{ t('nav_logs') }}</span></div>
-        <div class="nav-item" :class="{active:currentPage==='settings'}" @click="goTo('settings')"><span class="nav-icon">⚙️</span><span>{{ t('nav_settings') }}</span></div>
-      </nav>
-      <div class="sidebar-footer">
-        <div class="user-info">
-          <div class="user-avatar">{{ userName[0] }}</div>
-          <div><div class="user-name">{{ userName }}</div><div class="user-role">{{ t('admin') }}</div></div>
-        </div>
-        <div class="lang-toggle" @click="toggleLang">
-          <span :class="{active:lang==='zh'}">中文</span>
-          <span :class="{active:lang==='en'}">EN</span>
-        </div>
-      </div>
-    </aside>
-
-    <main class="admin-main">
-      <!-- Dashboard -->
-      <div v-show="currentPage==='dashboard'">
-        <div class="page-header"><h1 class="page-title">{{ t('nav_dashboard') }}</h1></div>
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">{{ t('s_users') }}</div><div class="stat-value">{{ stats.totalUsers }}</div></div>
-          <div class="stat-card"><div class="stat-icon">🏪</div><div class="stat-label">{{ t('s_merchants') }}</div><div class="stat-value">{{ stats.totalMerchants }}</div></div>
-          <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-label">{{ t('s_orders') }}</div><div class="stat-value">{{ stats.totalOrders }}</div></div>
-          <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">{{ t('s_revenue') }}</div><div class="stat-value">${{ fmtNum(stats.totalRevenue) }}</div></div>
-          <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">{{ t('s_todayOrders') }}</div><div class="stat-value">{{ stats.todayOrders }}</div></div>
-          <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-label">{{ t('s_todayRevenue') }}</div><div class="stat-value">${{ fmtNum(stats.todayRevenue) }}</div></div>
-          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">{{ t('s_active') }}</div><div class="stat-value">{{ stats.activeMerchants }}</div></div>
-        </div>
-      </div>
-
-      <!-- Users -->
-      <div v-show="currentPage==='users'">
-        <div class="page-header"><h1 class="page-title">{{ t('nav_users') }}</h1></div>
-        <div class="content-card">
-          <div class="card-header">
-            <div class="search-box">
-              <input class="search-input" v-model="userSearch" :placeholder="t('ph_searchUser')" @keyup.enter="searchUsers" />
-              <van-button type="primary" size="small" color="#ff6b35" @click="searchUsers">{{ t('search') }}</van-button>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>{{ t('phone') }}</th><th>{{ t('role') }}</th><th>{{ t('registered') }}</th><th>{{ t('status') }}</th><th>{{ t('actions') }}</th></tr></thead>
-              <tbody>
-                <tr v-if="!users.length"><td colspan="5" class="empty-row">{{ t('noData') }}</td></tr>
-                <tr v-for="u in users" :key="u._id">
-                  <td>{{ u.phone || '-' }}</td>
-                  <td>{{ u.role || 'user' }}</td>
-                  <td>{{ relTime(u.createdAt) }}</td>
-                  <td><span class="badge" :class="getUserBadgeClass(u)">{{ getUserStatusText(u) }}</span></td>
-                  <td>
-                    <div class="btn-group">
-                      <van-button v-if="u.suspended" size="small" type="success" @click="unsuspendUser(u._id)">{{ t('unsuspend') }}</van-button>
-                      <van-button v-else size="small" @click="openSuspend('user',u._id)">{{ t('suspendUser') }}</van-button>
-                      <van-button v-if="u.banned" size="small" type="success" @click="unbanUser(u._id)">{{ t('unban') }}</van-button>
-                      <van-button v-else size="small" type="danger" @click="openBan('user',u._id)">{{ t('banUser') }}</van-button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="pagination">
-            <div class="pagination-info">{{ pageInfo(userPage,userTotalPages) }}</div>
-            <div class="pagination-btns">
-              <van-button size="small" :disabled="userPage<=1" @click="userPrev">{{ t('prev') }}</van-button>
-              <van-button size="small" :disabled="userPage>=userTotalPages" @click="userNext">{{ t('next') }}</van-button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Merchants -->
-      <div v-show="currentPage==='merchants'">
-        <div class="page-header"><h1 class="page-title">{{ t('nav_merchants') }}</h1></div>
-        <div class="content-card">
-          <div class="card-header">
-            <div class="search-box">
-              <input class="search-input" v-model="merchantSearch" :placeholder="t('ph_searchMerchant')" @keyup.enter="searchMerchants" />
-              <van-button type="primary" size="small" color="#ff6b35" @click="searchMerchants">{{ t('search') }}</van-button>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>{{ t('name') }}</th><th>{{ t('type') }}</th><th>{{ t('phone') }}</th><th>{{ t('status') }}</th><th>{{ t('plan') }}</th><th>{{ t('commission') }}</th><th>{{ t('rating') }}</th><th>{{ t('actions') }}</th></tr></thead>
-              <tbody>
-                <tr v-if="!merchants.length"><td colspan="8" class="empty-row">{{ t('noData') }}</td></tr>
-                <tr v-for="m in merchants" :key="m._id">
-                  <td>{{ m.name || m.businessName || '-' }}</td>
-                  <td>{{ m.type || m.cuisine || '-' }}</td>
-                  <td>{{ m.phone || '-' }}</td>
-                  <td><span class="badge" :class="getMerchantBadgeClass(m)">{{ getMerchantStatusText(m) }}</span></td>
-                  <td><span class="badge" :class="m.plan==='pro'?'badge-bl':'badge-ok'">{{ m.plan==='pro'?t('plan_pro'):t('plan_free') }}</span></td>
-                  <td>{{ m.commission || m.commissionRate || 8 }}%</td>
-                  <td>{{ m.rating ? Number(m.rating).toFixed(1) : '-' }}</td>
-                  <td>
-                    <div class="btn-group">
-                      <van-button v-if="m.suspended" size="small" type="success" @click="unsuspendMerchant(m._id)">{{ t('unsuspend') }}</van-button>
-                      <van-button v-else size="small" @click="openSuspend('merchant',m._id)">{{ t('suspendMerchant') }}</van-button>
-                      <van-button v-if="m.banned" size="small" type="success" @click="unbanMerchant(m._id)">{{ t('unban') }}</van-button>
-                      <van-button v-else size="small" type="danger" @click="openBan('merchant',m._id)">{{ t('banMerchant') }}</van-button>
-                      <van-button size="small" type="primary" color="#ff6b35" @click="openPlan(m._id,m.plan)">{{ t('changePlan') }}</van-button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="pagination">
-            <div class="pagination-info">{{ pageInfo(merchantPage,merchantTotalPages) }}</div>
-            <div class="pagination-btns">
-              <van-button size="small" :disabled="merchantPage<=1" @click="merchantPrev">{{ t('prev') }}</van-button>
-              <van-button size="small" :disabled="merchantPage>=merchantTotalPages" @click="merchantNext">{{ t('next') }}</van-button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Orders -->
-      <div v-show="currentPage==='orders'">
-        <div class="page-header">
-          <h1 class="page-title">{{ t('nav_orders') }}</h1>
-          <van-button type="primary" size="small" color="#ff6b35" @click="exportCSV('orders')">{{ t('exportOrders') }}</van-button>
-        </div>
-        <div class="content-card">
-          <div class="card-header">
-            <div class="search-box">
-              <select class="filter-select" v-model="orderFilter" @change="loadOrders">
-                <option value="">{{ lang==='zh'?'全部状态':'All Status' }}</option>
-                <option value="pending">{{ t('st_pending') }}</option>
-                <option value="preparing">{{ t('st_preparing') }}</option>
-                <option value="ready">{{ t('st_ready') }}</option>
-                <option value="completed">{{ t('st_completed') }}</option>
-                <option value="cancelled">{{ t('st_cancelled') }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>{{ t('orderId') }}</th><th>{{ t('merchant') }}</th><th>{{ t('amount') }}</th><th>{{ t('status') }}</th><th>{{ t('time') }}</th></tr></thead>
-              <tbody>
-                <tr v-if="!orders.length"><td colspan="5" class="empty-row">{{ t('noData') }}</td></tr>
-                <tr v-for="o in orders" :key="o._id">
-                  <td>{{ (o.orderId || o.orderNumber || o._id || '').slice(-6) }}</td>
-                  <td>{{ o.merchantName || o.merchant || '-' }}</td>
-                  <td>${{ fmtNum(o.amount || o.total) }}</td>
-                  <td><span class="badge" :class="getOrderBadgeClass(o.status)">{{ t('st_'+(o.status||'pending')) }}</span></td>
-                  <td>{{ relTime(o.createdAt) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="pagination">
-            <div class="pagination-info">{{ pageInfo(orderPage,orderTotalPages) }}</div>
-            <div class="pagination-btns">
-              <van-button size="small" :disabled="orderPage<=1" @click="orderPrev">{{ t('prev') }}</van-button>
-              <van-button size="small" :disabled="orderPage>=orderTotalPages" @click="orderNext">{{ t('next') }}</van-button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Logs -->
-      <div v-show="currentPage==='logs'">
-        <div class="page-header"><h1 class="page-title">{{ t('nav_logs') }}</h1></div>
-        <div class="content-card">
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>{{ t('time') }}</th><th>{{ t('operator') }}</th><th>{{ t('type') }}</th><th>{{ t('detail') }}</th></tr></thead>
-              <tbody>
-                <tr v-if="!logs.length"><td colspan="4" class="empty-row">{{ t('noData') }}</td></tr>
-                <tr v-for="l in logs" :key="l._id||l.timestamp">
-                  <td>{{ relTime(l.createdAt||l.created_at||l.timestamp) }}</td>
-                  <td>{{ l.operator || l.admin || l.userName || '-' }}</td>
-                  <td>{{ l.type || l.action || '-' }}</td>
-                  <td>{{ l.detail || l.description || l.message || '-' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="pagination">
-            <div class="pagination-info">{{ pageInfo(logPage,logTotalPages) }}</div>
-            <div class="pagination-btns">
-              <van-button size="small" :disabled="logPage<=1" @click="logPrev">{{ t('prev') }}</van-button>
-              <van-button size="small" :disabled="logPage>=logTotalPages" @click="logNext">{{ t('next') }}</van-button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Settings -->
-      <div v-show="currentPage==='settings'">
-        <div class="page-header"><h1 class="page-title">{{ t('nav_settings') }}</h1></div>
-        <div class="setting-section">
-          <h3>{{ t('adminInfo') }}</h3>
-          <div class="setting-row"><span class="label">{{ t('phone') }}</span><span class="value">{{ userPhone }}</span></div>
-          <div class="setting-row"><span class="label">{{ t('role') }}</span><span class="value">{{ t('admin') }}</span></div>
-        </div>
-        <div class="setting-section">
-          <h3>{{ t('dataExport') }}</h3>
-          <div class="setting-row"><span class="label">{{ t('nav_orders') }}</span><van-button size="small" type="primary" color="#ff6b35" @click="exportCSV('orders')">{{ t('export') }}</van-button></div>
-          <div class="setting-row"><span class="label">{{ t('nav_merchants') }}</span><van-button size="small" type="primary" color="#ff6b35" @click="exportCSV('merchants')">{{ t('export') }}</van-button></div>
-        </div>
-        <div class="setting-section">
-          <h3>{{ t('account') }}</h3>
-          <van-button type="danger" block @click="doLogout">{{ t('logout') }}</van-button>
-        </div>
-      </div>
-    </main>
-
-    <!-- Mobile Bottom Nav -->
-    <nav class="mobile-nav">
-      <div class="mobile-nav-items">
-        <div class="mobile-nav-item" :class="{active:currentPage==='dashboard'}" @click="goTo('dashboard')"><span class="nav-icon">📊</span><span>{{ t('nav_dashboard') }}</span></div>
-        <div class="mobile-nav-item" :class="{active:currentPage==='users'}" @click="goTo('users')"><span class="nav-icon">👥</span><span>{{ t('nav_users') }}</span></div>
-        <div class="mobile-nav-item" :class="{active:currentPage==='merchants'}" @click="goTo('merchants')"><span class="nav-icon">🏪</span><span>{{ t('nav_merchants') }}</span></div>
-        <div class="mobile-nav-item" :class="{active:currentPage==='orders'}" @click="goTo('orders')"><span class="nav-icon">📋</span><span>{{ t('nav_orders') }}</span></div>
-        <div class="mobile-nav-item" :class="{active:currentPage==='logs'}" @click="goTo('logs')"><span class="nav-icon">📝</span><span>{{ t('nav_logs') }}</span></div>
-      </div>
-    </nav>
-  </div>
-
-  <!-- Ban Dialog -->
-  <van-dialog v-model:show="showBanModal" :title="banTitle" show-cancel-button @confirm="confirmBan">
-    <van-field v-model="banReason" type="textarea" :placeholder="t('banReason')" rows="3" style="margin:16px 0;" />
-  </van-dialog>
-
-  <!-- Suspend Dialog -->
-  <van-dialog v-model:show="showSuspendModal" :title="suspendTitle" show-cancel-button @confirm="confirmSuspend">
-    <van-field v-model="suspendReason" type="textarea" :placeholder="t('suspendReason')" rows="3" style="margin:16px 0;" />
-  </van-dialog>
-
-  <!-- Plan Dialog -->
-  <van-dialog v-model:show="showPlanModal" :title="t('changePlan')" show-cancel-button @confirm="confirmPlan">
-    <van-radio-group v-model="selectedPlan" style="padding:16px;">
-      <van-radio name="free" shape="square" style="margin-bottom:12px;">{{ t('planFree') }} - {{ t('planFreeDesc') }}</van-radio>
-      <van-radio name="pro" shape="square">Pro - {{ t('planProDesc') }}</van-radio>
-    </van-radio-group>
-  </van-dialog>
 </div>
+
+<div id="app" class="app">
+  <aside class="side">
+    <div class="side-head"><h2>🍔 NearBite</h2></div>
+    <nav class="side-nav">
+      <div class="ni on" data-pg="dashboard"><em>📊</em><span data-i18n="nav_dashboard">概览</span></div>
+      <div class="ni" data-pg="users"><em>👥</em><span data-i18n="nav_users">用户</span></div>
+      <div class="ni" data-pg="merchants"><em>🏪</em><span data-i18n="nav_merchants">商家</span></div>
+      <div class="ni" data-pg="orders"><em>📋</em><span data-i18n="nav_orders">订单</span></div>
+      <div class="ni" data-pg="logs"><em>📝</em><span data-i18n="nav_logs">日志</span></div>
+      <div class="ni" data-pg="settings"><em>⚙️</em><span data-i18n="nav_settings">设置</span></div>
+    </nav>
+    <div class="side-foot">
+      <div class="um"><div class="ua" id="sAvatar">A</div><div class="ui"><div class="n" id="sName">Admin</div><div class="r" data-i18n="admin">管理员</div></div></div>
+      <div class="lt" id="langToggle"><span class="on" data-l="zh">中文</span><span data-l="en">EN</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <div id="pg_dashboard" class="pg on">
+      <div class="ph"><h1 data-i18n="nav_dashboard">概览</h1></div>
+      <div class="sg">
+        <div class="sc"><div class="ico">👥</div><div class="lb" data-i18n="s_users">总用户</div><div class="vl" id="v_users">-</div></div>
+        <div class="sc"><div class="ico">🏪</div><div class="lb" data-i18n="s_merchants">总商家</div><div class="vl" id="v_merchants">-</div></div>
+        <div class="sc"><div class="ico">📋</div><div class="lb" data-i18n="s_orders">总订单</div><div class="vl" id="v_orders">-</div></div>
+        <div class="sc"><div class="ico">💰</div><div class="lb" data-i18n="s_revenue">总收入</div><div class="vl" id="v_revenue">-</div></div>
+        <div class="sc"><div class="ico">📅</div><div class="lb" data-i18n="s_todayOrders">今日订单</div><div class="vl" id="v_todayO">-</div></div>
+        <div class="sc"><div class="ico">💵</div><div class="lb" data-i18n="s_todayRevenue">今日收入</div><div class="vl" id="v_todayR">-</div></div>
+        <div class="sc"><div class="ico">✅</div><div class="lb" data-i18n="s_active">在线商家</div><div class="vl" id="v_active">-</div></div>
+      </div>
+    </div>
+
+    <div id="pg_users" class="pg">
+      <div class="ph"><h1 data-i18n="nav_users">用户</h1></div>
+      <div class="tc">
+        <div class="th"><div class="sb"><input type="text" id="uSearch" data-i18n-ph="ph_searchUser" placeholder="搜索用户..."><button class="btn btn-p btn-sm" onclick="U.search()" data-i18n="search">搜索</button></div></div>
+        <div class="overflow-x"><table><thead><tr><th data-i18n="phone">手机号</th><th data-i18n="role">角色</th><th data-i18n="registered">注册时间</th><th data-i18n="status">状态</th><th data-i18n="actions">操作</th></tr></thead><tbody id="uBody"></tbody></table></div>
+        <div class="pg-bar"><div class="pg-info" id="uInfo"></div><div class="pg-btns"><button id="uPrev" onclick="U.prev()" data-i18n="prev">上一页</button><button id="uNext" onclick="U.next()" data-i18n="next">下一页</button></div></div>
+      </div>
+    </div>
+
+    <div id="pg_merchants" class="pg">
+      <div class="ph"><h1 data-i18n="nav_merchants">商家</h1></div>
+      <div class="tc">
+        <div class="th"><div class="sb"><input type="text" id="mSearch" data-i18n-ph="ph_searchMerchant" placeholder="搜索商家..."><button class="btn btn-p btn-sm" onclick="M.search()" data-i18n="search">搜索</button></div></div>
+        <div class="overflow-x"><table><thead><tr><th data-i18n="name">名称</th><th data-i18n="type">类型</th><th data-i18n="phone">手机号</th><th data-i18n="status">状态</th><th data-i18n="plan">套餐</th><th data-i18n="commission">提成</th><th data-i18n="rating">评分</th><th data-i18n="actions">操作</th></tr></thead><tbody id="mBody"></tbody></table></div>
+        <div class="pg-bar"><div class="pg-info" id="mInfo"></div><div class="pg-btns"><button id="mPrev" onclick="M.prev()" data-i18n="prev">上一页</button><button id="mNext" onclick="M.next()" data-i18n="next">下一页</button></div></div>
+      </div>
+    </div>
+
+    <div id="pg_orders" class="pg">
+      <div class="ph"><h1 data-i18n="nav_orders">订单</h1><button class="btn btn-p btn-sm" onclick="exportCSV('orders')" data-i18n="exportOrders">导出订单CSV</button></div>
+      <div class="tc">
+        <div class="th"><div class="sb"><select id="oFilter" class="fs" onchange="O.filter()"><option value="">全部状态</option><option value="pending">待处理</option><option value="preparing">准备中</option><option value="ready">待取餐</option><option value="completed">已完成</option><option value="cancelled">已取消</option></select></div></div>
+        <div class="overflow-x"><table><thead><tr><th data-i18n="orderId">订单号</th><th data-i18n="merchant">商家</th><th data-i18n="amount">金额</th><th data-i18n="status">状态</th><th data-i18n="time">时间</th></tr></thead><tbody id="oBody"></tbody></table></div>
+        <div class="pg-bar"><div class="pg-info" id="oInfo"></div><div class="pg-btns"><button id="oPrev" onclick="O.prev()" data-i18n="prev">上一页</button><button id="oNext" onclick="O.next()" data-i18n="next">下一页</button></div></div>
+      </div>
+    </div>
+
+    <div id="pg_logs" class="pg">
+      <div class="ph"><h1 data-i18n="nav_logs">操作日志</h1></div>
+      <div class="tc">
+        <div class="overflow-x"><table><thead><tr><th data-i18n="time">时间</th><th data-i18n="operator">操作人</th><th data-i18n="type">类型</th><th data-i18n="detail">详情</th></tr></thead><tbody id="lBody"></tbody></table></div>
+        <div class="pg-bar"><div class="pg-info" id="lInfo"></div><div class="pg-btns"><button id="lPrev" onclick="L.prev()" data-i18n="prev">上一页</button><button id="lNext" onclick="L.next()" data-i18n="next">下一页</button></div></div>
+      </div>
+    </div>
+
+    <div id="pg_settings" class="pg">
+      <div class="ph"><h1 data-i18n="nav_settings">设置</h1></div>
+      <div class="ss"><h3 data-i18n="adminInfo">管理员信息</h3>
+        <div class="sr"><span class="lb" data-i18n="phone">手机号</span><span class="vl" id="setPhone">-</span></div>
+        <div class="sr"><span class="lb" data-i18n="role">角色</span><span class="vl" data-i18n="admin">管理员</span></div>
+      </div>
+      <div class="ss"><h3 data-i18n="dataExport">数据导出</h3>
+        <div class="sr"><span class="lb" data-i18n="nav_orders">订单</span><button class="btn btn-p btn-sm" onclick="exportCSV('orders')" data-i18n="export">导出</button></div>
+        <div class="sr"><span class="lb" data-i18n="nav_merchants">商家</span><button class="btn btn-p btn-sm" onclick="exportCSV('merchants')" data-i18n="export">导出</button></div>
+      </div>
+      <div class="ss"><h3 data-i18n="account">账号</h3><button class="btn btn-d" onclick="doLogout()" data-i18n="logout">退出登录</button></div>
+    </div>
+
+  </main>
+
+  <nav class="mn"><div class="mn-items">
+    <div class="mi on" data-pg="dashboard"><em>📊</em><span data-i18n="nav_dashboard">概览</span></div>
+    <div class="mi" data-pg="users"><em>👥</em><span data-i18n="nav_users">用户</span></div>
+    <div class="mi" data-pg="merchants"><em>🏪</em><span data-i18n="nav_merchants">商家</span></div>
+    <div class="mi" data-pg="orders"><em>📋</em><span data-i18n="nav_orders">订单</span></div>
+    <div class="mi" data-pg="logs"><em>📝</em><span data-i18n="nav_logs">日志</span></div>
+    <div class="mi" data-pg="settings"><em>⚙️</em><span data-i18n="nav_settings">设置</span></div>
+  </div></nav>
+</div>
+
+<!-- Ban Modal -->
+<div id="banModal" class="mo">
+  <div class="modal">
+    <h3 id="banTitle">封禁</h3>
+    <div class="fg"><label data-i18n="banReason">封禁原因</label><textarea id="banReason" rows="3" placeholder="输入原因..."></textarea></div>
+    <div class="modal-acts"><button class="btn btn-o btn-sm" onclick="closeBan()" data-i18n="cancel">取消</button><button class="btn btn-d btn-sm" id="banConfirm" data-i18n="confirm">确认</button></div>
+  </div>
+</div>
+
+<!-- Suspend Modal -->
+<div id="suspendModal" class="mo">
+  <div class="modal">
+    <h3 id="suspendTitle">停权</h3>
+    <div class="fg"><label data-i18n="suspendReason">停权原因</label><textarea id="suspendReason" rows="3" placeholder="输入原因..."></textarea></div>
+    <div class="modal-acts"><button class="btn btn-o btn-sm" onclick="closeSuspend()" data-i18n="cancel">取消</button><button class="btn btn-d btn-sm" id="suspendConfirm" data-i18n="confirm">确认</button></div>
+  </div>
+</div>
+
+<!-- Plan Modal -->
+<div id="planModal" class="mo">
+  <div class="modal">
+    <h3 data-i18n="changePlan">调整套餐</h3>
+    <div class="radio-group" id="planOptions">
+      <label class="radio-item">
+        <input type="radio" name="plan" value="free" checked>
+        <span class="check"></span>
+        <span class="txt">
+          <div class="n" data-i18n="planFree">免费版</div>
+          <div class="d" data-i18n="planFreeDesc">基础功能</div>
+        </span>
+      </label>
+      <label class="radio-item">
+        <input type="radio" name="plan" value="pro">
+        <span class="check"></span>
+        <span class="txt">
+          <div class="n">Pro版</div>
+          <div class="d" data-i18n="planProDesc">高级功能</div>
+        </span>
+      </label>
+    </div>
+    <div class="modal-acts"><button class="btn btn-o btn-sm" onclick="closePlan()" data-i18n="cancel">取消</button><button class="btn btn-p btn-sm" id="planConfirm" data-i18n="confirm">确认</button></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
 
 <script>
 (function(){
 "use strict";
-var createApp=Vue.createApp,ref=Vue.ref,computed=Vue.computed,onMounted=Vue.onMounted;
 
 var LANG={
 zh:{
@@ -383,6 +300,9 @@ st_pending:'待处理',st_preparing:'准备中',st_ready:'待取餐',st_complete
 justNow:'刚刚',mAgo:'{n}分钟前',hAgo:'{n}小时前',dAgo:'{n}天前',
 noData:'暂无数据',loading:'加载中...',
 pageOf:'第 {p} 页 / 共 {t} 页',
+confirmBan:'确认封禁？',confirmUnban:'确认解封？',
+confirmSuspend:'确认停权？',confirmUnsuspend:'确认解停？',
+confirmPlan:'确认更换套餐？',
 opSuccess:'操作成功',opFail:'操作失败',loginFail:'登录失败，请检查账号密码',
 ph_searchUser:'搜索手机号...',ph_searchMerchant:'搜索商家名称...'
 },
@@ -405,218 +325,391 @@ st_pending:'Pending',st_preparing:'Preparing',st_ready:'Ready',st_completed:'Com
 justNow:'Just now',mAgo:'{n}m ago',hAgo:'{n}h ago',dAgo:'{n}d ago',
 noData:'No data',loading:'Loading...',
 pageOf:'Page {p} of {t}',
+confirmBan:'Confirm ban?',confirmUnban:'Confirm unban?',
+confirmSuspend:'Confirm suspend?',confirmUnsuspend:'Confirm unsuspend?',
+confirmPlan:'Confirm plan change?',
 opSuccess:'Success',opFail:'Failed',loginFail:'Login failed. Check credentials.',
 ph_searchUser:'Search phone...',ph_searchMerchant:'Search merchant name...'
 }
 };
 
-createApp({
-  setup:function(){
-    var lang=ref(localStorage.getItem('nb_lang')||'zh');
-    var token=ref(localStorage.getItem('nb_token'));
-    var user=ref(JSON.parse(localStorage.getItem('nb_user')||'null'));
-    var currentPage=ref('dashboard');
-    var loggingIn=ref(false);
-    var loginForm=ref({phone:'',password:''});
-    var isLoggedIn=computed(function(){return!!token.value});
-    var userName=computed(function(){return(user.value&&(user.value.name||user.value.phone))||'Admin'});
-    var userPhone=computed(function(){return(user.value&&user.value.phone)||'-'});
+var lang=localStorage.getItem('nb_lang')||'zh';
+var token=localStorage.getItem('nb_token');
+var user=JSON.parse(localStorage.getItem('nb_user')||'null');
+var banCtx=null;
+var suspendCtx=null;
+var planCtx=null;
 
-    var stats=ref({totalUsers:0,totalMerchants:0,totalOrders:0,totalRevenue:0,todayOrders:0,todayRevenue:0,activeMerchants:0});
-    var users=ref([]),merchants=ref([]),orders=ref([]),logs=ref([]);
-    var userPage=ref(1),userTotalPages=ref(1);
-    var merchantPage=ref(1),merchantTotalPages=ref(1);
-    var orderPage=ref(1),orderTotalPages=ref(1);
-    var logPage=ref(1),logTotalPages=ref(1);
-    var userSearch=ref(''),merchantSearch=ref(''),orderFilter=ref('');
+function t(k){
+  var val=LANG[lang]&&LANG[lang][k];
+  return val!==undefined?val:k;
+}
 
-    var showBanModal=ref(false),showSuspendModal=ref(false),showPlanModal=ref(false);
-    var banTitle=ref(''),banReason=ref(''),banCtx=ref(null);
-    var suspendTitle=ref(''),suspendReason=ref(''),suspendCtx=ref(null);
-    var selectedPlan=ref('free'),planCtx=ref(null);
+function fmtNum(n){if(n==null)return'0';return Number(n).toLocaleString()}
+function fmtMoney(n){return'$'+fmtNum(n!=null?Math.round(n):0)}
 
-    function t(k){var v=LANG[lang.value]&&LANG[lang.value][k];return v!==undefined?v:k;}
-    function fmtNum(n){if(n==null)return'0';return Number(n).toLocaleString();}
-    function pageInfo(p,tp){return t('pageOf').replace('{p}',p).replace('{t}',tp);}
+function relTime(d){
+  if(!d)return'-';
+  var ms=Date.now()-new Date(d).getTime();
+  if(ms<0)ms=0;
+  var m=Math.floor(ms/60000),h=Math.floor(ms/3600000),dy=Math.floor(ms/86400000);
+  if(m<1)return t('justNow');
+  if(m<60)return t('mAgo').replace('{n}',m);
+  if(h<24)return t('hAgo').replace('{n}',h);
+  return t('dAgo').replace('{n}',dy);
+}
 
-    function relTime(d){
-      if(!d)return'-';
-      var ms=Date.now()-new Date(d).getTime();
-      if(ms<0)ms=0;
-      var m=Math.floor(ms/60000),h=Math.floor(ms/3600000),dy=Math.floor(ms/86400000);
-      if(m<1)return t('justNow');
-      if(m<60)return t('mAgo').replace('{n}',m);
-      if(h<24)return t('hAgo').replace('{n}',h);
-      return t('dAgo').replace('{n}',dy);
-    }
+function getStatusBadge(status){
+  var map={
+    'active':{cls:'b-bl',txt:t('st_active')},
+    'banned':{cls:'b-no',txt:t('st_banned')},
+    'suspended':{cls:'b-or',txt:t('st_suspended')},
+    'free_trial':{cls:'b-ok',txt:t('st_free_trial')},
+    'expired':{cls:'b-wn',txt:t('st_expired')},
+    'online':{cls:'b-ok',txt:t('st_online')},
+    'offline':{cls:'b-no',txt:t('st_offline')}
+  };
+  var m=map[status]||{cls:'b-ok',txt:status||'active'};
+  return'<span class="badge '+m.cls+'">'+m.txt+'</span>';
+}
 
-    function getUserBadgeClass(u){if(u.banned)return'badge-no';if(u.suspended)return'badge-wn';return'badge-bl';}
-    function getUserStatusText(u){if(u.banned)return t('st_banned');if(u.suspended)return t('st_suspended');return t('st_active');}
-    function getMerchantBadgeClass(m){if(m.banned)return'badge-no';if(m.suspended)return'badge-wn';return(m.isOnline||m.is_online)?'badge-ok':'badge-no';}
-    function getMerchantStatusText(m){if(m.banned)return t('st_banned');if(m.suspended)return t('st_suspended');return(m.isOnline||m.is_online)?t('st_online'):t('st_offline');}
-    function getOrderBadgeClass(s){if(s==='completed')return'badge-ok';if(s==='cancelled')return'badge-no';return'badge-wn';}
+function getMerchantStatusBadge(m){
+  if(m.banned)return getStatusBadge('banned');
+  if(m.suspended)return getStatusBadge('suspended');
+  var online=m.isOnline||m.is_online;
+  return online?getStatusBadge('online'):getStatusBadge('offline');
+}
 
-    function api(path,opts){
-      opts=opts||{};
-      var headers=Object.assign({'Content-Type':'application/json'},opts.headers||{});
-      if(token.value)headers['Authorization']='Bearer '+token.value;
-      return fetch(path,Object.assign({},opts,{headers:headers}))
-        .then(function(r){
-          if(r.status===401){doLogout();return Promise.reject('401');}
-          if(!r.ok)return r.json().catch(function(){return{}}).then(function(e){return Promise.reject(e.message||'Error')});
-          return r.json();
-        });
-    }
+function getUserStatusBadge(u){
+  if(u.banned)return getStatusBadge('banned');
+  if(u.suspended)return getStatusBadge('suspended');
+  return getStatusBadge('active');
+}
 
-    function handleLogin(){
-      loggingIn.value=true;
-      api('/api/auth/login',{method:'POST',body:JSON.stringify({phone:loginForm.value.phone,password:loginForm.value.password})})
-        .then(function(d){
-          token.value=d.token;user.value=d.user;
-          localStorage.setItem('nb_token',d.token);
-          localStorage.setItem('nb_user',JSON.stringify(d.user));
-          goTo('dashboard');
-        })
-        .catch(function(){vant.showToast({message:t('loginFail'),type:'fail'})})
-        .finally(function(){loggingIn.value=false});
-    }
+function getUserStatus(u){
+  if(u.banned)return'banned';
+  if(u.suspended)return'suspended';
+  return'active';
+}
 
-    function doLogout(){
-      token.value=null;user.value=null;
-      localStorage.removeItem('nb_token');localStorage.removeItem('nb_user');
-    }
+function getMerchantStatus(m){
+  if(m.banned)return'banned';
+  if(m.suspended)return'suspended';
+  var online=m.isOnline||m.is_online;
+  return online?'online':'offline';
+}
 
-    function goTo(pg){
-      currentPage.value=pg;
-      if(pg==='dashboard')loadStats();
-      else if(pg==='users')loadUsers();
-      else if(pg==='merchants')loadMerchants();
-      else if(pg==='orders')loadOrders();
-      else if(pg==='logs')loadLogs();
-    }
+function getPlanBadge(plan){
+  var txt=plan==='pro'?t('plan_pro'):t('plan_free');
+  var cls=plan==='pro'?'b-bl':'b-ok';
+  return'<span class="badge '+cls+'">'+txt+'</span>';
+}
 
-    function toggleLang(){
-      lang.value=lang.value==='zh'?'en':'zh';
-      localStorage.setItem('nb_lang',lang.value);
-    }
-
-    function loadStats(){
-      api('/api/admin/stats').then(function(d){
-        stats.value={
-          totalUsers:fmtNum(d.totalUsers),totalMerchants:fmtNum(d.totalMerchants),
-          totalOrders:fmtNum(d.totalOrders),totalRevenue:Math.round(d.totalRevenue||0),
-          todayOrders:fmtNum(d.todayOrders),todayRevenue:Math.round(d.todayRevenue||0),
-          activeMerchants:fmtNum(d.activeMerchants)
-        };
-      }).catch(function(){});
-    }
-
-    function loadUsers(){
-      api('/api/admin/users?page='+userPage.value+'&limit=20&search='+encodeURIComponent(userSearch.value))
-        .then(function(d){users.value=d.users||[];userTotalPages.value=d.totalPages||1;})
-        .catch(function(){users.value=[];});
-    }
-    function searchUsers(){userPage.value=1;loadUsers();}
-    function userPrev(){if(userPage.value>1){userPage.value--;loadUsers();}}
-    function userNext(){if(userPage.value<userTotalPages.value){userPage.value++;loadUsers();}}
-
-    function loadMerchants(){
-      api('/api/admin/merchants?page='+merchantPage.value+'&limit=20&search='+encodeURIComponent(merchantSearch.value))
-        .then(function(d){merchants.value=d.merchants||[];merchantTotalPages.value=d.totalPages||1;})
-        .catch(function(){merchants.value=[];});
-    }
-    function searchMerchants(){merchantPage.value=1;loadMerchants();}
-    function merchantPrev(){if(merchantPage.value>1){merchantPage.value--;loadMerchants();}}
-    function merchantNext(){if(merchantPage.value<merchantTotalPages.value){merchantPage.value++;loadMerchants();}}
-
-    function loadOrders(){
-      var s=orderFilter.value;
-      api('/api/admin/orders?page='+orderPage.value+'&limit=20'+(s?'&status='+s:''))
-        .then(function(d){orders.value=d.orders||[];orderTotalPages.value=d.totalPages||1;})
-        .catch(function(){orders.value=[];});
-    }
-    function orderPrev(){if(orderPage.value>1){orderPage.value--;loadOrders();}}
-    function orderNext(){if(orderPage.value<orderTotalPages.value){orderPage.value++;loadOrders();}}
-
-    function loadLogs(){
-      api('/api/admin/logs?page='+logPage.value+'&limit=50')
-        .then(function(d){logs.value=d.logs||[];logTotalPages.value=d.totalPages||1;})
-        .catch(function(){logs.value=[];});
-    }
-    function logPrev(){if(logPage.value>1){logPage.value--;loadLogs();}}
-    function logNext(){if(logPage.value<logTotalPages.value){logPage.value++;loadLogs();}}
-
-    function openBan(type,id){banCtx.value={type:type,id:id};banTitle.value=type==='user'?t('banUser'):t('banMerchant');banReason.value='';showBanModal.value=true;}
-    function confirmBan(){
-      if(!banCtx.value)return;
-      var url=banCtx.value.type==='user'?'/api/admin/users/'+banCtx.value.id+'/ban':'/api/admin/merchants/'+banCtx.value.id+'/ban';
-      api(url,{method:'PATCH',body:JSON.stringify({reason:banReason.value})})
-        .then(function(){vant.showToast(t('opSuccess'));if(banCtx.value.type==='user')loadUsers();else loadMerchants();})
-        .catch(function(){vant.showToast({message:t('opFail'),type:'fail'})});
-      showBanModal.value=false;
-    }
-    function unbanUser(id){api('/api/admin/users/'+id+'/unban',{method:'PATCH'}).then(function(){vant.showToast(t('opSuccess'));loadUsers();}).catch(function(){vant.showToast({message:t('opFail'),type:'fail'})});}
-    function unbanMerchant(id){api('/api/admin/merchants/'+id+'/unban',{method:'PATCH'}).then(function(){vant.showToast(t('opSuccess'));loadMerchants();}).catch(function(){vant.showToast({message:t('opFail'),type:'fail'})});}
-
-    function openSuspend(type,id){suspendCtx.value={type:type,id:id};suspendTitle.value=type==='user'?t('suspendUser'):t('suspendMerchant');suspendReason.value='';showSuspendModal.value=true;}
-    function confirmSuspend(){
-      if(!suspendCtx.value)return;
-      var url=suspendCtx.value.type==='user'?'/api/admin/users/'+suspendCtx.value.id+'/suspend':'/api/admin/merchants/'+suspendCtx.value.id+'/suspend';
-      api(url,{method:'PATCH',body:JSON.stringify({reason:suspendReason.value})})
-        .then(function(){vant.showToast(t('opSuccess'));if(suspendCtx.value.type==='user')loadUsers();else loadMerchants();})
-        .catch(function(){vant.showToast({message:t('opFail'),type:'fail'})});
-      showSuspendModal.value=false;
-    }
-    function unsuspendUser(id){api('/api/admin/users/'+id+'/unsuspend',{method:'PATCH'}).then(function(){vant.showToast(t('opSuccess'));loadUsers();}).catch(function(){vant.showToast({message:t('opFail'),type:'fail'})});}
-    function unsuspendMerchant(id){api('/api/admin/merchants/'+id+'/unsuspend',{method:'PATCH'}).then(function(){vant.showToast(t('opSuccess'));loadMerchants();}).catch(function(){vant.showToast({message:t('opFail'),type:'fail'})});}
-
-    function openPlan(id,current){planCtx.value={id:id};selectedPlan.value=current||'free';showPlanModal.value=true;}
-    function confirmPlan(){
-      if(!planCtx.value)return;
-      api('/api/admin/merchants/'+planCtx.value.id+'/plan',{method:'PATCH',body:JSON.stringify({plan:selectedPlan.value})})
-        .then(function(){vant.showToast(t('opSuccess'));loadMerchants();})
-        .catch(function(){vant.showToast({message:t('opFail'),type:'fail'})});
-      showPlanModal.value=false;
-    }
-
-    function exportCSV(type){
-      fetch('/api/admin/export/'+type,{headers:{'Authorization':'Bearer '+token.value}})
-        .then(function(r){if(r.status===401){doLogout();return;}return r.blob();})
-        .then(function(blob){
-          if(!blob)return;
-          var u=URL.createObjectURL(blob);
-          var a=document.createElement('a');a.href=u;a.download=type+'.csv';a.click();
-          URL.revokeObjectURL(u);
-          vant.showToast(t('opSuccess'));
-        })
-        .catch(function(){vant.showToast({message:t('opFail'),type:'fail'})});
-    }
-
-    onMounted(function(){if(token.value&&user.value)goTo('dashboard');});
-
-    return{
-      lang:lang,currentPage:currentPage,loggingIn:loggingIn,loginForm:loginForm,isLoggedIn:isLoggedIn,userName:userName,userPhone:userPhone,
-      stats:stats,users:users,merchants:merchants,orders:orders,logs:logs,
-      userPage:userPage,userTotalPages:userTotalPages,merchantPage:merchantPage,merchantTotalPages:merchantTotalPages,
-      orderPage:orderPage,orderTotalPages:orderTotalPages,logPage:logPage,logTotalPages:logTotalPages,
-      userSearch:userSearch,merchantSearch:merchantSearch,orderFilter:orderFilter,
-      showBanModal:showBanModal,showSuspendModal:showSuspendModal,showPlanModal:showPlanModal,
-      banTitle:banTitle,banReason:banReason,suspendTitle:suspendTitle,suspendReason:suspendReason,selectedPlan:selectedPlan,
-      t:t,fmtNum:fmtNum,relTime:relTime,pageInfo:pageInfo,
-      getUserBadgeClass:getUserBadgeClass,getUserStatusText:getUserStatusText,
-      getMerchantBadgeClass:getMerchantBadgeClass,getMerchantStatusText:getMerchantStatusText,
-      getOrderBadgeClass:getOrderBadgeClass,
-      handleLogin:handleLogin,doLogout:doLogout,goTo:goTo,toggleLang:toggleLang,
-      loadStats:loadStats,loadUsers:loadUsers,searchUsers:searchUsers,userPrev:userPrev,userNext:userNext,
-      loadMerchants:loadMerchants,searchMerchants:searchMerchants,merchantPrev:merchantPrev,merchantNext:merchantNext,
-      loadOrders:loadOrders,orderPrev:orderPrev,orderNext:orderNext,
-      loadLogs:loadLogs,logPrev:logPrev,logNext:logNext,
-      openBan:openBan,confirmBan:confirmBan,unbanUser:unbanUser,unbanMerchant:unbanMerchant,
-      openSuspend:openSuspend,confirmSuspend:confirmSuspend,unsuspendUser:unsuspendUser,unsuspendMerchant:unsuspendMerchant,
-      openPlan:openPlan,confirmPlan:confirmPlan,exportCSV:exportCSV
-    };
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=t(el.getAttribute('data-i18n'))});
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){el.placeholder=t(el.getAttribute('data-i18n-ph'))});
+  var sel=document.getElementById('oFilter');
+  if(sel){
+    sel.options[0].text=lang==='zh'?'全部状态':'All Status';
+    if(sel.options[1])sel.options[1].text=t('st_pending');
+    if(sel.options[2])sel.options[2].text=t('st_preparing');
+    if(sel.options[3])sel.options[3].text=t('st_ready');
+    if(sel.options[4])sel.options[4].text=t('st_completed');
+    if(sel.options[5])sel.options[5].text=t('st_cancelled');
   }
-}).use(vant).mount('#app');
+}
+
+function showToast(msg,ok){
+  var el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast '+(ok!==false?'toast-ok':'toast-no')+' show';
+  setTimeout(function(){el.classList.remove('show')},3000);
+}
+
+function api(path,opts){
+  opts=opts||{};
+  var headers=Object.assign({'Content-Type':'application/json'},opts.headers||{});
+  if(token)headers['Authorization']='Bearer '+token;
+  return fetch(path,Object.assign({},opts,{headers:headers}))
+    .then(function(r){
+      if(r.status===401){doLogout();return Promise.reject('401');}
+      if(!r.ok)return r.json().catch(function(){return{}}).then(function(e){return Promise.reject(e.message||'Error')});
+      return r.json();
+    });
+}
+
+document.getElementById('loginForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var ph=document.getElementById('lPhone').value.trim();
+  var pw=document.getElementById('lPass').value;
+  api('/api/auth/login',{method:'POST',body:JSON.stringify({phone:ph,password:pw})})
+    .then(function(d){
+      token=d.token;user=d.user;
+      localStorage.setItem('nb_token',token);
+      localStorage.setItem('nb_user',JSON.stringify(user));
+      enterApp();
+    })
+    .catch(function(){showToast(t('loginFail'),false)});
+});
+
+window.doLogout=function(){
+  token=null;user=null;
+  localStorage.removeItem('nb_token');localStorage.removeItem('nb_user');
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('app').classList.remove('on');
+};
+
+function enterApp(){
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('app').classList.add('on');
+  if(user){
+    var nm=user.name||user.phone||'Admin';
+    document.getElementById('sName').textContent=nm;
+    document.getElementById('sAvatar').textContent=nm[0].toUpperCase();
+    document.getElementById('setPhone').textContent=user.phone||'-';
+  }
+  goTo('dashboard');
+}
+
+function goTo(pg){
+  document.querySelectorAll('.pg').forEach(function(el){el.classList.remove('on')});
+  var target=document.getElementById('pg_'+pg);
+  if(target)target.classList.add('on');
+  document.querySelectorAll('.ni,.mi').forEach(function(el){el.classList.toggle('on',el.getAttribute('data-pg')===pg)});
+  if(pg==='dashboard')loadStats();
+  else if(pg==='users')U.load();
+  else if(pg==='merchants')M.load();
+  else if(pg==='orders')O.load();
+  else if(pg==='logs')L.load();
+}
+document.querySelectorAll('.ni,.mi').forEach(function(el){
+  el.addEventListener('click',function(){goTo(el.getAttribute('data-pg'))});
+});
+
+document.getElementById('langToggle').addEventListener('click',function(e){
+  var l=e.target.getAttribute('data-l');
+  if(!l)return;
+  lang=l;localStorage.setItem('nb_lang',lang);
+  this.querySelectorAll('span').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-l')===lang)});
+  applyI18n();
+});
+
+function loadStats(){
+  api('/api/admin/stats').then(function(d){
+    document.getElementById('v_users').textContent=fmtNum(d.totalUsers);
+    document.getElementById('v_merchants').textContent=fmtNum(d.totalMerchants);
+    document.getElementById('v_orders').textContent=fmtNum(d.totalOrders);
+    document.getElementById('v_revenue').textContent=fmtMoney(d.totalRevenue);
+    document.getElementById('v_todayO').textContent=fmtNum(d.todayOrders);
+    document.getElementById('v_todayR').textContent=fmtMoney(d.todayRevenue);
+    document.getElementById('v_active').textContent=fmtNum(d.activeMerchants);
+  }).catch(function(){});
+}
+
+function makePager(cfg){
+  var pg=1,total=0,totalPages=1;
+  function updateBar(){
+    document.getElementById(cfg.info).textContent=t('pageOf').replace('{p}',pg).replace('{t}',totalPages);
+    document.getElementById(cfg.prev).disabled=(pg<=1);
+    document.getElementById(cfg.next).disabled=(pg>=totalPages);
+  }
+  function load(){
+    var url=cfg.url(pg);
+    api(url).then(function(d){
+      total=d.total||0;
+      totalPages=d.totalPages||Math.ceil(total/(cfg.limit||20))||1;
+      cfg.render(d[cfg.key]||[]);
+      updateBar();
+    }).catch(function(){
+      cfg.render([]);updateBar();
+    });
+  }
+  return{load:load,search:function(){pg=1;load()},filter:function(){pg=1;load()},prev:function(){if(pg>1){pg--;load()}},next:function(){if(pg<totalPages){pg++;load()}}};
+}
+
+var U=makePager({
+  key:'users',info:'uInfo',prev:'uPrev',next:'uNext',limit:20,
+  url:function(p){return'/api/admin/users?page='+p+'&limit=20&search='+encodeURIComponent(document.getElementById('uSearch').value)},
+  render:function(rows){
+    var tb=document.getElementById('uBody');
+    if(!rows.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--t2)">'+t('noData')+'</td></tr>';return}
+    tb.innerHTML=rows.map(function(u){
+      var st=getUserStatus(u);
+      var badge=getUserStatusBadge(u);
+      var btns='<div class="btn-group">';
+      if(u.suspended){
+        btns+='<button class="btn btn-s btn-xs" onclick="unsuspendUser(\''+u._id+'\')">'+t('unsuspend')+'</button>';
+      }else{
+        btns+='<button class="btn btn-o btn-xs" onclick="openSuspend(\'user\',\''+u._id+'\')">'+t('suspendUser')+'</button>';
+      }
+      if(u.banned){
+        btns+='<button class="btn btn-s btn-xs" onclick="unbanUser(\''+u._id+'\')">'+t('unban')+'</button>';
+      }else{
+        btns+='<button class="btn btn-d btn-xs" onclick="openBan(\'user\',\''+u._id+'\')">'+t('banUser')+'</button>';
+      }
+      btns+='</div>';
+      return'<tr><td>'+(u.phone||'-')+'</td><td>'+(u.role||'user')+'</td><td>'+relTime(u.createdAt||u.created_at)+'</td><td>'+badge+'</td><td>'+btns+'</td></tr>';
+    }).join('');
+  }
+});
+document.getElementById('uSearch').addEventListener('keydown',function(e){if(e.key==='Enter')U.search()});
+
+window.unbanUser=function(id){
+  if(!confirm(t('confirmUnban')))return;
+  api('/api/admin/users/'+id+'/unban',{method:'PATCH'}).then(function(){showToast(t('opSuccess'));U.load()}).catch(function(){showToast(t('opFail'),false)});
+};
+
+window.unsuspendUser=function(id){
+  if(!confirm(t('confirmUnsuspend')))return;
+  api('/api/admin/users/'+id+'/unsuspend',{method:'PATCH'}).then(function(){showToast(t('opSuccess'));U.load()}).catch(function(){showToast(t('opFail'),false)});
+};
+
+var M=makePager({
+  key:'merchants',info:'mInfo',prev:'mPrev',next:'mNext',limit:20,
+  url:function(p){return'/api/admin/merchants?page='+p+'&limit=20&search='+encodeURIComponent(document.getElementById('mSearch').value)},
+  render:function(rows){
+    var tb=document.getElementById('mBody');
+    if(!rows.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--t2)">'+t('noData')+'</td></tr>';return}
+    tb.innerHTML=rows.map(function(m){
+      var badge=getMerchantStatusBadge(m);
+      var plan=m.plan||m.subscription||'free';
+      var planBadge=getPlanBadge(plan);
+      var comm=m.commission||m.commissionRate||8;
+      var commTxt=comm+'%';
+      var rating=m.rating!=null?Number(m.rating).toFixed(1):'-';
+      var btns='<div class="btn-group">';
+      if(m.suspended){
+        btns+='<button class="btn btn-s btn-xs" onclick="unsuspendMerchant(\''+m._id+'\')">'+t('unsuspend')+'</button>';
+      }else{
+        btns+='<button class="btn btn-o btn-xs" onclick="openSuspend(\'merchant\',\''+m._id+'\')">'+t('suspendMerchant')+'</button>';
+      }
+      if(m.banned){
+        btns+='<button class="btn btn-s btn-xs" onclick="unbanMerchant(\''+m._id+'\')">'+t('unban')+'</button>';
+      }else{
+        btns+='<button class="btn btn-d btn-xs" onclick="openBan(\'merchant\',\''+m._id+'\')">'+t('banMerchant')+'</button>';
+      }
+      btns+='<button class="btn btn-p btn-xs" onclick="openPlan(\''+m._id+'\',\''+plan+'\')">'+t('changePlan')+'</button>';
+      btns+='</div>';
+      return'<tr><td>'+(m.name||m.businessName||'-')+'</td><td>'+(m.type||m.cuisine||'-')+'</td><td>'+(m.phone||'-')+'</td><td>'+badge+'</td><td>'+planBadge+'</td><td>'+commTxt+'</td><td>'+rating+'</td><td>'+btns+'</td></tr>';
+    }).join('');
+  }
+});
+document.getElementById('mSearch').addEventListener('keydown',function(e){if(e.key==='Enter')M.search()});
+
+window.unbanMerchant=function(id){
+  if(!confirm(t('confirmUnban')))return;
+  api('/api/admin/merchants/'+id+'/unban',{method:'PATCH'}).then(function(){showToast(t('opSuccess'));M.load()}).catch(function(){showToast(t('opFail'),false)});
+};
+
+window.unsuspendMerchant=function(id){
+  if(!confirm(t('confirmUnsuspend')))return;
+  api('/api/admin/merchants/'+id+'/unsuspend',{method:'PATCH'}).then(function(){showToast(t('opSuccess'));M.load()}).catch(function(){showToast(t('opFail'),false)});
+};
+
+var O=makePager({
+  key:'orders',info:'oInfo',prev:'oPrev',next:'oNext',limit:20,
+  url:function(p){var s=document.getElementById('oFilter').value;return'/api/admin/orders?page='+p+'&limit=20'+(s?'&status='+s:'')},
+  render:function(rows){
+    var tb=document.getElementById('oBody');
+    if(!rows.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--t2)">'+t('noData')+'</td></tr>';return}
+    tb.innerHTML=rows.map(function(o){
+      var oid=(o.orderId||o.orderNumber||o._id||'').slice(-6);
+      var st=o.status||'pending';
+      var cls=st==='completed'?'b-ok':st==='cancelled'?'b-no':'b-wn';
+      return'<tr><td>'+oid+'</td><td>'+(o.merchantName||o.merchant||'-')+'</td><td>'+fmtMoney(o.amount||o.total)+'</td><td><span class="badge '+cls+'">'+t('st_'+st)+'</span></td><td>'+relTime(o.createdAt||o.created_at)+'</td></tr>';
+    }).join('');
+  }
+});
+
+var L=makePager({
+  key:'logs',info:'lInfo',prev:'lPrev',next:'lNext',limit:50,
+  url:function(p){return'/api/admin/logs?page='+p+'&limit=50'},
+  render:function(rows){
+    var tb=document.getElementById('lBody');
+    if(!rows.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--t2)">'+t('noData')+'</td></tr>';return}
+    tb.innerHTML=rows.map(function(l){
+      return'<tr><td>'+relTime(l.createdAt||l.created_at||l.timestamp)+'</td><td>'+(l.operator||l.admin||l.userName||'-')+'</td><td>'+(l.type||l.action||'-')+'</td><td>'+(l.detail||l.description||l.message||'-')+'</td></tr>';
+    }).join('');
+  }
+});
+
+window.openBan=function(type,id){
+  banCtx={type:type,id:id};
+  document.getElementById('banTitle').textContent=type==='user'?t('banUser'):t('banMerchant');
+  document.getElementById('banReason').value='';
+  document.getElementById('banModal').classList.add('on');
+};
+window.closeBan=function(){
+  document.getElementById('banModal').classList.remove('on');
+  banCtx=null;
+};
+document.getElementById('banConfirm').addEventListener('click',function(){
+  if(!banCtx)return;
+  var reason=document.getElementById('banReason').value.trim();
+  var url=banCtx.type==='user'?'/api/admin/users/'+banCtx.id+'/ban':'/api/admin/merchants/'+banCtx.id+'/ban';
+  api(url,{method:'PATCH',body:JSON.stringify({reason:reason})})
+    .then(function(){showToast(t('opSuccess'));closeBan();if(banCtx.type==='user')U.load();else M.load()})
+    .catch(function(){showToast(t('opFail'),false)});
+});
+document.getElementById('banModal').addEventListener('click',function(e){if(e.target===this)closeBan()});
+
+window.openSuspend=function(type,id){
+  suspendCtx={type:type,id:id};
+  document.getElementById('suspendTitle').textContent=type==='user'?t('suspendUser'):t('suspendMerchant');
+  document.getElementById('suspendReason').value='';
+  document.getElementById('suspendModal').classList.add('on');
+};
+window.closeSuspend=function(){
+  document.getElementById('suspendModal').classList.remove('on');
+  suspendCtx=null;
+};
+document.getElementById('suspendConfirm').addEventListener('click',function(){
+  if(!suspendCtx)return;
+  var reason=document.getElementById('suspendReason').value.trim();
+  var url=suspendCtx.type==='user'?'/api/admin/users/'+suspendCtx.id+'/suspend':'/api/admin/merchants/'+suspendCtx.id+'/suspend';
+  api(url,{method:'PATCH',body:JSON.stringify({reason:reason})})
+    .then(function(){showToast(t('opSuccess'));closeSuspend();if(suspendCtx.type==='user')U.load();else M.load()})
+    .catch(function(){showToast(t('opFail'),false)});
+});
+document.getElementById('suspendModal').addEventListener('click',function(e){if(e.target===this)closeSuspend()});
+
+window.openPlan=function(id,current){
+  planCtx={id:id};
+  var radios=document.getElementsByName('plan');
+  for(var i=0;i<radios.length;i++){radios[i].checked=(radios[i].value===current);}
+  document.getElementById('planModal').classList.add('on');
+};
+window.closePlan=function(){
+  document.getElementById('planModal').classList.remove('on');
+  planCtx=null;
+};
+document.getElementById('planConfirm').addEventListener('click',function(){
+  if(!planCtx)return;
+  var radios=document.getElementsByName('plan');
+  var plan='free';
+  for(var i=0;i<radios.length;i++){if(radios[i].checked){plan=radios[i].value;break;}}
+  api('/api/admin/merchants/'+planCtx.id+'/plan',{method:'PATCH',body:JSON.stringify({plan:plan})})
+    .then(function(){showToast(t('opSuccess'));closePlan();M.load()})
+    .catch(function(){showToast(t('opFail'),false)});
+});
+document.getElementById('planModal').addEventListener('click',function(e){if(e.target===this)closePlan()});
+
+window.exportCSV=function(type){
+  var url='/api/admin/export/'+type;
+  var a=document.createElement('a');
+  a.href=url;
+  a.download=type+'.csv';
+  fetch(url,{headers:{'Authorization':'Bearer '+token}})
+    .then(function(r){if(r.status===401){doLogout();return}return r.blob()})
+    .then(function(blob){if(!blob)return;var u=URL.createObjectURL(blob);a.href=u;a.click();URL.revokeObjectURL(u);showToast(t('opSuccess'))})
+    .catch(function(){showToast(t('opFail'),false)});
+};
+
+applyI18n();
+document.querySelectorAll('#langToggle span').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-l')===lang)});
+
+if(token&&user){enterApp();}
+
 })();
 </script>
 </body>
