@@ -110,6 +110,34 @@
             color: var(--text-2);
         }
 
+        .lang-select {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-2);
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 24px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 10px;
+        }
+
+        .lang-select:hover {
+            border-color: var(--primary);
+            color: var(--primary-dark);
+        }
+
+        .lang-select:focus {
+            border-color: var(--primary);
+        }
+
         /* ===== Location Bar ===== */
         .location-bar {
             display: flex;
@@ -984,7 +1012,12 @@
         <div class="header-right">
             <a href="/merchant" class="merchant-btn" data-i18n="im_merchant">我是商家</a>
             <button class="user-btn" id="userBtn" onclick="showLoginModal()">👤</button>
-            <button class="lang-btn" id="langBtn" onclick="toggleLang()">中文</button>
+            <select class="lang-select" id="langSelect" onchange="switchLang(this.value)">
+                <option value="zh">🇨🇳 中文</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="ko">🇰🇷 한국어</option>
+            </select>
         </div>
     </header>
 
@@ -1230,6 +1263,112 @@
             back: 'Back',
             no_menu: 'No menu available',
             search_radius: 'Search Radius'
+        },
+        ja: {
+            im_merchant: '店舗向け',
+            locating: '位置情報を取得中…',
+            located: '📍 位置情報取得済み',
+            location_fail: '位置情報の取得に失敗しました',
+            search_placeholder: '店舗や料理を検索...',
+            nearby_merchants: '近くの店舗',
+            merchant_count: '{n} 件',
+            view_menu: 'メニューを見る',
+            add_to_cart: 'カートに追加',
+            cart: 'カート',
+            cart_empty: 'カートは空です',
+            total: '合計',
+            pickup_method: '受け取り方法',
+            table_number: 'テーブル番号',
+            table_placeholder: 'テーブル番号を入力',
+            self_pickup: '店頭受け取り',
+            delivery_table: 'テーブルへ配達',
+            order_note: '備考：テーブル番号や特別な要望',
+            confirm_order: '注文を確定',
+            order_pending: '店舗の対応をお待ちください...',
+            order_accepted: '店舗が注文を受け付けました',
+            order_preparing: '準備中です',
+            order_ready: '受け取り準備完了！',
+            order_delivered: 'テーブル {n} へ配達済み',
+            status_pending: '対応待ち',
+            status_accepted: '受付済み',
+            status_preparing: '準備中',
+            status_ready: '完了',
+            close: '閉じる',
+            login: 'ログイン',
+            phone: '電話番号',
+            password: 'パスワード',
+            phone_placeholder: '+64 ...',
+            password_placeholder: '••••••',
+            login_btn: 'ログイン',
+            register_btn: '新規登録',
+            no_account: 'アカウントをお持ちでないですか？',
+            register_now: '今すぐ登録',
+            register: '新規登録',
+            login_success: 'ログインに成功しました',
+            register_success: '登録に成功しました',
+            order_success: '注文が完了しました！',
+            added_to_cart: 'カートに追加しました',
+            cart_updated: 'カートを更新しました',
+            no_merchants_nearby: '近くに店舗がありません',
+            empty_cart_warning: 'カートは空です',
+            select_merchant: '店舗を選択してください',
+            order_id: '注文 #',
+            back: '戻る',
+            no_menu: 'メニューがありません',
+            search_radius: '検索範囲'
+        },
+        ko: {
+            im_merchant: '점주용',
+            locating: '위치 확인 중…',
+            located: '📍 위치 확인됨',
+            location_fail: '위치 확인 실패, 기본 위치 사용',
+            search_placeholder: '매장 또는 메뉴 검색...',
+            nearby_merchants: '주변 매장',
+            merchant_count: '{n}개',
+            view_menu: '메뉴 보기',
+            add_to_cart: '장바구니에 추가',
+            cart: '장바구니',
+            cart_empty: '장바구니가 비어있습니다',
+            total: '합계',
+            pickup_method: '수령 방법',
+            table_number: '테이블 번호',
+            table_placeholder: '테이블 번호 입력',
+            self_pickup: '카운터 수령',
+            delivery_table: '테이블 배달',
+            order_note: '메모: 테이블 번호 또는 특별 요청',
+            confirm_order: '주문 확정',
+            order_pending: '매장 수락 대기 중...',
+            order_accepted: '매장이 주문을 수락했습니다',
+            order_preparing: '준비 중입니다',
+            order_ready: '수령 가능합니다!',
+            order_delivered: '테이블 {n}로 배달 완료',
+            status_pending: '대기 중',
+            status_accepted: '수락됨',
+            status_preparing: '준비 중',
+            status_ready: '완료',
+            close: '닫기',
+            login: '로그인',
+            phone: '전화번호',
+            password: '비밀번호',
+            phone_placeholder: '+64 ...',
+            password_placeholder: '••••••',
+            login_btn: '로그인',
+            register_btn: '새 계정 만들기',
+            no_account: '계정이 없으신가요?',
+            register_now: '지금 등록',
+            register: '회원가입',
+            login_success: '로그인 성공',
+            register_success: '가입 성공',
+            order_success: '주문 완료!',
+            added_to_cart: '장바구니에 추가됨',
+            cart_updated: '장바구니 업데이트됨',
+            no_merchants_nearby: '주변에 매장이 없습니다',
+            empty_cart_warning: '장바구니가 비어있습니다',
+            select_merchant: '매장을 선택해주세요',
+            order_id: '주문 #',
+            back: '뒤로',
+            no_menu: '메뉴가 없습니다',
+            search_radius: '검색 반경'
         }
     };
 
@@ -1242,7 +1381,9 @@
     }
 
     function applyLang() {
-        document.getElementById('langBtn').textContent = currentLang === 'zh' ? '中文' : 'EN';
+        var langNames = { zh: '🇨🇳 中文', en: '🇬🇧 English', ja: '🇯🇵 日本語', ko: '🇰🇷 한국어' };
+        var selectEl = document.getElementById('langSelect');
+        if (selectEl) selectEl.value = currentLang;
         document.querySelectorAll('[data-i18n]').forEach(el => {
             el.textContent = t(el.dataset.i18n);
         });
@@ -1251,8 +1392,8 @@
         });
     }
 
-    function toggleLang() {
-        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+    function switchLang(lang) {
+        currentLang = lang;
         localStorage.setItem('lang', currentLang);
         applyLang();
         if (merchants.length) renderMerchants();
