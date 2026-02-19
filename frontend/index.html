@@ -1348,28 +1348,33 @@
 
         list.innerHTML = merchants.map(function(m) {
             var icon = TYPE_ICON[m.type] || '📦';
-            var menuHtml = (m.menu || []).map(function(item) {
+            // Fix: API返回menuItems而非menu，location是{lat,lng}对象
+            var menuItems = m.menuItems || [];
+            var menuHtml = menuItems.map(function(item) {
                 return '<div class="menu-item">' +
                     '<div class="menu-item-info"><div class="menu-item-name">' + item.name + '</div><div class="menu-item-price">NZD $' + item.price + '</div></div>' +
-                    '<button class="menu-item-add" onclick="addToCart(' + m.id + ', \'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ')">+</button></div>';
+                    '<button class="menu-item-add" onclick="addToCart(\'' + m.id + '\', \'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ')">+</button></div>';
             }).join('');
+            
+            // Fix: 商户ID是UUID字符串，不是数字
+            var menuId = 'menu-' + m.id.replace(/-/g, '_');
 
             return '<div class="merchant-card">' +
                 '<div class="mc-header"><div class="mc-info"><div class="mc-icon">' + icon + '</div><div><div class="mc-name">' + m.name + '</div><div class="mc-meta">' + typeName(m.type) + (m.address ? ' · ' + m.address : '') + '</div></div></div>' +
-                '<span class="mc-dist">' + (m.distance || '?') + 'km</span></div>' +
-                '<div class="mc-rating"><span class="mc-stars">' + starsStr(m.rating) + '</span><span class="mc-rating-num">' + m.rating + '</span><span class="mc-rating-cnt">(' + (m.reviewCount || 0) + ')</span></div>' +
-                '<div class="mc-actions"><button class="mc-btn secondary" onclick="toggleMenu(' + m.id + ')">📋 ' + t('view_menu') + '</button></div>' +
-                '<div class="menu-expand" id="menu-' + m.id + '">' + menuHtml + '</div></div>';
+                '<span class="mc-dist">' + (m.distance ? m.distance.toFixed(1) : '?') + 'km</span></div>' +
+                '<div class="mc-rating"><span class="mc-stars">' + starsStr(m.rating) + '</span><span class="mc-rating-num">' + (m.rating || 0) + '</span><span class="mc-rating-cnt">(' + (m.reviewCount || 0) + ')</span></div>' +
+                '<div class="mc-actions"><button class="mc-btn secondary" onclick="toggleMenu(\'' + menuId + '\')">📋 ' + t('view_menu') + '</button></div>' +
+                '<div class="menu-expand" id="' + menuId + '">' + (menuHtml || '<div style="padding:12px;color:var(--text-3)">' + t('no_menu') + '</div>') + '</div></div>';
         }).join('');
     }
 
     function toggleMenu(id) {
-        var el = document.getElementById('menu-' + id);
+        var el = document.getElementById(id);
         if (el) el.classList.toggle('show');
     }
 
     function updateMapMarkers() {
-        markers.forEach(function(m) { map.removeLayer(m); });
+        markers.forEach(function(mk) { map.removeLayer(mk); });
         markers = [];
         merchants.forEach(function(m) {
             var icon = TYPE_ICON[m.type] || '📦';
@@ -1379,8 +1384,14 @@
                 iconSize: [30, 30],
                 iconAnchor: [15, 15]
             });
-            var mk = L.marker([m.lat, m.lng], { icon: divIcon }).addTo(map);
-            mk.bindPopup('<div class="popup-rich"><div class="pr-name">' + icon + ' ' + m.name + '</div><div class="pr-type">' + typeName(m.type) + '</div><div class="pr-stars">' + starsStr(m.rating) + ' ' + m.rating + '</div><div class="pr-dist">📍 ' + (m.distance || '?') + 'km</div><button class="pr-action" onclick="scrollToMerchant(' + m.id + ')">' + t('view_menu') + '</button></div>');
+            // Fix: location是{lat, lng}对象
+            var lat = m.location ? m.location.lat : (m.lat || 0);
+            var lng = m.location ? m.location.lng : (m.lng || 0);
+            if (!lat && !lng) return; // 跳过无效坐标
+            
+            var mk = L.marker([lat, lng], { icon: divIcon }).addTo(map);
+            var menuId = 'menu-' + m.id.replace(/-/g, '_');
+            mk.bindPopup('<div class="popup-rich"><div class="pr-name">' + icon + ' ' + m.name + '</div><div class="pr-type">' + typeName(m.type) + '</div><div class="pr-stars">' + starsStr(m.rating) + ' ' + (m.rating || 0) + '</div><div class="pr-dist">📍 ' + (m.distance ? m.distance.toFixed(1) : '?') + 'km</div><button class="pr-action" onclick="scrollToMerchant(\'' + menuId + '\')">' + t('view_menu') + '</button></div>');
             markers.push(mk);
         });
         if (merchants.length) {
@@ -1391,8 +1402,8 @@
         showUserMarker();
     }
 
-    function scrollToMerchant(id) {
-        var el = document.getElementById('menu-' + id);
+    function scrollToMerchant(menuId) {
+        var el = document.getElementById(menuId);
         if (el) {
             el.classList.add('show');
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1400,6 +1411,7 @@
     }
 
     /* ===== Cart ===== */
+    // Fix: merchantId是UUID字符串
     function addToCart(merchantId, name, price) {
         var token = localStorage.getItem('token');
         if (!token) {

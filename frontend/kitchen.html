@@ -843,13 +843,26 @@
     }
 
     /* ===== State ===== */
-    let token = new URLSearchParams(window.location.search).get('token') || localStorage.getItem('token');
-    // 如果从URL获取到token，存入localStorage并清理URL
-    if (new URLSearchParams(window.location.search).get('token')) {
-        localStorage.setItem('token', token);
-        window.history.replaceState({}, '', window.location.pathname);
+    // Fix: 先提取所有URL参数，然后清理URL时保留station参数
+    let urlParams = new URLSearchParams(window.location.search);
+    let urlToken = urlParams.get('token');
+    let stationId = urlParams.get('station');
+    
+    // 如果从URL获取到token，存入localStorage
+    if (urlToken) {
+        localStorage.setItem('token', urlToken);
     }
-    let stationId = new URLSearchParams(window.location.search).get('station');
+    
+    // 清理URL但保留station参数
+    if (urlToken) {
+        var cleanUrl = window.location.pathname;
+        if (stationId) {
+            cleanUrl += '?station=' + encodeURIComponent(stationId);
+        }
+        window.history.replaceState({}, '', cleanUrl);
+    }
+    
+    let token = localStorage.getItem('token');
     let user = null;
     let merchant = null;
     let kitchenStations = [];
@@ -1266,11 +1279,19 @@
 
         try {
             const data = await apiCall('/auth/me');
-            if (data && data.user) {
-                user = data.user;
+            if (data && data.id) {  // Fix: 检查data.id而不是data.user
+                user = data;
                 return true;
             }
         } catch (e) {
+            // 只有401错误才显示登录页面，其他错误（如rate limit）重试
+            if (e.message && e.message.includes('401')) {
+                showLoginPage();
+                return false;
+            }
+            // 其他错误，稍后重试
+            console.error('Auth check failed:', e);
+            // 仍然显示登录页面，但记录错误
             showLoginPage();
             return false;
         }
@@ -1312,7 +1333,8 @@
             const merchants = data.merchants || data;
             
             if (Array.isArray(merchants) && merchants.length > 0) {
-                merchant = merchants.find(m => m.ownerId === user.id || m.owner === user.id) || merchants[0];
+                // Fix: 检查userId字段匹配当前用户
+                merchant = merchants.find(m => m.userId === user.id) || merchants[0];
                 // 获取工位信息
                 kitchenStations = merchant.kitchenStations || [];
                 if (stationId) {
@@ -1542,16 +1564,17 @@
         
         if (hasMerchant) {
             // 显示工位名称
-            if (stationId && currentStationName) {
+            if (stationId) {
                 const label = document.getElementById('stationLabel');
                 if (label) {
                     const station = kitchenStations.find(s => s.id === stationId);
                     if (station) {
                         label.textContent = '— ' + station.name_zh + ' / ' + station.name_en;
+                        label.style.display = 'inline';
                     } else {
-                        label.textContent = '— ' + currentStationName;
+                        // 工位不存在，显示所有订单
+                        console.log('Station not found:', stationId);
                     }
-                    label.style.display = 'inline';
                 }
             }
             showAppPage();

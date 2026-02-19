@@ -2341,8 +2341,9 @@
 
         try {
             const data = await apiCall('/auth/me');
-            if (data && data.user) {
-                user = data.user;
+            // Fix: API直接返回user对象，不是{user: {...}}
+            if (data && data.id) {
+                user = data;
                 return true;
             }
         } catch (e) {
@@ -2384,8 +2385,10 @@
             const merchants = data.merchants || data;
             
             if (Array.isArray(merchants) && merchants.length > 0) {
-                // Find merchant belonging to current user
-                merchant = merchants.find(m => m.ownerId === user.id || m.owner === user.id) || merchants[0];
+                // Fix: 检查userId字段匹配当前用户
+                merchant = merchants.find(m => m.userId === user.id) || merchants[0];
+                // 更新menuItems
+                menuItems = merchant.menuItems || [];
                 document.getElementById('createStoreSection').style.display = 'none';
                 return true;
             }
@@ -2695,8 +2698,9 @@
 
     /* ===== Menu ===== */
     async function loadMenu() {
-        if (!merchant || !merchant.menu) return;
-        menuItems = merchant.menu || [];
+        // Fix: API返回menuItems而不是menu
+        if (!merchant) return;
+        menuItems = merchant.menuItems || [];
         renderMenu();
     }
 
@@ -2928,12 +2932,13 @@
         if (!merchant) return;
 
         try {
+            // Fix: API期望items字段而不是menuItems
             await apiCall('/merchants/' + merchant.id + '/menu', {
                 method: 'PUT',
-                body: JSON.stringify({ menuItems })
+                body: JSON.stringify({ items: menuItems })
             });
             
-            merchant.menu = menuItems;
+            merchant.menuItems = menuItems;
         } catch (e) {
             toast(e.message, 'error');
         }
@@ -3313,12 +3318,21 @@
     // ===== 厨房工位管理 =====
     var kitchenStationsData = [];
 
-    function showKitchenStationsModal() {
+    async function showKitchenStationsModal() {
         if (!merchant) {
             toast(currentLang === 'zh' ? '请先注册商户' : 'Please register merchant first', 'error');
             return;
         }
-        kitchenStationsData = JSON.parse(JSON.stringify(merchant.kitchenStations || []));
+        
+        // 从服务器获取最新工位数据
+        try {
+            var data = await apiCall('/merchant/kitchen-stations');
+            kitchenStationsData = data.stations || [];
+            merchant.kitchenStations = kitchenStationsData;
+        } catch (e) {
+            kitchenStationsData = JSON.parse(JSON.stringify(merchant.kitchenStations || []));
+        }
+        
         renderKitchenStations();
         document.getElementById('kitchenStationsModal').classList.add('show');
     }
@@ -3359,7 +3373,8 @@
             return;
         }
         
-        var id = 'station_' + Date.now();
+        // 生成UUID格式的ID
+        var id = 'station_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         kitchenStationsData.push({
             id: id,
             name_zh: nameZh,
@@ -3389,9 +3404,11 @@
                 body: JSON.stringify({ stations: kitchenStationsData })
             });
             
+            // 更新本地数据
             merchant.kitchenStations = kitchenStationsData;
             toast(currentLang === 'zh' ? '工位已保存' : 'Stations saved', 'success');
-            closeKitchenStationsModal();
+            // 重新渲染列表确保数据同步
+            renderKitchenStations();
         } catch (e) {
             toast(e.message || (currentLang === 'zh' ? '保存失败' : 'Save failed'), 'error');
         } finally {
