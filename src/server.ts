@@ -47,6 +47,7 @@ import {
   getAllMerchantsForExport,
   initAdminAccount,
   deleteReview,
+  cancelOrder,
 } from './database';
 import { register, login, authMiddleware, optionalAuthMiddleware, adminMiddleware, superAdminMiddleware } from './auth';
 
@@ -637,6 +638,34 @@ app.patch('/api/orders/:id/status', authMiddleware, async (req: Request, res: Re
     res.json({ message: '状态已更新', order });
   } catch (e: any) {
     console.error('更新订单状态错误:', e);
+    return err(res, 400, e.message);
+  }
+});
+
+/**
+ * PATCH /api/orders/:id/cancel
+ * 买家取消订单（仅pending状态可取消）
+ */
+app.patch('/api/orders/:id/cancel', authMiddleware, async (req: Request, res: Response) => {
+  const orderId = req.params.id;
+  const userId = (req as any).userId;
+
+  try {
+    const order = await cancelOrder(orderId, userId);
+
+    // 通知商家订单已取消
+    emitOrderEvent({
+      type: 'order_status_changed',
+      orderId: order.id,
+      merchantId: order.merchantId,
+      userId: order.userId,
+      data: order,
+    });
+
+    console.log(`❌ 订单已取消: ${order.id}, 用户: ${userId}`);
+    res.json({ message: '订单已取消', order });
+  } catch (e: any) {
+    console.error('取消订单错误:', e);
     return err(res, 400, e.message);
   }
 });

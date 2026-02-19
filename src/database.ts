@@ -565,7 +565,7 @@ export async function deleteReview(reviewId: string): Promise<{ merchantId: stri
 // ==================== 订单类型定义 ====================
 
 /** 订单状态 */
-export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'picked_up' | 'rejected';
+export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'picked_up' | 'rejected' | 'cancelled';
 
 /** 取餐方式 */
 export type PickupMethod = 'self' | 'table_delivery';
@@ -765,12 +765,13 @@ export async function getOrdersByUser(userId: string): Promise<Order[]> {
 
 /** 状态流转规则 */
 const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending: ['accepted', 'rejected'],
+  pending: ['accepted', 'rejected', 'cancelled'],
   accepted: ['preparing'],
   preparing: ['ready'],
   ready: ['picked_up'],
   picked_up: [], // 终态
   rejected: [],  // 终态
+  cancelled: [], // 终态（买家取消）
 };
 
 /** 状态对应的时间戳字段 */
@@ -781,6 +782,7 @@ const STATUS_TIMESTAMP_FIELD: Record<OrderStatus, string> = {
   ready: 'ready_at',
   picked_up: 'picked_up_at',
   rejected: 'updated_at',
+  cancelled: 'updated_at',
 };
 
 /**
@@ -843,6 +845,41 @@ export async function updateOrderStatus(
     throw new Error(`更新订单状态失败: ${error.message}`);
   }
 
+  return mapOrderFromDb(data as OrderDbRow);
+}
+
+/**
+ * 买家取消订单（只能在pending状态取消）
+ */
+export async function cancelOrder(orderId: string, userId: string): Promise<Order> {
+  const order = await getOrder(orderId);
+  if (!order) {
+    throw new Error('订单不存在');
+  }
+  if (order.userId !== userId) {
+    throw new Error('无权操作此订单');
+  }
+  if (order.status !== 'pending') {
+    throw new Error('只能取消待接单的订单（商家接单后无法取消）');
+  }
+
+  const statusHistory = [...order.statusHistory, { 
+    status: 'cancelled' as OrderStatus, 
+    timestamp: new Date().toISOString() 
+  }];
+
+  const { data, error } = await supabase
+    .from('orders')
+    .update({
+      status: 'cancelled',
+      status_history: statusHistory,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', orderId)
+    .select()
+    .single();
+
+  if (error) throw new Error(`取消订单失败: ${error.message}`);
   return mapOrderFromDb(data as OrderDbRow);
 }
 
