@@ -1590,6 +1590,12 @@ app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: '服务器内部错误' });
 });
 
+// ==================== MCP Server ====================
+import { mountMcpServer } from './mcp-server';
+
+// 挂载 MCP Server 到 /mcp 路径
+mountMcpServer(app, '/mcp');
+
 // ==================== 启动 ====================
 
 const PORT = process.env.PORT || 3000;
