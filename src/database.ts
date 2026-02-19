@@ -1,5 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+
+const SALT_ROUNDS = 12;
 
 // ==================== 类型定义 ====================
 
@@ -78,7 +81,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 }
 
 // 使用service_role key绕过RLS，加db.schema选项确保正确
-const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
@@ -95,12 +98,17 @@ const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY
 
 // ==================== 工具函数 ====================
 
-function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password).digest('hex');
+export function hashPassword(password: string): string {
+  return bcrypt.hashSync(password, SALT_ROUNDS);
 }
 
 export function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash;
+  // 兼容旧SHA-256哈希（迁移期间）
+  if (hash.length === 64 && !hash.startsWith('$2')) {
+    const sha256 = crypto.createHash('sha256').update(password).digest('hex');
+    return sha256 === hash;
+  }
+  return bcrypt.compareSync(password, hash);
 }
 
 /** Haversine公式：计算两点距离（公里） */

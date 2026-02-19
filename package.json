@@ -11,13 +11,18 @@
     "@supabase/supabase-js": "^2.96.0",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "express": "^4.21.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "postgres": "^3.4.8",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "xss": "^1.0.15"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^4.17.21",
     "@types/uuid": "^10.0.0",
     "tsx": "^4.19.0",

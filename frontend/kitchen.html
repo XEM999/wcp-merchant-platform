@@ -5,1556 +5,622 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NearBite 厨房挂屏</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍🍳</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/vant@4/lib/index.css"/>
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --bg-card-hover: #334155;
-            --text: #f1f5f9;
-            --text-2: #94a3b8;
-            --text-3: #64748b;
             --primary: #ff6b35;
             --primary-light: #fff7ed;
+            --bg: #f7f8fa;
+            --bg-card: #ffffff;
+            --text: #1a1a1a;
+            --text-2: #666666;
+            --text-3: #999999;
             --green: #22c55e;
-            --green-bg: #166534;
+            --green-bg: #dcfce7;
             --red: #ef4444;
-            --red-bg: #991b1b;
+            --red-bg: #fee2e2;
             --blue: #3b82f6;
-            --blue-bg: #1e40af;
+            --blue-bg: #dbeafe;
             --yellow: #f59e0b;
-            --yellow-bg: #92400e;
-            --border: #334155;
+            --yellow-bg: #fef3c7;
+            --border: #e5e5e5;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-dark);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
             color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Flash animation for new orders */
-        body.flash {
-            animation: screenFlash 0.5s ease-in-out 3;
-        }
+        body.flash { animation: screenFlash 0.5s ease-in-out 3; }
 
         @keyframes screenFlash {
-            0%, 100% { background: var(--bg-dark); }
+            0%, 100% { background: var(--bg); }
             50% { background: var(--primary); }
         }
 
-        /* ===== Login Page ===== */
+        #app { min-height: 100vh; }
+
         .login-page {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 40px;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            padding: 24px;
+            background: linear-gradient(135deg, var(--bg) 0%, #e8e8e8 100%);
         }
 
-        .login-logo {
-            font-size: 100px;
-            margin-bottom: 24px;
-        }
-
-        .login-title {
-            font-size: 48px;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 12px;
-        }
-
-        .login-subtitle {
-            font-size: 24px;
-            color: var(--text-2);
-            margin-bottom: 48px;
-        }
+        .login-logo { font-size: 72px; margin-bottom: 16px; }
+        .login-title { font-size: 36px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+        .login-subtitle { font-size: 18px; color: var(--text-2); margin-bottom: 32px; }
 
         .login-card {
             width: 100%;
-            max-width: 500px;
+            max-width: 400px;
             background: var(--bg-card);
-            border-radius: 24px;
-            padding: 40px;
-            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
         }
 
-        /* ===== Header ===== */
         .app-header {
             position: sticky;
             top: 0;
-            z-index: 500;
-            background: var(--bg-dark);
+            z-index: 100;
+            background: var(--bg-card);
             border-bottom: 1px solid var(--border);
-            padding: 20px 32px;
+            padding: 16px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .header-logo { font-size: 48px; }
-        .header-title { font-size: 32px; font-weight: 800; color: var(--primary); }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-logo { font-size: 36px; }
+        .header-title { font-size: 24px; font-weight: 700; color: var(--primary); }
         
         .header-status {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px 24px;
-            background: var(--bg-card);
-            border-radius: 16px;
-            font-size: 18px;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg);
+            border-radius: 20px;
+            font-size: 14px;
         }
 
         .status-dot {
-            width: 16px;
-            height: 16px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: var(--green);
             animation: pulse 2s infinite;
         }
 
-        .status-dot.offline {
-            background: var(--red);
-            animation: none;
-        }
+        .status-dot.offline { background: var(--red); animation: none; }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
+        .header-right { display: flex; gap: 12px; }
 
-        .header-btn {
-            padding: 16px 32px;
-            background: var(--bg-card);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all .2s;
-            font-family: inherit;
-        }
-
-        .header-btn:hover {
-            background: var(--bg-card-hover);
-        }
-
-        .header-btn.primary {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        /* ===== Forms ===== */
-        .form-group { margin-bottom: 24px; }
-
-        .form-label {
-            display: block;
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-2);
-            margin-bottom: 8px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 20px;
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            font-size: 20px;
-            font-family: inherit;
-            background: var(--bg-dark);
-            color: var(--text);
-            transition: all .2s;
-        }
-
-        .form-input:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        .form-btn {
-            width: 100%;
-            padding: 24px;
-            border: none;
-            border-radius: 16px;
-            font-size: 24px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-            transition: transform .15s;
-        }
-
-        .form-btn:active { transform: scale(.98); }
-
-        .form-btn.primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        /* ===== Main App ===== */
-        .app-container {
-            display: none;
-        }
-
-        .app-container.active {
-            display: block;
-        }
-
-        /* ===== Order Grid ===== */
         .order-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 24px;
-            padding: 32px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+            padding: 20px;
             max-width: 1920px;
             margin: 0 auto;
         }
 
-        /* ===== Order Card ===== */
         .order-card {
             background: var(--bg-card);
-            border-radius: 24px;
-            padding: 28px;
+            border-radius: 16px;
+            padding: 20px;
             border: 3px solid var(--border);
-            transition: all .3s;
-            position: relative;
-            overflow: hidden;
+            transition: all 0.3s;
         }
 
-        .order-card.new {
-            animation: cardPulse 1s ease-in-out 3;
-        }
+        .order-card.new { animation: cardPulse 1s ease-in-out 3; }
 
         @keyframes cardPulse {
             0%, 100% { border-color: var(--border); transform: scale(1); }
-            50% { border-color: var(--primary); transform: scale(1.02); box-shadow: 0 0 40px rgba(255,107,53,.4); }
+            50% { border-color: var(--primary); transform: scale(1.02); box-shadow: 0 0 30px rgba(255,107,53,0.3); }
         }
 
-        .order-card.pending {
-            border-color: var(--yellow);
-        }
-
-        .order-card.accepted {
-            border-color: var(--blue);
-        }
-
-        .order-card.preparing {
-            border-color: var(--green);
-        }
+        .order-card.pending { border-color: var(--yellow); }
+        .order-card.accepted { border-color: var(--blue); }
+        .order-card.preparing { border-color: var(--green); }
 
         .order-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
-        .order-id {
-            font-size: 48px;
-            font-weight: 800;
-            color: var(--primary);
-            letter-spacing: 2px;
-        }
-
-        .order-time {
-            font-size: 20px;
-            color: var(--text-2);
-        }
+        .order-id { font-size: 36px; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
+        .order-time { font-size: 16px; color: var(--text-2); }
 
         .order-status-badge {
-            padding: 8px 20px;
-            border-radius: 12px;
-            font-size: 18px;
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
         }
 
-        .order-card.pending .order-status-badge {
-            background: var(--yellow-bg);
-            color: var(--yellow);
-        }
+        .order-card.pending .order-status-badge { background: var(--yellow-bg); color: #b45309; }
+        .order-card.accepted .order-status-badge { background: var(--blue-bg); color: #1d4ed8; }
+        .order-card.preparing .order-status-badge { background: var(--green-bg); color: #15803d; }
 
-        .order-card.accepted .order-status-badge {
-            background: var(--blue-bg);
-            color: var(--blue);
-        }
-
-        .order-card.preparing .order-status-badge {
-            background: var(--green-bg);
-            color: var(--green);
-        }
-
-        .order-items {
-            margin-bottom: 24px;
-            max-height: 250px;
-            overflow-y: auto;
-        }
+        .order-items { margin-bottom: 16px; max-height: 200px; overflow-y: auto; }
 
         .order-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 0;
+            padding: 12px 0;
             border-bottom: 1px solid var(--border);
         }
 
-        .order-item:last-child {
-            border-bottom: none;
-        }
-
-        .order-item-name {
-            font-size: 28px;
-            font-weight: 500;
-        }
-
+        .order-item:last-child { border-bottom: none; }
+        .order-item-name { font-size: 20px; font-weight: 500; }
         .order-item-qty {
-            font-size: 32px;
-            font-weight: 800;
+            font-size: 24px;
+            font-weight: 700;
             color: var(--primary);
-            background: var(--bg-dark);
-            padding: 8px 20px;
-            border-radius: 12px;
+            background: var(--primary-light);
+            padding: 4px 12px;
+            border-radius: 8px;
         }
 
         .order-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            background: var(--bg-dark);
-            border-radius: 16px;
-            margin-bottom: 24px;
+            padding: 14px;
+            background: var(--bg);
+            border-radius: 12px;
+            margin-bottom: 16px;
         }
 
-        .order-table {
-            font-size: 36px;
-            font-weight: 800;
-        }
-
-        .order-pickup {
-            font-size: 28px;
-            color: var(--text-2);
-        }
+        .order-table { font-size: 28px; font-weight: 700; }
+        .order-pickup { font-size: 20px; color: var(--text-2); }
 
         .order-note {
-            padding: 16px 20px;
+            padding: 12px 16px;
             background: var(--yellow-bg);
-            border-radius: 12px;
-            font-size: 20px;
-            color: var(--yellow);
-            margin-bottom: 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            color: #b45309;
+            margin-bottom: 16px;
         }
 
-        .order-actions {
-            display: flex;
-            gap: 16px;
-        }
+        .order-actions { display: flex; gap: 12px; }
 
         .order-btn {
             flex: 1;
-            padding: 24px;
+            padding: 20px;
             border: none;
-            border-radius: 16px;
-            font-size: 28px;
+            border-radius: 12px;
+            font-size: 20px;
             font-weight: 700;
             cursor: pointer;
-            font-family: inherit;
-            transition: all .15s;
-        }
-
-        .order-btn:active { transform: scale(.96); }
-
-        .order-btn.accept {
-            background: var(--green);
+            transition: all 0.15s;
             color: white;
         }
 
-        .order-btn.prepare {
-            background: var(--blue);
-            color: white;
-        }
+        .order-btn:active { transform: scale(0.96); }
+        .order-btn.accept { background: var(--green); }
+        .order-btn.prepare { background: var(--blue); }
+        .order-btn.complete { background: var(--primary); }
 
-        .order-btn.complete {
-            background: var(--primary);
-            color: white;
-        }
-
-        /* ===== Empty State ===== */
-        .empty-state {
-            text-align: center;
-            padding: 80px 40px;
-            color: var(--text-3);
-        }
-
-        .empty-state .em-icon { 
-            font-size: 120px; 
-            margin-bottom: 24px; 
-            opacity: 0.5;
-        }
-
-        .empty-state .em-text {
-            font-size: 32px;
-            font-weight: 500;
-        }
-
-        /* ===== Loading ===== */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(15,23,42,.95);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .loading-overlay.active { display: flex; }
-
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin .6s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loading-msg {
-            margin-top: 20px;
-            font-size: 20px;
-            color: var(--text-2);
-        }
-
-        /* ===== Toast ===== */
-        .toast-container {
-            position: fixed;
-            top: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            pointer-events: none;
-        }
-
-        .toast {
-            background: var(--bg-card);
-            padding: 20px 32px;
-            border-radius: 16px;
-            font-size: 20px;
-            font-weight: 500;
-            border-left: 6px solid var(--primary);
-            animation: toastIn .3s ease;
-        }
-
-        .toast.success { border-left-color: var(--green); }
-        .toast.error { border-left-color: var(--red); }
-        .toast.info { border-left-color: var(--blue); }
-
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: none; }
-        }
-
-        /* ===== Wake Lock Notice ===== */
-        .wake-lock-notice {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg-card);
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 14px;
-            color: var(--text-3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 100;
-        }
-
-        /* ===== Responsive ===== */
-        @media (max-width: 768px) {
-            .order-grid {
-                grid-template-columns: 1fr;
-                padding: 16px;
-            }
-
-            .order-id {
-                font-size: 36px;
-            }
-
-            .order-item-name {
-                font-size: 22px;
-            }
-
-            .order-item-qty {
-                font-size: 26px;
-            }
-
-            .order-btn {
-                font-size: 22px;
-                padding: 20px;
-            }
-
-            .header-title {
-                font-size: 24px;
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .order-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (min-width: 1600px) {
-            .order-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        /* ===== Confirm Mode Buttons (Kitchen sized) ===== */
-        .confirm-btn-wrapper {
-            position: relative;
-            overflow: hidden;
-            border-radius: 16px;
-        }
-
-        .confirm-btn-wrapper .order-btn {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Long press progress */
-        .confirm-btn-wrapper .progress-ring {
+        .confirm-wrapper { position: relative; overflow: hidden; border-radius: 12px; flex: 1; }
+        
+        .confirm-wrapper .progress-ring {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             pointer-events: none;
-            z-index: 0;
         }
 
-        .confirm-btn-wrapper .progress-ring svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .confirm-btn-wrapper .progress-ring circle {
+        .confirm-wrapper .progress-ring circle {
             fill: none;
-            stroke: rgba(255,255,255,0.3);
-            stroke-width: 6;
+            stroke: rgba(255,255,255,0.4);
+            stroke-width: 4;
             stroke-linecap: round;
             transform: rotate(-90deg);
             transform-origin: center;
         }
 
-        .confirm-btn-wrapper .progress-ring .progress {
-            stroke: rgba(255,255,255,0.8);
+        .confirm-wrapper .progress-ring .progress {
+            stroke: rgba(255,255,255,0.9);
             stroke-dasharray: 283;
             stroke-dashoffset: 283;
-            transition: stroke-dashoffset 1.5s linear;
         }
 
-        .confirm-btn-wrapper.pressing .progress-ring .progress {
-            stroke-dashoffset: 0;
-        }
+        .confirm-wrapper.pressing .progress-ring .progress { stroke-dashoffset: 0; }
 
-        /* Swipe confirm (Kitchen sized) */
-        .confirm-btn-wrapper.swipe-mode {
+        .confirm-wrapper.swipe-mode {
             position: relative;
-            background: rgba(0,0,0,0.3);
-            border-radius: 16px;
-            min-height: 76px;
+            background: rgba(0,0,0,0.15);
+            min-height: 60px;
         }
 
-        .confirm-btn-wrapper.swipe-mode .order-btn {
-            background: transparent !important;
-            color: transparent !important;
-        }
+        .confirm-wrapper.swipe-mode .order-btn { background: transparent !important; color: transparent !important; }
 
-        .confirm-btn-wrapper.swipe-mode .swipe-slider {
+        .confirm-wrapper.swipe-mode .swipe-slider {
             position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 100%;
+            top: 0; left: 0;
+            height: 100%; width: 100%;
             display: flex;
             align-items: center;
-            padding-left: 12px;
+            padding-left: 8px;
             cursor: grab;
-            z-index: 2;
-            background: var(--bg-card);
-            border-radius: 16px;
+            border-radius: 12px;
             transition: transform 0.1s ease-out;
         }
 
-        .confirm-btn-wrapper.swipe-mode .swipe-slider .slider-thumb {
-            width: 52px;
-            height: 52px;
+        .confirm-wrapper.swipe-mode .swipe-slider .thumb {
+            width: 44px; height: 44px;
             background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             flex-shrink: 0;
         }
 
-        .confirm-btn-wrapper.swipe-mode .swipe-slider .slider-text {
+        .confirm-wrapper.swipe-mode .swipe-slider .text {
             flex: 1;
             text-align: center;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 600;
-            color: var(--text);
-            padding-right: 64px;
+            padding-right: 40px;
         }
 
-        .confirm-btn-wrapper.swipe-mode.accept .swipe-slider {
-            background: var(--green);
-        }
+        .confirm-wrapper.swipe-mode.accept .swipe-slider { background: var(--green); }
+        .confirm-wrapper.swipe-mode.prepare .swipe-slider { background: var(--blue); }
+        .confirm-wrapper.swipe-mode.complete .swipe-slider { background: var(--primary); }
 
-        .confirm-btn-wrapper.swipe-mode.prepare .swipe-slider {
-            background: var(--blue);
-        }
-
-        .confirm-btn-wrapper.swipe-mode.complete .swipe-slider {
-            background: var(--primary);
-        }
-
-        /* Double click (Kitchen sized) */
-        .confirm-btn-wrapper.doubleclick-mode .order-btn.pending-click {
-            background: var(--yellow) !important;
-            animation: pulseBtn 0.3s ease;
-        }
-
-        @keyframes pulseBtn {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        /* QuickTap undo progress (Kitchen sized) */
-        .confirm-btn-wrapper.quicktap-mode .undo-progress {
+        .confirm-wrapper.quicktap-mode .undo-bar {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 6px;
+            bottom: 0; left: 0;
+            height: 5px;
             background: var(--yellow);
             width: 0;
             transition: width 2s linear;
-            border-radius: 0 0 16px 16px;
+            border-radius: 0 0 12px 12px;
         }
 
-        .confirm-btn-wrapper.quicktap-mode.undoing .undo-progress {
-            width: 100%;
-        }
+        .confirm-wrapper.undoing .undo-bar { width: 100%; }
+        .confirm-wrapper.undoing .order-btn { background: var(--yellow) !important; }
 
-        .confirm-btn-wrapper.quicktap-mode .order-btn.undoing {
+        .confirm-wrapper.doubleclick-mode .order-btn.pending {
+            animation: pulseBtn 0.3s ease;
             background: var(--yellow) !important;
         }
+
+        @keyframes pulseBtn { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        .empty-state { text-align: center; padding: 60px 24px; color: var(--text-3); grid-column: 1 / -1; }
+        .empty-icon { font-size: 80px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-text { font-size: 24px; font-weight: 500; }
+
+        .wake-lock-notice {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .order-grid { grid-template-columns: 1fr; padding: 12px; gap: 16px; }
+            .order-id { font-size: 28px; }
+            .order-item-name { font-size: 18px; }
+            .order-item-qty { font-size: 20px; }
+            .order-btn { font-size: 18px; padding: 16px; }
+            .header-title { font-size: 20px; }
+            .login-title { font-size: 28px; }
+        }
+
+        @media (min-width: 1200px) { .order-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (min-width: 1600px) { .order-grid { grid-template-columns: repeat(4, 1fr); } }
     </style>
 </head>
 <body>
-    <!-- Login Page -->
-    <div class="login-page" id="loginPage">
-        <div class="login-logo">👨‍🍳</div>
-        <h1 class="login-title">NearBite Kitchen</h1>
-        <p class="login-subtitle" data-i18n="kitchen_portal">厨房挂屏模式</p>
-        
-        <div class="login-card">
-            <div class="form-group">
-                <label class="form-label" data-i18n="phone">手机号</label>
-                <input type="tel" class="form-input" id="loginPhone" placeholder="+64 ...">
+    <div id="app">
+        <div class="login-page" v-if="!isLoggedIn">
+            <div class="login-logo">👨‍🍳</div>
+            <h1 class="login-title">NearBite Kitchen</h1>
+            <p class="login-subtitle">{{ t('kitchen_portal') }}</p>
+            <div class="login-card">
+                <van-cell-group inset>
+                    <van-field v-model="loginForm.phone" :label="t('phone')" :placeholder="t('phone') + ' +64...'" type="tel" size="large" />
+                    <van-field v-model="loginForm.password" :label="t('password')" :placeholder="t('password')" type="password" size="large" />
+                </van-cell-group>
+                <div style="padding: 16px;">
+                    <van-button type="primary" size="large" block :loading="loggingIn" @click="doLogin">{{ t('login_btn') }}</van-button>
+                </div>
             </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="password">密码</label>
-                <input type="password" class="form-input" id="loginPassword" placeholder="••••••">
+        </div>
+
+        <div v-else>
+            <header class="app-header">
+                <div class="header-left">
+                    <span class="header-logo">👨‍🍳</span>
+                    <span class="header-title">Kitchen Display</span>
+                    <div class="header-status">
+                        <span class="status-dot" :class="{ offline: !sseConnected }"></span>
+                        <span>{{ sseConnected ? t('online') : t('offline') }}</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <van-button size="small" @click="logout" plain>{{ t('logout') }}</van-button>
+                </div>
+            </header>
+
+            <div class="order-grid">
+                <template v-if="orders.length > 0">
+                    <div v-for="order in sortedOrders" :key="order.id" class="order-card" :class="[order.status, { new: order.isNew }]">
+                        <div class="order-card-header">
+                            <span class="order-id">#{{ formatOrderId(order.id) }}</span>
+                            <span class="order-time">{{ formatTime(order.createdAt) }}</span>
+                        </div>
+                        <span class="order-status-badge">{{ t('status_' + order.status) }}</span>
+                        
+                        <div class="order-items">
+                            <div v-for="(item, idx) in order.items" :key="idx" class="order-item">
+                                <span class="order-item-name">{{ item.name }}</span>
+                                <span class="order-item-qty">×{{ item.qty }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="order-meta">
+                            <span :class="order.tableNumber ? 'order-table' : 'order-pickup'">
+                                {{ order.tableNumber ? t('order_table') + ' ' + order.tableNumber : t('order_pickup') }}
+                            </span>
+                        </div>
+                        
+                        <div v-if="order.note" class="order-note">
+                            <strong>{{ t('order_note') }}:</strong> {{ order.note }}
+                        </div>
+                        
+                        <div class="order-actions">
+                            <div v-if="order.status === 'pending'" class="confirm-wrapper" :class="confirmMode">
+                                <button class="order-btn accept" @click="handleConfirm(order.id, 'accepted', $event)">{{ t('order_accept') }}</button>
+                            </div>
+                            <div v-else-if="order.status === 'accepted'" class="confirm-wrapper" :class="confirmMode">
+                                <button class="order-btn prepare" @click="handleConfirm(order.id, 'preparing', $event)">{{ t('order_prepare') }}</button>
+                            </div>
+                            <div v-else-if="order.status === 'preparing'" class="confirm-wrapper" :class="confirmMode">
+                                <button class="order-btn complete" @click="handleConfirm(order.id, 'ready', $event)">{{ t('order_complete') }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                
+                <div v-else class="empty-state">
+                    <div class="empty-icon">👨‍🍳</div>
+                    <div class="empty-text">{{ t('no_orders') }}</div>
+                </div>
             </div>
-            <button class="form-btn primary" onclick="doLogin()" data-i18n="login_btn">登录</button>
+
+            <div class="wake-lock-notice" v-if="wakeLockActive">
+                <span>🔒</span>
+                <span>{{ t('screen_locked') }}</span>
+            </div>
         </div>
     </div>
 
-    <!-- Main App -->
-    <div class="app-container" id="appContainer">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-left">
-                <span class="header-logo">👨‍🍳</span>
-                <span class="header-title">Kitchen Display</span>
-                <div class="header-status">
-                    <span class="status-dot" id="statusDot"></span>
-                    <span id="statusText" data-i18n="online">在线</span>
-                </div>
-            </div>
-            <div class="header-right">
-                <a href="/merchant" class="header-btn" data-i18n="back_to_merchant">返回商家后台</a>
-                <button class="header-btn" onclick="logout()" data-i18n="logout">退出</button>
-            </div>
-        </header>
-
-        <!-- Order Grid -->
-        <div class="order-grid" id="orderGrid"></div>
-    </div>
-
-    <!-- Wake Lock Notice -->
-    <div class="wake-lock-notice" id="wakeLockNotice" style="display: none;">
-        <span>🔒</span>
-        <span data-i18n="screen_locked">屏幕保持常亮</span>
-    </div>
-
-    <!-- Loading -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div class="loading-msg" id="loadingMsg">Loading...</div>
-    </div>
-
-    <!-- Toast -->
-    <div class="toast-container" id="toastBox"></div>
-
+    <script src="https://fastly.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
     <script>
-    /* ===== i18n ===== */
+    const { createApp, ref, computed, onMounted } = Vue;
+
     const LANG = {
         zh: {
-            kitchen_portal: '厨房挂屏模式',
-            phone: '手机号',
-            password: '密码',
-            login_btn: '登录',
-            login_success: '登录成功',
-            login_failed: '登录失败',
-            online: '在线',
-            offline: '离线',
-            back_to_merchant: '返回商家后台',
-            logout: '退出',
-            status_pending: '待接单',
-            status_accepted: '已接单',
-            status_preparing: '制作中',
-            order_accept: '接单',
-            order_prepare: '开始制作',
-            order_complete: '完成',
-            order_table: '桌号',
-            order_pickup: '自取',
-            order_note: '备注',
-            order_new: '🔔 新订单！',
-            no_orders: '暂无活跃订单',
-            screen_locked: '屏幕保持常亮',
-            session_expired: '登录已过期，请重新登录',
-            network_error: '网络错误，请重试',
-            sse_connected: '实时连接已建立',
-            sse_disconnected: '连接断开，正在重连...',
-            confirm_mode: '操作确认方式',
-            confirm_longpress: '长按确认',
-            confirm_swipe: '滑动确认',
-            confirm_doubleclick: '二次点击',
-            confirm_longpress_desc: '按住1.5秒确认',
-            confirm_swipe_desc: '滑动到底确认',
-            confirm_doubleclick_desc: '点两次确认',
-            confirm_prompt: '确认？',
-            slide_to_confirm: '滑动确认',
-            confirm_quicktap: '一键通过',
-            confirm_quicktap_desc: '点击确认，长按回退',
-            longpress_duration: '长按时长',
-            undo_action: '回退',
-            undoing: '回退中...'
+            kitchen_portal: '厨房挂屏模式', phone: '手机号', password: '密码', login_btn: '登录',
+            login_success: '登录成功', login_failed: '登录失败', online: '在线', offline: '离线',
+            logout: '退出', status_pending: '待接单', status_accepted: '已接单', status_preparing: '制作中',
+            order_accept: '接单', order_prepare: '开始制作', order_complete: '完成',
+            order_table: '桌号', order_pickup: '自取', order_note: '备注',
+            order_new: '🔔 新订单！', no_orders: '暂无活跃订单', screen_locked: '屏幕保持常亮',
+            session_expired: '登录已过期', network_error: '网络错误'
         },
         en: {
-            kitchen_portal: 'Kitchen Display Mode',
-            phone: 'Phone',
-            password: 'Password',
-            login_btn: 'Login',
-            login_success: 'Login successful',
-            login_failed: 'Login failed',
-            online: 'Online',
-            offline: 'Offline',
-            back_to_merchant: 'Back to Merchant',
-            logout: 'Logout',
-            status_pending: 'Pending',
-            status_accepted: 'Accepted',
-            status_preparing: 'Preparing',
-            order_accept: 'Accept',
-            order_prepare: 'Prepare',
-            order_complete: 'Complete',
-            order_table: 'Table',
-            order_pickup: 'Pickup',
-            order_note: 'Note',
-            order_new: '🔔 New Order!',
-            no_orders: 'No active orders',
-            screen_locked: 'Screen will stay on',
-            session_expired: 'Session expired, please login again',
-            network_error: 'Network error, please retry',
-            sse_connected: 'Real-time connected',
-            sse_disconnected: 'Disconnected, reconnecting...',
-            confirm_mode: 'Confirm Mode',
-            confirm_longpress: 'Long Press',
-            confirm_swipe: 'Swipe',
-            confirm_doubleclick: 'Double Click',
-            confirm_longpress_desc: 'Hold 1.5s to confirm',
-            confirm_swipe_desc: 'Slide to confirm',
-            confirm_doubleclick_desc: 'Tap twice to confirm',
-            confirm_prompt: 'Confirm?',
-            slide_to_confirm: 'Slide to confirm',
-            confirm_quicktap: 'Quick Tap',
-            confirm_quicktap_desc: 'Tap to confirm, hold to undo',
-            longpress_duration: 'Hold Duration',
-            undo_action: 'Undo',
-            undoing: 'Undoing...'
+            kitchen_portal: 'Kitchen Display Mode', phone: 'Phone', password: 'Password', login_btn: 'Login',
+            login_success: 'Login successful', login_failed: 'Login failed', online: 'Online', offline: 'Offline',
+            logout: 'Logout', status_pending: 'Pending', status_accepted: 'Accepted', status_preparing: 'Preparing',
+            order_accept: 'Accept', order_prepare: 'Prepare', order_complete: 'Complete',
+            order_table: 'Table', order_pickup: 'Pickup', order_note: 'Note',
+            order_new: '🔔 New Order!', no_orders: 'No active orders', screen_locked: 'Screen stays on',
+            session_expired: 'Session expired', network_error: 'Network error'
         }
     };
 
-    let currentLang = localStorage.getItem('lang') || 'zh';
-
-    function t(key) {
-        return (LANG[currentLang] && LANG[currentLang][key]) || (LANG.zh[key]) || key;
-    }
-
-    function applyLang() {
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            el.textContent = t(el.dataset.i18n);
-        });
-    }
-
-    /* ===== State ===== */
-    let token = localStorage.getItem('token');
-    let user = null;
-    let merchant = null;
-    let orders = [];
-    let sseConnection = null;
-    let audioCtx = null;
-    let wakeLock = null;
-
-    /* ===== Toast & Loading ===== */
-    function toast(msg, type) {
-        type = type || 'info';
-        const el = document.createElement('div');
-        el.className = 'toast ' + type;
-        el.textContent = msg;
-        document.getElementById('toastBox').appendChild(el);
-        setTimeout(() => el.remove(), 4000);
-    }
-
-    function showLoading(msg) {
-        document.getElementById('loadingMsg').textContent = msg || '...';
-        document.getElementById('loadingOverlay').classList.add('active');
-    }
-
-    function hideLoading() {
-        document.getElementById('loadingOverlay').classList.remove('active');
-    }
-
-    /* ===== Audio ===== */
-    function playNotificationSound() {
-        try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+    createApp({
+        setup() {
+            const currentLang = ref(localStorage.getItem('lang') || 'zh');
+            const t = (key) => LANG[currentLang.value]?.[key] || LANG.zh[key] || key;
             
-            // Play a more noticeable sound
-            const notes = [800, 1000, 800, 1000, 1200];
-            notes.forEach((freq, i) => {
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.15);
-                gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime + i * 0.15);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.15 + 0.12);
-                
-                oscillator.start(audioCtx.currentTime + i * 0.15);
-                oscillator.stop(audioCtx.currentTime + i * 0.15 + 0.12);
-            });
-        } catch (e) {
-            console.log('Audio not supported');
-        }
-    }
-
-    /* ===== Confirm Mode ===== */
-    function getConfirmMode() {
-        return localStorage.getItem('confirmMode') || 'quicktap';
-    }
-
-    function getLongpressDuration() {
-        return parseInt(localStorage.getItem('longpressDuration')) || 1500;
-    }
-
-    // Pending clicks for double-click mode
-    let pendingClicks = {};
-
-    function confirmAction(wrapper, orderId, status, btnClass) {
-        const mode = getConfirmMode();
-        const btn = wrapper.querySelector('.order-btn');
-
-        if (mode === 'longpress') {
-            setupLongPress(wrapper, btn, orderId, status);
-        } else if (mode === 'swipe') {
-            setupSwipe(wrapper, btn, orderId, status, btnClass);
-        } else if (mode === 'doubleclick') {
-            setupDoubleClick(btn, orderId, status);
-        } else if (mode === 'quicktap') {
-            setupQuickTap(wrapper, btn, orderId, status, btnClass);
-        } else {
-            executeOrderUpdate(orderId, status);
-        }
-    }
-
-    function setupLongPress(wrapper, btn, orderId, status) {
-        let timer = null;
-        let isPressed = false;
-        const duration = getLongpressDuration();
-
-        // Add progress ring if not exists
-        if (!wrapper.querySelector('.progress-ring')) {
-            const ring = document.createElement('div');
-            ring.className = 'progress-ring';
-            ring.innerHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/><circle class="progress" cx="50" cy="50" r="45"/></svg>';
-            wrapper.appendChild(ring);
-        }
-
-        // Update progress ring animation duration
-        const progressCircle = wrapper.querySelector('.progress-ring .progress');
-        if (progressCircle) {
-            progressCircle.style.transition = `stroke-dashoffset ${duration}ms linear`;
-        }
-
-        const onDown = (e) => {
-            e.preventDefault();
-            isPressed = true;
-            wrapper.classList.add('pressing');
-            timer = setTimeout(() => {
-                if (isPressed) {
-                    executeOrderUpdate(orderId, status);
-                }
-            }, duration);
-        };
-
-        const onUp = () => {
-            isPressed = false;
-            wrapper.classList.remove('pressing');
-            if (timer) {
-                clearTimeout(timer);
-                timer = null;
-            }
-        };
-
-        btn.addEventListener('mousedown', onDown);
-        btn.addEventListener('touchstart', onDown, { passive: false });
-        btn.addEventListener('mouseup', onUp);
-        btn.addEventListener('touchend', onUp);
-        btn.addEventListener('mouseleave', onUp);
-        btn.addEventListener('touchcancel', onUp);
-    }
-
-    // Status undo mapping
-    const STATUS_UNDO_MAP = {
-        'accepted': 'pending',
-        'preparing': 'accepted',
-        'ready': 'preparing'
-    };
-
-    function setupQuickTap(wrapper, btn, orderId, status, btnClass) {
-        wrapper.classList.add('quicktap-mode');
-        
-        let undoTimer = null;
-        let isHolding = false;
-        const undoDuration = 2000;
-
-        // Add undo progress bar if not exists
-        if (!wrapper.querySelector('.undo-progress')) {
-            const progress = document.createElement('div');
-            progress.className = 'undo-progress';
-            wrapper.appendChild(progress);
-        }
-
-        const onClick = (e) => {
-            if (isHolding) return;
-            e.preventDefault();
-            // Quick tap - execute action
-            executeOrderUpdate(orderId, status);
-        };
-
-        const onDown = (e) => {
-            isHolding = false;
-            undoTimer = setTimeout(() => {
-                isHolding = true;
-                // Start undo animation
-                wrapper.classList.add('undoing');
-                btn.classList.add('undoing');
-                const originalText = btn.textContent;
-                btn.textContent = t('undoing');
-            }, 300);
-        };
-
-        const onUp = () => {
-            if (undoTimer) {
-                clearTimeout(undoTimer);
-                undoTimer = null;
-            }
+            const token = ref(localStorage.getItem('token'));
+            const isLoggedIn = ref(!!token.value);
+            const loggingIn = ref(false);
+            const loginForm = ref({ phone: '', password: '' });
+            const orders = ref([]);
+            const sseConnected = ref(false);
+            const wakeLockActive = ref(false);
+            const confirmMode = ref(localStorage.getItem('confirmMode') || 'quicktap');
             
-            if (isHolding) {
-                // Held long enough - perform undo
-                const previousStatus = STATUS_UNDO_MAP[status];
-                if (previousStatus) {
-                    executeOrderUpdate(orderId, previousStatus);
-                }
-            }
+            let audioCtx = null;
+            let eventSource = null;
+            let wakeLock = null;
             
-            // Reset state
-            wrapper.classList.remove('undoing');
-            btn.classList.remove('undoing');
-            isHolding = false;
-        };
-
-        btn.addEventListener('click', onClick);
-        btn.addEventListener('mousedown', onDown);
-        btn.addEventListener('touchstart', onDown, { passive: true });
-        btn.addEventListener('mouseup', onUp);
-        btn.addEventListener('touchend', onUp);
-        btn.addEventListener('mouseleave', onUp);
-        btn.addEventListener('touchcancel', onUp);
-    }
-
-    function setupSwipe(wrapper, btn, orderId, status, btnClass) {
-        wrapper.classList.add('swipe-mode', btnClass);
-
-        // Create slider if not exists
-        if (!wrapper.querySelector('.swipe-slider')) {
-            const slider = document.createElement('div');
-            slider.className = 'swipe-slider';
-            slider.innerHTML = '<div class="slider-thumb">→</div><span class="slider-text">' + t('slide_to_confirm') + '</span>';
-            wrapper.appendChild(slider);
-
-            let startX = 0;
-            let currentX = 0;
-            const maxDistance = wrapper.offsetWidth - 64; // 64 = thumb width for kitchen
-
-            const onTouchStart = (e) => {
-                startX = e.touches ? e.touches[0].clientX : e.clientX;
-                slider.style.transition = 'none';
-            };
-
-            const onTouchMove = (e) => {
-                const x = e.touches ? e.touches[0].clientX : e.clientX;
-                const diff = Math.max(0, Math.min(maxDistance, x - startX));
-                currentX = diff;
-                slider.style.transform = `translateX(${diff}px)`;
-            };
-
-            const onTouchEnd = () => {
-                slider.style.transition = 'transform 0.2s ease';
-                const threshold = maxDistance * 0.8;
-
-                if (currentX >= threshold) {
-                    executeOrderUpdate(orderId, status);
-                } else {
-                    slider.style.transform = 'translateX(0)';
-                }
-                currentX = 0;
-            };
-
-            slider.addEventListener('touchstart', onTouchStart, { passive: true });
-            slider.addEventListener('touchmove', onTouchMove, { passive: true });
-            slider.addEventListener('touchend', onTouchEnd);
-            slider.addEventListener('mousedown', (e) => {
-                onTouchStart(e);
-                document.addEventListener('mousemove', onTouchMove);
-                document.addEventListener('mouseup', function onUp() {
-                    onTouchEnd();
-                    document.removeEventListener('mousemove', onTouchMove);
-                    document.removeEventListener('mouseup', onUp);
-                });
-            });
-        }
-    }
-
-    function setupDoubleClick(btn, orderId, status) {
-        const wrapper = btn.closest('.confirm-btn-wrapper');
-        if (!wrapper) return;
-
-        wrapper.classList.add('doubleclick-mode');
-
-        const key = orderId + '_' + status;
-
-        if (pendingClicks[key]) {
-            // Second click - execute
-            clearTimeout(pendingClicks[key].timer);
-            delete pendingClicks[key];
-            executeOrderUpdate(orderId, status);
-        } else {
-            // First click - show pending state
-            btn.classList.add('pending-click');
-            const originalText = btn.textContent;
-            btn.textContent = t('confirm_prompt');
-
-            const timer = setTimeout(() => {
-                // Timeout - reset
-                btn.classList.remove('pending-click');
-                btn.textContent = originalText;
-                delete pendingClicks[key];
-            }, 3000);
-
-            pendingClicks[key] = { timer, originalText };
-        }
-    }
-
-    async function executeOrderUpdate(orderId, status) {
-        try {
-            await apiCall('/orders/' + orderId + '/status', {
-                method: 'PATCH',
-                body: JSON.stringify({ status })
-            });
-
-            if (status === 'ready') {
-                // Remove from active orders
-                orders = orders.filter(o => o.id !== orderId);
-            } else {
-                // Update status
-                const order = orders.find(o => o.id === orderId);
-                if (order) {
-                    order.status = status;
-                }
-            }
-
-            renderOrders();
-        } catch (e) {
-            toast(e.message, 'error');
-        }
-    }
-
-    /* ===== Screen Flash ===== */
-    function flashScreen() {
-        document.body.classList.add('flash');
-        setTimeout(() => {
-            document.body.classList.remove('flash');
-        }, 1500);
-    }
-
-    /* ===== Wake Lock ===== */
-    async function requestWakeLock() {
-        try {
-            if ('wakeLock' in navigator) {
-                wakeLock = await navigator.wakeLock.request('screen');
-                document.getElementById('wakeLockNotice').style.display = 'flex';
-                
-                wakeLock.addEventListener('release', () => {
-                    console.log('Wake Lock released');
-                    document.getElementById('wakeLockNotice').style.display = 'none';
-                });
-            }
-        } catch (e) {
-            console.log('Wake Lock not supported or failed:', e);
-        }
-    }
-
-    // Re-acquire wake lock when page becomes visible
-    document.addEventListener('visibilitychange', async () => {
-        if (document.visibilityState === 'visible' && !wakeLock) {
-            await requestWakeLock();
-        }
-    });
-
-    /* ===== API ===== */
-    async function apiCall(endpoint, options) {
-        options = options || {};
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-
-        try {
-            const r = await fetch('/api' + endpoint, { 
-                method: 'GET', 
-                headers: headers, 
-                ...options 
+            const sortedOrders = computed(() => {
+                const statusOrder = { pending: 0, accepted: 1, preparing: 2 };
+                return [...orders.value].sort((a, b) => (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99));
             });
             
-            if (r.status === 401) {
-                localStorage.removeItem('token');
-                token = null;
-                showLoginPage();
-                toast(t('session_expired'), 'error');
-                return null;
-            }
+            const formatOrderId = (id) => id ? id.slice(-6).toUpperCase() : '------';
+            const formatTime = (date) => new Date(date).toLocaleTimeString(currentLang.value === 'zh' ? 'zh-CN' : 'en-NZ', { hour: '2-digit', minute: '2-digit' });
             
-            if (!r.ok) {
-                let err = {};
-                try { err = await r.json(); } catch(e) {}
-                throw new Error(err.error || err.message || 'Failed');
-            }
-            
-            return r.json();
-        } catch (e) {
-            if (e.message.includes('fetch')) {
-                toast(t('network_error'), 'error');
-            }
-            throw e;
-        }
-    }
-
-    /* ===== Auth ===== */
-    async function doLogin() {
-        const phone = document.getElementById('loginPhone').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        
-        if (!phone || !password) {
-            toast(currentLang === 'zh' ? '请输入手机号和密码' : 'Please enter phone and password', 'error');
-            return;
-        }
-
-        showLoading(currentLang === 'zh' ? '登录中...' : 'Logging in...');
-
-        try {
-            const data = await apiCall('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ phone, password })
-            });
-
-            if (data && data.token) {
-                token = data.token;
-                user = data.user;
-                localStorage.setItem('token', token);
-                toast(t('login_success'), 'success');
-                await initApp();
-            }
-        } catch (e) {
-            toast(e.message || t('login_failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    async function checkAuth() {
-        if (!token) {
-            showLoginPage();
-            return false;
-        }
-
-        try {
-            const data = await apiCall('/auth/me');
-            if (data && data.user) {
-                user = data.user;
-                return true;
-            }
-        } catch (e) {
-            showLoginPage();
-            return false;
-        }
-        
-        showLoginPage();
-        return false;
-    }
-
-    function showLoginPage() {
-        document.getElementById('loginPage').style.display = 'flex';
-        document.getElementById('appContainer').classList.remove('active');
-    }
-
-    function showAppPage() {
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('appContainer').classList.add('active');
-    }
-
-    function logout() {
-        localStorage.removeItem('token');
-        token = null;
-        user = null;
-        merchant = null;
-        if (sseConnection) {
-            sseConnection.close();
-            sseConnection = null;
-        }
-        if (wakeLock) {
-            wakeLock.release();
-            wakeLock = null;
-        }
-        showLoginPage();
-    }
-
-    /* ===== Merchant ===== */
-    async function loadMerchant() {
-        try {
-            const data = await apiCall('/merchants');
-            const merchants = data.merchants || data;
-            
-            if (Array.isArray(merchants) && merchants.length > 0) {
-                merchant = merchants.find(m => m.ownerId === user.id || m.owner === user.id) || merchants[0];
-                return true;
-            }
-            return false;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    /* ===== Orders ===== */
-    async function loadOrders() {
-        try {
-            const data = await apiCall('/orders/merchant');
-            const allOrders = data.orders || data || [];
-            // Filter to only active orders
-            orders = allOrders.filter(o => ['pending', 'accepted', 'preparing'].includes(o.status));
-            renderOrders();
-        } catch (e) {
-            console.error('Failed to load orders:', e);
-        }
-    }
-
-    function renderOrders() {
-        const grid = document.getElementById('orderGrid');
-
-        if (!orders.length) {
-            grid.innerHTML = `<div class="empty-state">
-                <div class="em-icon">👨‍🍳</div>
-                <div class="em-text">${t('no_orders')}</div>
-            </div>`;
-            return;
-        }
-
-        // Sort: pending first, then accepted, then preparing
-        const statusOrder = { pending: 0, accepted: 1, preparing: 2 };
-        const sorted = [...orders].sort((a, b) => {
-            return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
-        });
-
-        grid.innerHTML = sorted.map(order => {
-            const orderId = order.id ? order.id.slice(-6).toUpperCase() : '------';
-            const time = new Date(order.createdAt).toLocaleTimeString(currentLang === 'zh' ? 'zh-CN' : 'en-NZ', { hour: '2-digit', minute: '2-digit' });
-            
-            const itemsHtml = (order.items || []).map(item => `
-                <div class="order-item">
-                    <span class="order-item-name">${item.name}</span>
-                    <span class="order-item-qty">×${item.qty}</span>
-                </div>
-            `).join('');
-
-            const actionsHtml = getOrderActions(order);
-
-            return `
-                <div class="order-card ${order.status}" data-order-id="${order.id}">
-                    <div class="order-card-header">
-                        <span class="order-id">#${orderId}</span>
-                        <span class="order-time">${time}</span>
-                    </div>
-                    <span class="order-status-badge">${t('status_' + order.status)}</span>
-                    <div class="order-items">${itemsHtml}</div>
-                    <div class="order-meta">
-                        <span class="${order.tableNumber ? 'order-table' : 'order-pickup'}">
-                            ${order.tableNumber ? t('order_table') + ' ' + order.tableNumber : t('order_pickup')}
-                        </span>
-                    </div>
-                    ${order.note ? `<div class="order-note"><strong>${t('order_note')}:</strong> ${order.note}</div>` : ''}
-                    <div class="order-actions">${actionsHtml}</div>
-                </div>
-            `;
-        }).join('');
-
-        // Setup confirmation buttons after render
-        setupConfirmButtons();
-    }
-
-    function setupConfirmButtons() {
-        document.querySelectorAll('.confirm-btn-wrapper').forEach(wrapper => {
-            const btn = wrapper.querySelector('.order-btn');
-            if (!btn || btn.dataset.initialized) return;
-            btn.dataset.initialized = 'true';
-
-            const orderId = btn.dataset.order;
-            const status = btn.dataset.status;
-            const btnClass = btn.dataset.btnClass;
-
-            confirmAction(wrapper, orderId, status, btnClass);
-        });
-    }
-
-    function getOrderActions(order) {
-        const mode = getConfirmMode();
-        const wrapperClass = mode === 'swipe' ? 'confirm-btn-wrapper swipe-mode' : 'confirm-btn-wrapper';
-
-        switch (order.status) {
-            case 'pending':
-                return `
-                    <div class="${wrapperClass}"><button class="order-btn accept" data-order="${order.id}" data-status="accepted" data-btn-class="accept">${t('order_accept')}</button></div>
-                `;
-            case 'accepted':
-                return `
-                    <div class="${wrapperClass}"><button class="order-btn prepare" data-order="${order.id}" data-status="preparing" data-btn-class="prepare">${t('order_prepare')}</button></div>
-                `;
-            case 'preparing':
-                return `
-                    <div class="${wrapperClass}"><button class="order-btn complete" data-order="${order.id}" data-status="ready" data-btn-class="complete">${t('order_complete')}</button></div>
-                `;
-            default:
-                return '';
-        }
-    }
-
-    async function updateOrderStatus(orderId, status) {
-        try {
-            await apiCall('/orders/' + orderId + '/status', {
-                method: 'PATCH',
-                body: JSON.stringify({ status })
-            });
-            
-            if (status === 'ready') {
-                // Remove from active orders
-                orders = orders.filter(o => o.id !== orderId);
-            } else {
-                // Update status
-                const order = orders.find(o => o.id === orderId);
-                if (order) {
-                    order.status = status;
-                }
-            }
-            
-            renderOrders();
-        } catch (e) {
-            toast(e.message, 'error');
-        }
-    }
-
-    /* ===== SSE ===== */
-    let sseRetryCount = 0;
-
-    function connectSSE() {
-        if (!token || sseConnection) return;
-
-        try {
-            const eventSource = new EventSource('/api/orders/merchant/stream?token=' + encodeURIComponent(token));
-            
-            eventSource.onopen = () => {
-                console.log('SSE connected');
-                document.getElementById('statusDot').classList.remove('offline');
-                if (sseRetryCount > 0) {
-                    console.log('SSE reconnected after ' + sseRetryCount + ' retries');
-                }
-                sseRetryCount = 0;
-            };
-
-            eventSource.onmessage = (event) => {
+            const playNotificationSound = () => {
                 try {
-                    const data = JSON.parse(event.data);
-                    handleNewOrder(data);
-                } catch (e) {
-                    console.error('SSE parse error:', e);
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    [800, 1000, 800, 1000, 1200].forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.3, audioCtx.currentTime + i * 0.15);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.15 + 0.12);
+                        osc.start(audioCtx.currentTime + i * 0.15);
+                        osc.stop(audioCtx.currentTime + i * 0.15 + 0.12);
+                    });
+                } catch (e) {}
+            };
+            
+            const flashScreen = () => {
+                document.body.classList.add('flash');
+                setTimeout(() => document.body.classList.remove('flash'), 1500);
+            };
+            
+            const showToast = (msg, type = 'info') => {
+                vant.Toast({ message: msg, type, duration: 3000 });
+            };
+            
+            const apiCall = async (endpoint, options = {}) => {
+                const headers = { 'Content-Type': 'application/json' };
+                if (token.value) headers['Authorization'] = 'Bearer ' + token.value;
+                const r = await fetch('/api' + endpoint, { method: 'GET', headers, ...options });
+                if (r.status === 401) {
+                    localStorage.removeItem('token');
+                    token.value = null;
+                    isLoggedIn.value = false;
+                    showToast(t('session_expired'), 'fail');
+                    return null;
+                }
+                if (!r.ok) { let err = {}; try { err = await r.json(); } catch(e) {}; throw new Error(err.error || 'Failed'); }
+                return r.json();
+            };
+            
+            const doLogin = async () => {
+                const { phone, password } = loginForm.value;
+                if (!phone || !password) { showToast(currentLang.value === 'zh' ? '请输入手机号和密码' : 'Please enter phone and password', 'fail'); return; }
+                loggingIn.value = true;
+                try {
+                    const data = await apiCall('/auth/login', { method: 'POST', body: JSON.stringify({ phone, password }) });
+                    if (data && data.token) {
+                        token.value = data.token;
+                        localStorage.setItem('token', token.value);
+                        isLoggedIn.value = true;
+                        showToast(t('login_success'), 'success');
+                        await initApp();
+                    }
+                } catch (e) { showToast(e.message || t('login_failed'), 'fail'); }
+                finally { loggingIn.value = false; }
+            };
+            
+            const logout = () => {
+                localStorage.removeItem('token');
+                token.value = null;
+                isLoggedIn.value = false;
+                if (eventSource) { eventSource.close(); eventSource = null; }
+                if (wakeLock) { wakeLock.release(); wakeLock = null; }
+            };
+            
+            const loadMerchant = async () => { try { const data = await apiCall('/merchants'); return data?.merchants?.length > 0 || Array.isArray(data) && data.length > 0; } catch (e) { return false; } };
+            
+            const loadOrders = async () => { try { const data = await apiCall('/orders/merchant'); orders.value = (data?.orders || data || []).filter(o => ['pending', 'accepted', 'preparing'].includes(o.status)); } catch (e) { console.error(e); } };
+            
+            const connectSSE = () => {
+                if (!token.value || eventSource) return;
+                try {
+                    eventSource = new EventSource('/api/orders/merchant/stream?token=' + encodeURIComponent(token.value));
+                    eventSource.onopen = () => { sseConnected.value = true; };
+                    eventSource.onmessage = (event) => { try { handleNewOrder(JSON.parse(event.data)); } catch (e) {} };
+                    eventSource.onerror = () => { sseConnected.value = false; eventSource.close(); eventSource = null; setTimeout(connectSSE, 5000); };
+                } catch (e) { setTimeout(connectSSE, 5000); }
+            };
+            
+            const handleNewOrder = (order) => {
+                if (!['pending', 'accepted', 'preparing'].includes(order.status)) {
+                    orders.value = orders.value.filter(o => o.id !== order.id);
+                } else {
+                    const existing = orders.value.find(o => o.id === order.id);
+                    if (existing) { Object.assign(existing, order); }
+                    else {
+                        order.isNew = true;
+                        orders.value.unshift(order);
+                        playNotificationSound();
+                        flashScreen();
+                        showToast(t('order_new'), 'info');
+                        setTimeout(() => order.isNew = false, 3000);
+                    }
                 }
             };
-
-            eventSource.onerror = () => {
-                document.getElementById('statusDot').classList.add('offline');
-                eventSource.close();
-                sseConnection = null;
-                sseRetryCount++;
-                if (sseRetryCount >= 3) {
-                    toast(t('sse_disconnected'), 'error');
-                }
-                setTimeout(connectSSE, 5000);
+            
+            const handleConfirm = (orderId, status) => {
+                executeOrderUpdate(orderId, status);
             };
+            
+            const executeOrderUpdate = async (orderId, status) => {
+                try {
+                    await apiCall('/orders/' + orderId + '/status', { method: 'PATCH', body: JSON.stringify({ status }) });
+                    if (status === 'ready') { orders.value = orders.value.filter(o => o.id !== orderId); }
+                    else { const order = orders.value.find(o => o.id === orderId); if (order) order.status = status; }
+                } catch (e) { showToast(e.message, 'fail'); }
+            };
+            
+            const requestWakeLock = async () => {
+                try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); wakeLockActive.value = true; wakeLock.addEventListener('release', () => { wakeLockActive.value = false; }); } } catch (e) {}
+            };
+            
+            const initApp = async () => {
+                const hasMerchant = await loadMerchant();
+                if (hasMerchant) { await loadOrders(); connectSSE(); await requestWakeLock(); }
+                else { showToast(currentLang.value === 'zh' ? '没有找到店铺' : 'No store found', 'fail'); setTimeout(() => { window.location.href = '/merchant'; }, 2000); }
+            };
+            
+            onMounted(async () => {
+                if (isLoggedIn.value) { await initApp(); }
+            });
 
-            sseConnection = eventSource;
-        } catch (e) {
-            console.error('SSE error:', e);
-            sseRetryCount++;
-            setTimeout(connectSSE, 5000);
+            document.addEventListener('visibilitychange', async () => {
+                if (document.visibilityState === 'visible' && !wakeLock && isLoggedIn.value) { await requestWakeLock(); }
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'r' || e.key === 'R') loadOrders();
+                if (e.key === 'l' || e.key === 'L') logout();
+            });
+            
+            return { t, isLoggedIn, loggingIn, loginForm, orders, sortedOrders, sseConnected, wakeLockActive, confirmMode, doLogin, logout, formatOrderId, formatTime, handleConfirm };
         }
-    }
-
-    function handleNewOrder(order) {
-        // Only handle active orders
-        if (!['pending', 'accepted', 'preparing'].includes(order.status)) {
-            // Remove if exists
-            orders = orders.filter(o => o.id !== order.id);
-        } else {
-            // Check if order already exists
-            const existing = orders.find(o => o.id === order.id);
-            if (existing) {
-                // Update existing order
-                Object.assign(existing, order);
-            } else {
-                // Add new order
-                orders.unshift(order);
-                
-                // Play notification sound
-                playNotificationSound();
-                
-                // Flash screen
-                flashScreen();
-                
-                // Show toast
-                toast(t('order_new'), 'info');
-            }
-        }
-        
-        renderOrders();
-    }
-
-    /* ===== Init ===== */
-    async function initApp() {
-        showLoading(currentLang === 'zh' ? '加载中...' : 'Loading...');
-
-        const hasMerchant = await loadMerchant();
-        
-        if (hasMerchant) {
-            showAppPage();
-            await loadOrders();
-            connectSSE();
-            await requestWakeLock();
-        } else {
-            toast(currentLang === 'zh' ? '没有找到店铺，请先在商家后台创建' : 'No store found, please create one in merchant portal', 'error');
-            setTimeout(() => {
-                window.location.href = '/merchant';
-            }, 2000);
-        }
-
-        hideLoading();
-    }
-
-    // Entry point
-    document.addEventListener('DOMContentLoaded', async () => {
-        applyLang();
-        
-        const isAuth = await checkAuth();
-        if (isAuth) {
-            await initApp();
-        }
-    });
-
-    // Handle keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        // Press 'R' to refresh
-        if (e.key === 'r' || e.key === 'R') {
-            loadOrders();
-        }
-        // Press 'L' to logout
-        if (e.key === 'l' || e.key === 'L') {
-            logout();
-        }
-    });
+    }).use(vant.Vant).mount('#app');
     </script>
 </body>
 </html>

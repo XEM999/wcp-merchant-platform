@@ -6,2641 +6,663 @@
     <title>NearBite 商家后台</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/vant@4/lib/index.css"/>
     <style>
-        :root {
-            --primary: #ff6b35;
-            --primary-light: #fff7ed;
-            --primary-dark: #ea580c;
-            --bg: #fafafa;
-            --bg-card: #ffffff;
-            --bg-input: #f3f4f6;
-            --text: #111827;
-            --text-2: #6b7280;
-            --text-3: #9ca3af;
-            --green: #22c55e;
-            --green-bg: #f0fdf4;
-            --red: #ef4444;
-            --red-bg: #fef2f2;
-            --blue: #3b82f6;
-            --yellow: #f59e0b;
-            --yellow-bg: #fffbeb;
-            --border: #e5e7eb;
-            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-            --shadow-lg: 0 4px 12px rgba(0,0,0,.1);
-            --radius: 16px;
-            --radius-sm: 10px;
-        }
-
+        :root { --van-primary-color: #ff6b35; --primary: #ff6b35; --primary-light: #fff7ed; --primary-dark: #ea580c; --bg: #f7f8fa; --bg-card: #ffffff; --bg-input: #f3f4f6; --text: #111827; --text-2: #6b7280; --text-3: #9ca3af; --green: #22c55e; --green-bg: #f0fdf4; --red: #ef4444; --red-bg: #fef2f2; --blue: #3b82f6; --yellow: #f59e0b; --yellow-bg: #fffbeb; --border: #e5e7eb; --radius: 16px; --radius-sm: 10px; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding-bottom: 80px;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* ===== Login Page ===== */
-        .login-page {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: linear-gradient(135deg, var(--primary-light) 0%, white 100%);
-        }
-
-        .login-logo {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-
-        .login-title {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--primary-dark);
-            margin-bottom: 8px;
-        }
-
-        .login-subtitle {
-            font-size: 14px;
-            color: var(--text-2);
-            margin-bottom: 32px;
-        }
-
-        .login-card {
-            width: 100%;
-            max-width: 400px;
-            background: white;
-            border-radius: var(--radius);
-            padding: 24px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* ===== Header ===== */
-        .app-header {
-            position: sticky;
-            top: 0;
-            z-index: 500;
-            background: rgba(255,255,255,.95);
-            backdrop-filter: blur(20px);
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .header-logo { font-size: 24px; }
-        .header-brand { font-size: 18px; font-weight: 800; color: var(--primary-dark); letter-spacing: -0.5px; }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .lang-btn {
-            padding: 6px 12px;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            background: white;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text-2);
-            font-family: inherit;
-        }
-
-        /* ===== Forms ===== */
-        .form-group { margin-bottom: 16px; }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-2);
-            margin-bottom: 6px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-            transition: all .2s;
-        }
-
-        .form-input:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(255,107,53,.1);
-        }
-
-        .form-input.error {
-            border-color: var(--red);
-        }
-
-        .form-select {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-            background: white;
-            cursor: pointer;
-        }
-
-        .form-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: transform .15s;
-        }
-
-        .form-btn:active { transform: scale(.98); }
-
-        .form-btn.primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .form-btn.secondary {
-            background: var(--bg-input);
-            color: var(--text);
-        }
-
-        .form-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        textarea.form-input {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        /* ===== Main App ===== */
-        .app-container {
-            display: none;
-        }
-
-        .app-container.active {
-            display: block;
-        }
-
-        /* ===== Page Content ===== */
-        .page-content {
-            padding: 16px;
-            display: none;
-        }
-
-        .page-content.active {
-            display: block;
-        }
-
-        /* ===== Status Cards ===== */
-        .status-bar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            overflow-x: auto;
-            padding-bottom: 8px;
-        }
-
-        .status-card {
-            flex: 1;
-            min-width: 100px;
-            padding: 12px;
-            background: white;
-            border-radius: var(--radius-sm);
-            border: 2px solid var(--border);
-            text-align: center;
-            cursor: pointer;
-            transition: all .2s;
-        }
-
-        .status-card.active {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-
-        .status-card.pending { border-left: 4px solid var(--yellow); }
-        .status-card.preparing { border-left: 4px solid var(--blue); }
-        .status-card.ready { border-left: 4px solid var(--green); }
-
-        .status-card-count {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--text);
-        }
-
-        .status-card-label {
-            font-size: 12px;
-            color: var(--text-2);
-            margin-top: 4px;
-        }
-
-        /* ===== Order Cards ===== */
-        .order-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .order-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 16px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-        }
-
-        .order-card.new {
-            animation: pulseBorder 1s ease-in-out 3;
-        }
-
-        @keyframes pulseBorder {
-            0%, 100% { border-color: var(--border); }
-            50% { border-color: var(--primary); box-shadow: 0 0 20px rgba(255,107,53,.3); }
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .order-id {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--primary-dark);
-        }
-
-        .order-time {
-            font-size: 12px;
-            color: var(--text-3);
-        }
-
-        .order-items {
-            margin-bottom: 12px;
-        }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .order-item:last-child {
-            border-bottom: none;
-        }
-
-        .order-item-name {
-            font-size: 14px;
-        }
-
-        .order-item-qty {
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .order-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: var(--bg-input);
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-
-        .order-total {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .order-meta {
-            font-size: 13px;
-            color: var(--text-2);
-        }
-
-        .order-note {
-            padding: 10px;
-            background: var(--yellow-bg);
-            border-radius: 8px;
-            font-size: 13px;
-            color: var(--text-2);
-            margin-bottom: 12px;
-        }
-
-        .order-note strong {
-            color: var(--yellow);
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .order-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all .15s;
-        }
-
-        .order-btn:active { transform: scale(.96); }
-
-        .order-btn.accept {
-            background: var(--green);
-            color: white;
-        }
-
-        .order-btn.prepare {
-            background: var(--blue);
-            color: white;
-        }
-
-        .order-btn.complete {
-            background: var(--primary);
-            color: white;
-        }
-
-        .order-btn.reject {
-            background: var(--bg-input);
-            color: var(--red);
-        }
-
-        /* ===== Menu Page ===== */
-        .menu-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .menu-title {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .add-menu-btn {
-            padding: 10px 16px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .menu-category {
-            margin-bottom: 16px;
-        }
-
-        .menu-category-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-2);
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .menu-item-card {
-            background: white;
-            border-radius: var(--radius-sm);
-            padding: 14px;
-            border: 1px solid var(--border);
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .menu-item-info {
-            flex: 1;
-        }
-
-        .menu-item-name {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .menu-item-price {
-            font-size: 14px;
-            color: var(--primary-dark);
-            font-weight: 700;
-        }
-
-        .menu-item-desc {
-            font-size: 12px;
-            color: var(--text-3);
-            margin-top: 4px;
-        }
-
-        .menu-item-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .menu-item-toggle {
-            position: relative;
-            width: 48px;
-            height: 28px;
-            background: var(--bg-input);
-            border-radius: 14px;
-            cursor: pointer;
-            transition: background .2s;
-        }
-
-        .menu-item-toggle.on {
-            background: var(--green);
-        }
-
-        .menu-item-toggle::after {
-            content: '';
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            background: white;
-            border-radius: 50%;
-            top: 3px;
-            left: 3px;
-            transition: transform .2s;
-            box-shadow: var(--shadow);
-        }
-
-        .menu-item-toggle.on::after {
-            transform: translateX(20px);
-        }
-
-        .menu-item-edit {
-            padding: 6px 12px;
-            background: var(--bg-input);
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        /* ===== Store Page ===== */
-        .store-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 20px;
-            border: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-
-        .store-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .store-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 16px;
-            background: var(--primary-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-        }
-
-        .store-name {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .store-type {
-            font-size: 14px;
-            color: var(--text-2);
-        }
-
-        .store-info-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .store-info-item:last-child {
-            border-bottom: none;
-        }
-
-        .store-info-label {
-            font-size: 13px;
-            color: var(--text-2);
-            min-width: 80px;
-        }
-
-        .store-info-value {
-            font-size: 14px;
-        }
-
-        .store-status-toggle {
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: var(--radius);
-            text-align: center;
-        }
-
-        .store-status-toggle.online {
-            background: var(--green-bg);
-        }
-
-        .store-status-toggle.offline {
-            background: var(--red-bg);
-        }
-
-        .store-status-label {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .store-status-toggle.online .store-status-label {
-            color: var(--green);
-        }
-
-        .store-status-toggle.offline .store-status-label {
-            color: var(--red);
-        }
-
-        .store-status-btn {
-            padding: 16px 40px;
-            border: none;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .store-status-toggle.online .store-status-btn {
-            background: var(--green);
-            color: white;
-        }
-
-        .store-status-toggle.offline .store-status-btn {
-            background: var(--red);
-            color: white;
-        }
-
-        /* ===== Settings Page ===== */
-        .settings-group {
-            background: white;
-            border-radius: var(--radius);
-            overflow: hidden;
-            margin-bottom: 16px;
-        }
-
-        .settings-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px;
-            border-bottom: 1px solid #f3f4f6;
-            cursor: pointer;
-            transition: background .15s;
-        }
-
-        .settings-item:last-child {
-            border-bottom: none;
-        }
-
-        .settings-item:active {
-            background: var(--bg-input);
-        }
-
-        .settings-item-icon {
-            font-size: 20px;
-            margin-right: 12px;
-        }
-
-        .settings-item-text {
-            flex: 1;
-        }
-
-        .settings-item-label {
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        .settings-item-desc {
-            font-size: 12px;
-            color: var(--text-3);
-        }
-
-        .settings-item-arrow {
-            color: var(--text-3);
-        }
-
-        /* ===== Bottom Tab Bar ===== */
-        .tab-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-top: 1px solid var(--border);
-            display: flex;
-            z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        .tab-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px 0;
-            cursor: pointer;
-            transition: all .2s;
-            position: relative;
-        }
-
-        .tab-item.active {
-            color: var(--primary);
-        }
-
-        .tab-icon {
-            font-size: 22px;
-            margin-bottom: 4px;
-        }
-
-        .tab-label {
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .tab-badge {
-            position: absolute;
-            top: 4px;
-            right: 50%;
-            transform: translateX(14px);
-            background: var(--red);
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            min-width: 18px;
-            height: 18px;
-            border-radius: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 5px;
-        }
-
-        .tab-badge.hidden {
-            display: none;
-        }
-
-        /* ===== Modal ===== */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.5);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all .3s;
-            padding: 20px;
-        }
-
-        .modal-overlay.show { opacity: 1; visibility: visible; }
-
-        .modal {
-            background: white;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 400px;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 24px;
-            transform: scale(.9);
-            transition: transform .3s;
-        }
-
-        .modal-overlay.show .modal { transform: scale(1); }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-2);
-        }
-
-        .modal-footer {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .modal-footer .form-btn {
-            flex: 1;
-        }
-
-        /* ===== Toast ===== */
-        .toast-container {
-            position: fixed;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-        }
-
-        .toast {
-            background: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: var(--shadow-lg);
-            animation: toastIn .3s ease;
-        }
-
-        .toast.success { border-left: 4px solid var(--green); }
-        .toast.error { border-left: 4px solid var(--red); }
-        .toast.info { border-left: 4px solid var(--blue); }
-
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-12px); }
-            to { opacity: 1; transform: none; }
-        }
-
-        /* ===== Loading ===== */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(255,255,255,.9);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .loading-overlay.active { display: flex; }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin .6s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+        #app { min-height: 100vh; background: var(--bg); }
+        .login-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(135deg, var(--primary-light) 0%, white 100%); }
+        .login-logo { font-size: 64px; margin-bottom: 16px; }
+        .login-title { font-size: 28px; font-weight: 800; color: var(--primary-dark); margin-bottom: 8px; }
+        .login-subtitle { font-size: 14px; color: var(--text-2); margin-bottom: 32px; }
+        .login-card { width: 100%; max-width: 400px; background: white; border-radius: var(--radius); padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+        .order-card-new { border: 2px solid var(--primary) !important; animation: pulseBorder 1s ease-in-out 3; }
+        @keyframes pulseBorder { 0%, 100% { border-color: var(--border); } 50% { border-color: var(--primary); box-shadow: 0 0 20px rgba(255,107,53,.3); } }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .order-id { font-size: 18px; font-weight: 700; color: var(--primary-dark); }
+        .order-time { font-size: 12px; color: var(--text-3); }
+        .order-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+        .order-item:last-child { border-bottom: none; }
+        .order-item-name { font-size: 14px; }
+        .order-item-qty { font-weight: 600; color: var(--primary); }
+        .order-total { font-size: 16px; font-weight: 700; }
+        .order-meta { font-size: 13px; color: var(--text-2); }
+        .order-note { padding: 10px; background: var(--yellow-bg); border-radius: 8px; font-size: 13px; color: var(--text-2); margin-bottom: 12px; }
+        .order-note strong { color: var(--yellow); }
+        .store-status-card { margin-top: 16px; padding: 20px; border-radius: var(--radius); text-align: center; }
+        .store-status-card.online { background: var(--green-bg); }
+        .store-status-card.offline { background: var(--red-bg); }
+        .confirm-mode-options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .confirm-mode-btn { flex: 1; min-width: 100px; padding: 12px; border: 2px solid var(--border); border-radius: 10px; background: white; cursor: pointer; text-align: center; transition: all .2s; }
+        .confirm-mode-btn:hover { border-color: var(--primary); }
+        .confirm-mode-btn.active { border-color: var(--primary); background: var(--primary-light); }
+        .confirm-mode-btn .mode-icon { font-size: 20px; margin-bottom: 4px; }
+        .confirm-mode-btn .mode-name { font-size: 13px; font-weight: 600; color: var(--text); }
+        .confirm-mode-btn .mode-desc { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+        .duration-options { display: flex; gap: 8px; margin-top: 12px; }
+        .duration-btn { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 8px; background: white; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
+        .duration-btn:hover { border-color: var(--primary); }
+        .duration-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary-dark); }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-        .loading-msg {
-            margin-top: 12px;
-            font-size: 13px;
-            color: var(--text-2);
-        }
-
-        /* ===== Empty State ===== */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-3);
-        }
-
-        .empty-state .em-icon { font-size: 48px; margin-bottom: 12px; }
-
-        /* ===== Create Store Form ===== */
-        .create-store-section {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border);
-        }
-
-        .create-store-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        /* ===== Confirm Mode Buttons ===== */
-        .confirm-btn-wrapper {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .confirm-btn-wrapper .order-btn {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Long press progress */
-        .confirm-btn-wrapper .progress-ring {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .confirm-btn-wrapper .progress-ring svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .confirm-btn-wrapper .progress-ring circle {
-            fill: none;
-            stroke: rgba(255,255,255,0.3);
-            stroke-width: 4;
-            stroke-linecap: round;
-            transform: rotate(-90deg);
-            transform-origin: center;
-        }
-
-        .confirm-btn-wrapper .progress-ring .progress {
-            stroke: rgba(255,255,255,0.8);
-            stroke-dasharray: 283;
-            stroke-dashoffset: 283;
-            transition: stroke-dashoffset 1.5s linear;
-        }
-
-        .confirm-btn-wrapper.pressing .progress-ring .progress {
-            stroke-dashoffset: 0;
-        }
-
-        /* Swipe confirm */
-        .confirm-btn-wrapper.swipe-mode {
-            position: relative;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-        }
-
-        .confirm-btn-wrapper.swipe-mode .order-btn {
-            background: transparent !important;
-            color: transparent !important;
-        }
-
-        .confirm-btn-wrapper.swipe-mode .swipe-slider {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            padding-left: 8px;
-            cursor: grab;
-            z-index: 2;
-            background: var(--bg-input);
-            border-radius: 8px;
-            transition: transform 0.1s ease-out;
-        }
-
-        .confirm-btn-wrapper.swipe-mode .swipe-slider .slider-thumb {
-            width: 32px;
-            height: 32px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            flex-shrink: 0;
-        }
-
-        .confirm-btn-wrapper.swipe-mode .swipe-slider .slider-text {
-            flex: 1;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text);
-            padding-right: 40px;
-        }
-
-        .confirm-btn-wrapper.swipe-mode.accept .swipe-slider {
-            background: var(--green);
-        }
-
-        .confirm-btn-wrapper.swipe-mode.prepare .swipe-slider {
-            background: var(--blue);
-        }
-
-        .confirm-btn-wrapper.swipe-mode.complete .swipe-slider {
-            background: var(--primary);
-        }
-
-        .confirm-btn-wrapper.swipe-mode.reject .swipe-slider {
-            background: var(--red);
-        }
-
-        /* Double click */
-        .confirm-btn-wrapper.doubleclick-mode .order-btn.pending-click {
-            background: var(--yellow) !important;
-            animation: pulseBtn 0.3s ease;
-        }
-
-        .confirm-btn-wrapper.doubleclick-mode .order-btn.pending-click.reject {
-            background: var(--red) !important;
-        }
-
-        @keyframes pulseBtn {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        /* Confirm mode settings */
-        .confirm-mode-options {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .confirm-mode-btn {
-            flex: 1;
-            min-width: 100px;
-            padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            background: white;
-            cursor: pointer;
-            text-align: center;
-            transition: all .2s;
-        }
-
-        .confirm-mode-btn:hover {
-            border-color: var(--primary);
-        }
-
-        .confirm-mode-btn.active {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-
-        .confirm-mode-btn .mode-icon {
-            font-size: 20px;
-            margin-bottom: 4px;
-        }
-
-        .confirm-mode-btn .mode-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .confirm-mode-btn .mode-desc {
-            font-size: 11px;
-            color: var(--text-3);
-            margin-top: 2px;
-        }
-
-        /* Duration options */
-        .duration-options {
-            display: flex;
-            gap: 8px;
-        }
-
-        .duration-btn {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: white;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all .2s;
-        }
-
-        .duration-btn:hover {
-            border-color: var(--primary);
-        }
-
-        .duration-btn.active {
-            border-color: var(--primary);
-            background: var(--primary-light);
-            color: var(--primary-dark);
-        }
-
-        /* QuickTap undo progress */
-        .confirm-btn-wrapper.quicktap-mode .undo-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 4px;
-            background: var(--yellow);
-            width: 0;
-            transition: width 2s linear;
-            border-radius: 0 0 8px 8px;
-        }
-
-        .confirm-btn-wrapper.quicktap-mode.undoing .undo-progress {
-            width: 100%;
-        }
-
-        .confirm-btn-wrapper.quicktap-mode .order-btn.undoing {
-            background: var(--yellow) !important;
-        }
+        .recording-indicator { margin-top: 8px; color: var(--red); font-size: 13px; animation: blink 1s infinite; }
+        @media (min-width: 768px) { .van-container { max-width: 600px; margin: 0 auto; } }
+        @media (min-width: 1024px) and (orientation: landscape) { .van-container { max-width: 800px; } }
     </style>
 </head>
 <body>
-    <!-- Login Page -->
-    <div class="login-page" id="loginPage">
-        <div class="login-logo">🏪</div>
-        <h1 class="login-title">NearBite</h1>
-        <p class="login-subtitle" data-i18n="merchant_portal">商家管理后台</p>
-        
-        <div class="login-card">
-            <div class="form-group">
-                <label class="form-label" data-i18n="phone">手机号</label>
-                <input type="tel" class="form-input" id="loginPhone" data-i18n-placeholder="phone_placeholder" placeholder="+64 ...">
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="password">密码</label>
-                <input type="password" class="form-input" id="loginPassword" data-i18n-placeholder="password_placeholder" placeholder="••••••">
-            </div>
-            <button class="form-btn primary" onclick="doLogin()" data-i18n="login_btn">登录</button>
-            
-            <div class="create-store-section" id="createStoreSection" style="display: none;">
-                <h3 class="create-store-title" data-i18n="create_store">创建您的店铺</h3>
-                <div class="form-group">
-                    <label class="form-label" data-i18n="store_name">店铺名称</label>
-                    <input type="text" class="form-input" id="storeName" data-i18n-placeholder="store_name_placeholder" placeholder="我的美食店">
+    <div id="app">
+        <!-- Login Page -->
+        <div class="login-page" v-show="!isLoggedIn">
+            <div class="login-logo">🏪</div>
+            <h1 class="login-title">NearBite</h1>
+            <p class="login-subtitle">{{ t('merchant_portal') }}</p>
+            <div class="login-card">
+                <van-cell-group inset>
+                    <van-field v-model="loginForm.phone" :label="t('phone')" :placeholder="t('phone_placeholder')" type="tel" />
+                    <van-field v-model="loginForm.password" :label="t('password')" :placeholder="t('password_placeholder')" type="password" />
+                </van-cell-group>
+                <div style="padding: 16px;">
+                    <van-button type="primary" size="large" @click="doLogin" :loading="loading">{{ t('login_btn') }}</van-button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" data-i18n="store_type">店铺类型</label>
-                    <select class="form-select" id="storeType">
-                        <option value="food_truck" data-i18n="type_food_truck">餐车</option>
-                        <option value="cafe" data-i18n="type_cafe">咖啡店</option>
-                        <option value="bakery" data-i18n="type_bakery">烘焙店</option>
-                        <option value="restaurant" data-i18n="type_restaurant">餐厅</option>
-                    </select>
+                <div v-if="showCreateStore" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; text-align: center;">{{ t('create_store') }}</h3>
+                    <van-cell-group inset>
+                        <van-field v-model="storeForm.name" :label="t('store_name')" :placeholder="t('store_name_placeholder')" />
+                        <van-field v-model="storeForm.phone" :label="t('store_phone')" type="tel" :placeholder="t('phone_placeholder')" />
+                        <van-field v-model="storeForm.address" :label="t('store_address')" :placeholder="t('store_address_placeholder')" />
+                        <van-field v-model="storeForm.description" :label="t('store_desc')" type="textarea" rows="2" :placeholder="t('store_desc_placeholder')" />
+                    </van-cell-group>
+                    <div style="padding: 16px;">
+                        <van-picker title="" :columns="storeTypeColumns" @change="onStoreTypeChange" />
+                    </div>
+                    <div style="padding: 16px;">
+                        <van-button type="primary" size="large" @click="createStore" :loading="loading">{{ t('create_store_btn') }}</van-button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" data-i18n="store_phone">联系电话</label>
-                    <input type="tel" class="form-input" id="storePhone" placeholder="+64 ...">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" data-i18n="store_address">店铺地址</label>
-                    <input type="text" class="form-input" id="storeAddress" data-i18n-placeholder="store_address_placeholder" placeholder="街道地址">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" data-i18n="store_desc">店铺简介</label>
-                    <textarea class="form-input" id="storeDesc" data-i18n-placeholder="store_desc_placeholder" placeholder="简单介绍一下您的店铺..."></textarea>
-                </div>
-                <button class="form-btn primary" onclick="createStore()" data-i18n="create_store_btn">创建店铺</button>
             </div>
         </div>
+
+        <!-- Main App -->
+        <van-config-provider v-show="isLoggedIn" :theme-vars="themeVars">
+            <van-nav-bar :title="'NearBite'" fixed>
+                <template #right>
+                    <van-button size="small" round @click="toggleLang">{{ currentLang === 'zh' ? 'EN' : '中文' }}</van-button>
+                </template>
+            </van-nav-bar>
+
+            <van-tabbar v-model="activeTab" fixed>
+                <van-tabbar-item name="orders">
+                    <span>{{ t('tab_orders') }}</span>
+                    <template #icon><span>📋</span></template>
+                    <van-badge v-if="pendingOrdersCount > 0" :content="pendingOrdersCount" max="99" />
+                </van-tabbar-item>
+                <van-tabbar-item name="menu"><span>{{ t('tab_menu') }}</span><template #icon><span>📝</span></template></van-tabbar-item>
+                <van-tabbar-item name="store"><span>{{ t('tab_store') }}</span><template #icon><span>🏪</span></template></van-tabbar-item>
+                <van-tabbar-item name="settings"><span>{{ t('tab_settings') }}</span><template #icon><span>⚙️</span></template></van-tabbar-item>
+            </van-tabbar>
+
+            <!-- Orders Page -->
+            <div v-show="activeTab === 'orders'" style="padding-top: 46px; padding-bottom: 70px;">
+                <van-tabs v-model:active="orderFilter" sticky offset-top="46">
+                    <van-tab :title="t('status_pending') + ` (${pendingCount})`" name="pending">
+                        <van-pull-refresh v-model="refreshing" @refresh="loadOrders">
+                            <div style="padding: 12px;">
+                                <template v-if="filteredOrders.length">
+                                    <van-card v-for="order in filteredOrders" :key="order.id" :class="{ 'order-card-new': order.isNew }">
+                                        <template #title>
+                                            <div class="order-header">
+                                                <span class="order-id">#{{ order.id.slice(-6).toUpperCase() }}</span>
+                                                <van-tag type="warning">{{ t('status_' + order.status) }}</van-tag>
+                                            </div>
+                                        </template>
+                                        <template #desc>
+                                            <div style="font-size: 12px; color: var(--text-3); margin-bottom: 8px;">{{ formatTime(order.createdAt) }}</div>
+                                            <div v-for="item in order.items" :key="item.id" class="order-item"><span class="order-item-name">{{ item.name }}</span><span class="order-item-qty">×{{ item.qty }}</span></div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 12px; background: var(--bg-input); border-radius: 8px;">
+                                                <span class="order-meta">{{ order.tableNumber ? t('order_table') + ': ' + order.tableNumber : t('order_pickup') }}</span>
+                                                <span class="order-total">NZD ${{ (order.total || 0).toFixed(2) }}</span>
+                                            </div>
+                                            <div v-if="order.note" class="order-note"><strong>{{ t('order_note') }}:</strong> {{ order.note }}</div>
+                                        </template>
+                                        <template #footer>
+                                            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                                                <van-button type="success" size="large" block @click="handleOrderAction(order.id, 'accepted')">{{ t('order_accept') }}</van-button>
+                                                <van-button type="default" size="large" block @click="confirmReject(order)">{{ t('order_reject') }}</van-button>
+                                            </div>
+                                        </template>
+                                    </van-card>
+                                </template>
+                                <van-empty v-else :description="t('no_orders')" />
+                            </div>
+                        </van-pull-refresh>
+                    </van-tab>
+                    <van-tab :title="t('status_preparing') + ` (${preparingCount})`" name="preparing">
+                        <van-pull-refresh v-model="refreshing" @refresh="loadOrders">
+                            <div style="padding: 12px;">
+                                <template v-if="filteredOrders.length">
+                                    <van-card v-for="order in filteredOrders" :key="order.id">
+                                        <template #title><div class="order-header"><span class="order-id">#{{ order.id.slice(-6).toUpperCase() }}</span><van-tag type="primary">{{ t('status_' + order.status) }}</van-tag></div></template>
+                                        <template #desc>
+                                            <div style="font-size: 12px; color: var(--text-3); margin-bottom: 8px;">{{ formatTime(order.createdAt) }}</div>
+                                            <div v-for="item in order.items" :key="item.id" class="order-item"><span class="order-item-name">{{ item.name }}</span><span class="order-item-qty">×{{ item.qty }}</span></div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 12px; background: var(--bg-input); border-radius: 8px;">
+                                                <span class="order-meta">{{ order.tableNumber ? t('order_table') + ': ' + order.tableNumber : t('order_pickup') }}</span>
+                                                <span class="order-total">NZD ${{ (order.total || 0).toFixed(2) }}</span>
+                                            </div>
+                                        </template>
+                                        <template #footer>
+                                            <van-button v-if="order.status === 'accepted'" type="primary" size="large" block @click="handleOrderAction(order.id, 'preparing')">{{ t('order_prepare') }}</van-button>
+                                            <van-button v-else type="warning" size="large" block @click="handleOrderAction(order.id, 'ready')">{{ t('order_complete') }}</van-button>
+                                        </template>
+                                    </van-card>
+                                </template>
+                                <van-empty v-else :description="t('no_orders')" />
+                            </div>
+                        </van-pull-refresh>
+                    </van-tab>
+                    <van-tab :title="t('status_ready') + ` (${readyCount})`" name="ready">
+                        <van-pull-refresh v-model="refreshing" @refresh="loadOrders">
+                            <div style="padding: 12px;">
+                                <template v-if="filteredOrders.length">
+                                    <van-card v-for="order in filteredOrders" :key="order.id">
+                                        <template #title><div class="order-header"><span class="order-id">#{{ order.id.slice(-6).toUpperCase() }}</span><van-tag type="success">{{ t('status_' + order.status) }}</van-tag></div></template>
+                                        <template #desc>
+                                            <div style="font-size: 12px; color: var(--text-3); margin-bottom: 8px;">{{ formatTime(order.createdAt) }}</div>
+                                            <div v-for="item in order.items" :key="item.id" class="order-item"><span class="order-item-name">{{ item.name }}</span><span class="order-item-qty">×{{ item.qty }}</span></div>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 12px; background: var(--bg-input); border-radius: 8px;">
+                                                <span class="order-meta">{{ order.tableNumber ? t('order_table') + ': ' + order.tableNumber : t('order_pickup') }}</span>
+                                                <span class="order-total">NZD ${{ (order.total || 0).toFixed(2) }}</span>
+                                            </div>
+                                        </template>
+                                    </van-card>
+                                </template>
+                                <van-empty v-else :description="t('no_orders')" />
+                            </div>
+                        </van-pull-refresh>
+                    </van-tab>
+                </van-tabs>
+            </div>
+
+            <!-- Menu Page -->
+            <div v-show="activeTab === 'menu'" style="padding-top: 46px; padding-bottom: 70px;">
+                <div style="padding: 16px;">
+                    <van-button type="primary" size="large" block @click="showAddMenuModal">{{ t('add_item') }} +</van-button>
+                </div>
+                <van-cell-group inset>
+                    <template v-if="menuItems.length">
+                        <van-collapse v-model="activeCategories">
+                            <van-collapse-item v-for="(items, category) in groupedMenuItems" :key="category" :title="category">
+                                <van-cell v-for="item in items" :key="item.id">
+                                    <template #title>
+                                        <div>
+                                            <div style="font-weight: 600;">{{ item.name }}</div>
+                                            <div style="font-size: 12px; color: var(--primary); font-weight: 700;">NZD ${{ item.price.toFixed(2) }}</div>
+                                            <div v-if="item.description" style="font-size: 12px; color: var(--text-2); margin-top: 4px;">{{ item.description }}</div>
+                                        </div>
+                                    </template>
+                                    <template #label>
+                                        <van-switch v-model="item.available" size="20px" @change="toggleItemAvailability(item.id)" />
+                                    </template>
+                                </van-cell>
+                            </van-collapse-item>
+                        </van-collapse>
+                    </template>
+                    <van-empty v-else :description="t('no_menu')" />
+                </van-cell-group>
+            </div>
+
+            <!-- Store Page -->
+            <div v-show="activeTab === 'store'" style="padding-top: 46px; padding-bottom: 70px;">
+                <div style="padding: 16px;" v-if="merchant">
+                    <van-card>
+                        <template #title>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 32px;">{{ merchant.online ? '🟢' : '🔴' }}</span>
+                                <div>
+                                    <div style="font-size: 18px; font-weight: 700;">{{ merchant.name }}</div>
+                                    <div style="font-size: 14px; color: var(--text-2);">{{ t('type_' + merchant.type) }}</div>
+                                </div>
+                            </div>
+                        </template>
+                        <template #desc>
+                            <van-cell-group inset>
+                                <van-cell title="📍" :value="merchant.address || '-'" />
+                                <van-cell title="📞" :value="merchant.phone || '-'" />
+                                <van-cell title="📝" :value="merchant.description || '-'" />
+                            </van-cell-group>
+                            <div class="store-status-card" :class="merchant.online ? 'online' : 'offline'">
+                                <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;" :style="{ color: merchant.online ? 'var(--green)' : 'var(--red)' }">
+                                    {{ merchant.online ? t('store_online') : t('store_offline') }}
+                                </div>
+                                <van-button :type="merchant.online ? 'default' : 'primary'" size="large" @click="toggleStoreStatus">
+                                    {{ merchant.online ? t('store_status_online') : t('store_status_offline') }}
+                                </van-button>
+                            </div>
+                        </template>
+                    </van-card>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div v-show="activeTab === 'settings'" style="padding-top: 46px; padding-bottom: 70px;">
+                <div style="padding: 16px;">
+                    <div style="background: white; border-radius: var(--radius); padding: 16px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 20px;">🔔</span>
+                            <div>
+                                <div style="font-size: 15px; font-weight: 500;">{{ t('custom_sound') }}</div>
+                                <div style="font-size: 12px; color: var(--text-3);">{{ customSoundStatus }}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <van-button size="small" type="primary" @click="previewSound">▶ {{ t('sound_preview') }}</van-button>
+                            <van-button size="small" @click="triggerSoundUpload">📁 {{ t('sound_upload') }}</van-button>
+                            <van-button size="small" @click="toggleRecord" :type="isRecording ? 'danger' : 'default'">🎙 {{ t('sound_record') }}</van-button>
+                            <van-button v-if="customSoundData" size="small" type="warning" @click="resetSound">↩ {{ t('sound_reset') }}</van-button>
+                        </div>
+                        <div v-if="isRecording" class="recording-indicator">● {{ t('sound_recording') }}</div>
+                        <input type="file" ref="soundFileInput" accept="audio/*" @change="uploadSound" style="display: none;">
+                    </div>
+                    <div style="background: white; border-radius: var(--radius); padding: 16px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 20px;">🔒</span>
+                            <div>
+                                <div style="font-size: 15px; font-weight: 500;">{{ t('confirm_mode') }}</div>
+                                <div style="font-size: 12px; color: var(--text-3);">{{ t('confirm_' + confirmMode + '_desc') }}</div>
+                            </div>
+                        </div>
+                        <div class="confirm-mode-options">
+                            <div class="confirm-mode-btn" :class="{ active: confirmMode === 'quicktap' }" @click="setConfirmMode('quicktap')"><div class="mode-icon">✅</div><div class="mode-name">{{ t('confirm_quicktap') }}</div><div class="mode-desc">{{ t('confirm_quicktap_desc') }}</div></div>
+                            <div class="confirm-mode-btn" :class="{ active: confirmMode === 'longpress' }" @click="setConfirmMode('longpress')"><div class="mode-icon">👆</div><div class="mode-name">{{ t('confirm_longpress') }}</div><div class="mode-desc">{{ t('confirm_longpress_desc') }}</div></div>
+                            <div class="confirm-mode-btn" :class="{ active: confirmMode === 'swipe' }" @click="setConfirmMode('swipe')"><div class="mode-icon">👉</div><div class="mode-name">{{ t('confirm_swipe') }}</div><div class="mode-desc">{{ t('confirm_swipe_desc') }}</div></div>
+                            <div class="confirm-mode-btn" :class="{ active: confirmMode === 'doubleclick' }" @click="setConfirmMode('doubleclick')"><div class="mode-icon">👆👆</div><div class="mode-name">{{ t('confirm_doubleclick') }}</div><div class="mode-desc">{{ t('confirm_doubleclick_desc') }}</div></div>
+                        </div>
+                        <div v-if="confirmMode === 'longpress'" class="duration-options">
+                            <div class="duration-btn" :class="{ active: longpressDuration === 500 }" @click="setLongpressDuration(500)">0.5s</div>
+                            <div class="duration-btn" :class="{ active: longpressDuration === 1000 }" @click="setLongpressDuration(1000)">1s</div>
+                            <div class="duration-btn" :class="{ active: longpressDuration === 1500 }" @click="setLongpressDuration(1500)">1.5s</div>
+                            <div class="duration-btn" :class="{ active: longpressDuration === 2000 }" @click="setLongpressDuration(2000)">2s</div>
+                        </div>
+                    </div>
+                    <van-cell-group inset>
+                        <van-cell title="📺" :label="t('kitchen_mode_desc')" is-link @click="switchToKitchen"><template #title><span>{{ t('kitchen_mode') }}</span></template></van-cell>
+                        <van-cell title="🚪" is-link @click="logout"><template #title><span style="color: var(--red);">{{ t('logout') }}</span></template></van-cell>
+                    </van-cell-group>
+                </div>
+            </div>
+        </van-config-provider>
+
+        <!-- Menu Modal -->
+        <van-popup v-model:show="showMenuModal" position="bottom" round>
+            <van-cell-group inset>
+                <van-field v-model="menuForm.name" :label="t('item_name')" :placeholder="t('item_name')" />
+                <van-field v-model="menuForm.price" :label="t('item_price')" type="number" placeholder="0.00" />
+                <van-field v-model="menuForm.category" :label="t('item_category')" :placeholder="t('item_category')" />
+                <van-field v-model="menuForm.description" :label="t('item_desc')" type="textarea" rows="2" :placeholder="t('item_desc')" />
+            </van-cell-group>
+            <div style="padding: 16px; display: flex; gap: 12px;">
+                <van-button size="large" @click="showMenuModal = false">{{ t('cancel') }}</van-button>
+                <van-button size="large" type="primary" @click="saveMenuItem">{{ t('save') }}</van-button>
+            </div>
+        </van-popup>
+
+        <van-overlay :show="loading">
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                <van-loading size="48px" vertical>{{ loadingText }}</van-loading>
+            </div>
+        </van-overlay>
     </div>
 
-    <!-- Main App -->
-    <div class="app-container" id="appContainer">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-left">
-                <span class="header-logo">🏪</span>
-                <span class="header-brand">NearBite</span>
-            </div>
-            <div class="header-right">
-                <button class="lang-btn" id="langBtn" onclick="toggleLang()">中文</button>
-            </div>
-        </header>
-
-        <!-- Orders Page -->
-        <div class="page-content active" id="ordersPage">
-            <div class="status-bar" id="statusBar">
-                <div class="status-card pending active" data-status="pending" onclick="filterOrders('pending')">
-                    <div class="status-card-count" id="pendingCount">0</div>
-                    <div class="status-card-label" data-i18n="status_pending">待接单</div>
-                </div>
-                <div class="status-card preparing" data-status="preparing" onclick="filterOrders('preparing')">
-                    <div class="status-card-count" id="preparingCount">0</div>
-                    <div class="status-card-label" data-i18n="status_preparing">制作中</div>
-                </div>
-                <div class="status-card ready" data-status="ready" onclick="filterOrders('ready')">
-                    <div class="status-card-count" id="readyCount">0</div>
-                    <div class="status-card-label" data-i18n="status_ready">已完成</div>
-                </div>
-            </div>
-            <div class="order-list" id="orderList"></div>
-        </div>
-
-        <!-- Menu Page -->
-        <div class="page-content" id="menuPage">
-            <div class="menu-header">
-                <h3 class="menu-title" data-i18n="menu_management">菜单管理</h3>
-                <button class="add-menu-btn" onclick="showAddMenuModal()" data-i18n="add_item">+ 添加菜品</button>
-            </div>
-            <div id="menuList"></div>
-        </div>
-
-        <!-- Store Page -->
-        <div class="page-content" id="storePage">
-            <div class="store-card" id="storeCard"></div>
-        </div>
-
-        <!-- Settings Page -->
-        <div class="page-content" id="settingsPage">
-            <!-- 提示音设置 -->
-            <div class="settings-group">
-                <div class="settings-item" style="flex-direction:column;align-items:stretch;cursor:default">
-                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-                        <span class="settings-item-icon">🔔</span>
-                        <div class="settings-item-text">
-                            <div class="settings-item-label" data-i18n="custom_sound">订单提示音</div>
-                            <div class="settings-item-desc" id="soundStatus" data-i18n="sound_default">使用默认提示音</div>
-                        </div>
-                    </div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap">
-                        <button class="sound-btn" onclick="previewSound()" style="background:var(--primary);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer">
-                            ▶ <span data-i18n="sound_preview">试听</span>
-                        </button>
-                        <label class="sound-btn" style="background:var(--bg-input);color:var(--text);border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
-                            📁 <span data-i18n="sound_upload">上传音频</span>
-                            <input type="file" accept="audio/*" onchange="uploadSound(this)" style="display:none">
-                        </label>
-                        <button class="sound-btn" id="recordBtn" onclick="toggleRecord()" style="background:var(--bg-input);color:var(--text);border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer">
-                            🎙 <span data-i18n="sound_record">录音</span>
-                        </button>
-                        <button class="sound-btn" id="resetSoundBtn" onclick="resetSound()" style="background:var(--bg-input);color:var(--red);border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer;display:none">
-                            ↩ <span data-i18n="sound_reset">恢复默认</span>
-                        </button>
-                    </div>
-                    <div id="recordingIndicator" style="display:none;margin-top:8px;color:var(--red);font-size:13px;animation:blink 1s infinite">
-                        ● <span data-i18n="sound_recording">录音中...点击停止</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="settings-group">
-                <div class="settings-item" style="flex-direction:column;align-items:stretch;cursor:default">
-                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-                        <span class="settings-item-icon">🔒</span>
-                        <div class="settings-item-text">
-                            <div class="settings-item-label" data-i18n="confirm_mode">操作确认方式</div>
-                            <div class="settings-item-desc" id="confirmModeDesc" data-i18n="confirm_quicktap_desc">点击确认，长按回退</div>
-                        </div>
-                    </div>
-                    <div class="confirm-mode-options">
-                        <div class="confirm-mode-btn active" data-mode="quicktap" onclick="setConfirmMode('quicktap')">
-                            <div class="mode-icon">✅</div>
-                            <div class="mode-name" data-i18n="confirm_quicktap">一键通过</div>
-                            <div class="mode-desc" data-i18n="confirm_quicktap_desc">点击确认，长按回退</div>
-                        </div>
-                        <div class="confirm-mode-btn" data-mode="longpress" onclick="setConfirmMode('longpress')">
-                            <div class="mode-icon">👆</div>
-                            <div class="mode-name" data-i18n="confirm_longpress">长按确认</div>
-                            <div class="mode-desc" data-i18n="confirm_longpress_desc">按住1.5秒确认</div>
-                        </div>
-                        <div class="confirm-mode-btn" data-mode="swipe" onclick="setConfirmMode('swipe')">
-                            <div class="mode-icon">👉</div>
-                            <div class="mode-name" data-i18n="confirm_swipe">滑动确认</div>
-                            <div class="mode-desc" data-i18n="confirm_swipe_desc">滑动到底确认</div>
-                        </div>
-                        <div class="confirm-mode-btn" data-mode="doubleclick" onclick="setConfirmMode('doubleclick')">
-                            <div class="mode-icon">👆👆</div>
-                            <div class="mode-name" data-i18n="confirm_doubleclick">二次点击</div>
-                            <div class="mode-desc" data-i18n="confirm_doubleclick_desc">点两次确认</div>
-                        </div>
-                    </div>
-                    <!-- 长按时长选择器 -->
-                    <div id="longpressDurationSetting" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-                        <div style="font-size:13px;color:var(--text-2);margin-bottom:8px" data-i18n="longpress_duration">长按时长</div>
-                        <div class="duration-options">
-                            <div class="duration-btn" data-duration="500" onclick="setLongpressDuration(500)">0.5s</div>
-                            <div class="duration-btn" data-duration="1000" onclick="setLongpressDuration(1000)">1s</div>
-                            <div class="duration-btn active" data-duration="1500" onclick="setLongpressDuration(1500)">1.5s</div>
-                            <div class="duration-btn" data-duration="2000" onclick="setLongpressDuration(2000)">2s</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="settings-group">
-                <div class="settings-item" onclick="switchToKitchen()">
-                    <span class="settings-item-icon">📺</span>
-                    <div class="settings-item-text">
-                        <div class="settings-item-label" data-i18n="kitchen_mode">厨房挂屏模式</div>
-                        <div class="settings-item-desc" data-i18n="kitchen_mode_desc">适合厨房大屏显示</div>
-                    </div>
-                    <span class="settings-item-arrow">›</span>
-                </div>
-            </div>
-            <div class="settings-group">
-                <div class="settings-item" onclick="logout()">
-                    <span class="settings-item-icon">🚪</span>
-                    <div class="settings-item-text">
-                        <div class="settings-item-label" data-i18n="logout">退出登录</div>
-                    </div>
-                    <span class="settings-item-arrow">›</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab Bar -->
-        <div class="tab-bar">
-            <div class="tab-item active" data-page="orders" onclick="switchPage('orders')">
-                <span class="tab-icon">📋</span>
-                <span class="tab-label" data-i18n="tab_orders">订单</span>
-                <span class="tab-badge hidden" id="ordersBadge">0</span>
-            </div>
-            <div class="tab-item" data-page="menu" onclick="switchPage('menu')">
-                <span class="tab-icon">📝</span>
-                <span class="tab-label" data-i18n="tab_menu">菜单</span>
-            </div>
-            <div class="tab-item" data-page="store" onclick="switchPage('store')">
-                <span class="tab-icon">🏪</span>
-                <span class="tab-label" data-i18n="tab_store">店铺</span>
-            </div>
-            <div class="tab-item" data-page="settings" onclick="switchPage('settings')">
-                <span class="tab-icon">⚙️</span>
-                <span class="tab-label" data-i18n="tab_settings">设置</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Menu Modal -->
-    <div class="modal-overlay" id="menuModal" onclick="closeMenuModal(event)">
-        <div class="modal" onclick="event.stopPropagation()">
-            <div class="modal-title">
-                <span id="menuModalTitle" data-i18n="add_item">添加菜品</span>
-                <button class="modal-close" onclick="closeMenuModal()">✕</button>
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="item_name">菜品名称</label>
-                <input type="text" class="form-input" id="itemName" placeholder="菜品名称">
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="item_price">价格 (NZD)</label>
-                <input type="number" class="form-input" id="itemPrice" placeholder="0.00" step="0.01">
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="item_category">分类</label>
-                <input type="text" class="form-input" id="itemCategory" placeholder="主菜/饮品/甜点...">
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="item_desc">描述</label>
-                <textarea class="form-input" id="itemDesc" placeholder="简单描述..."></textarea>
-            </div>
-            <div class="modal-footer">
-                <button class="form-btn secondary" onclick="closeMenuModal()" data-i18n="cancel">取消</button>
-                <button class="form-btn primary" onclick="saveMenuItem()" data-i18n="save">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div class="loading-msg" id="loadingMsg">Loading...</div>
-    </div>
-
-    <!-- Toast -->
-    <div class="toast-container" id="toastBox"></div>
-
+    <script src="https://fastly.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
     <script>
-    /* ===== i18n ===== */
-    const LANG = {
-        zh: {
-            merchant_portal: '商家管理后台',
-            phone: '手机号',
-            password: '密码',
-            phone_placeholder: '+64 ...',
-            password_placeholder: '••••••',
-            login_btn: '登录',
-            login_success: '登录成功',
-            login_failed: '登录失败',
-            create_store: '创建您的店铺',
-            store_name: '店铺名称',
-            store_name_placeholder: '我的美食店',
-            store_type: '店铺类型',
-            store_phone: '联系电话',
-            store_address: '店铺地址',
-            store_address_placeholder: '街道地址',
-            store_desc: '店铺简介',
-            store_desc_placeholder: '简单介绍一下您的店铺...',
-            create_store_btn: '创建店铺',
-            store_created: '店铺创建成功',
-            store_create_failed: '创建店铺失败',
-            status_pending: '待接单',
-            status_accepted: '已接单',
-            status_preparing: '制作中',
-            status_ready: '已完成',
-            status_picked_up: '已取餐',
-            status_rejected: '已拒绝',
-            tab_orders: '订单',
-            tab_menu: '菜单',
-            tab_store: '店铺',
-            tab_settings: '设置',
-            menu_management: '菜单管理',
-            add_item: '添加菜品',
-            item_name: '菜品名称',
-            item_price: '价格 (NZD)',
-            item_category: '分类',
-            item_desc: '描述',
-            cancel: '取消',
-            save: '保存',
-            item_saved: '菜品已保存',
-            item_deleted: '菜品已删除',
-            confirm_delete: '确定删除此菜品？',
-            order_accept: '接单',
-            order_prepare: '开始制作',
-            order_complete: '完成',
-            order_reject: '拒绝',
-            order_total: '合计',
-            order_note: '备注',
-            order_table: '桌号',
-            order_pickup: '自取',
-            order_new: '新订单！',
-            store_online: '营业中',
-            store_offline: '已打烊',
-            store_status_online: '点击打烊',
-            store_status_offline: '点击营业',
-            kitchen_mode: '厨房挂屏模式',
-            kitchen_mode_desc: '适合厨房大屏显示',
-            logout: '退出登录',
-            logout_success: '已退出登录',
-            no_orders: '暂无订单',
-            no_menu: '暂无菜单，点击添加菜品',
-            type_food_truck: '餐车',
-            type_cafe: '咖啡店',
-            type_bakery: '烘焙店',
-            type_restaurant: '餐厅',
-            network_error: '网络错误，请重试',
-            session_expired: '登录已过期，请重新登录',
-            sse_connected: '实时连接已建立',
-            sse_disconnected: '连接断开，正在重连...',
-            confirm_action: '确认操作',
-            custom_sound: '订单提示音',
-            sound_default: '使用默认提示音',
-            sound_custom: '使用自定义提示音',
-            sound_preview: '试听',
-            sound_upload: '上传音频',
-            sound_record: '录音',
-            sound_reset: '恢复默认',
-            sound_recording: '录音中...点击停止',
-            sound_uploaded: '提示音已更新！',
-            sound_recorded: '录音已保存为提示音！',
-            sound_restored: '已恢复默认提示音',
-            sound_too_large: '文件太大，请选择小于1MB的音频',
-            sound_mic_error: '无法访问麦克风',
-            confirm_mode: '操作确认方式',
-            confirm_longpress: '长按确认',
-            confirm_swipe: '滑动确认',
-            confirm_doubleclick: '二次点击',
-            confirm_longpress_desc: '按住1.5秒确认',
-            confirm_swipe_desc: '滑动到底确认',
-            confirm_doubleclick_desc: '点两次确认',
-            confirm_prompt: '确认？',
-            slide_to_confirm: '滑动确认',
-            confirm_quicktap: '一键通过',
-            confirm_quicktap_desc: '点击确认，长按回退',
-            longpress_duration: '长按时长',
-            undo_action: '回退',
-            undoing: '回退中...'
-        },
-        en: {
-            merchant_portal: 'Merchant Portal',
-            phone: 'Phone',
-            password: 'Password',
-            phone_placeholder: '+64 ...',
-            password_placeholder: '••••••',
-            login_btn: 'Login',
-            login_success: 'Login successful',
-            login_failed: 'Login failed',
-            create_store: 'Create Your Store',
-            store_name: 'Store Name',
-            store_name_placeholder: 'My Food Store',
-            store_type: 'Store Type',
-            store_phone: 'Contact Phone',
-            store_address: 'Store Address',
-            store_address_placeholder: 'Street address',
-            store_desc: 'Store Description',
-            store_desc_placeholder: 'Brief description...',
-            create_store_btn: 'Create Store',
-            store_created: 'Store created successfully',
-            store_create_failed: 'Failed to create store',
-            status_pending: 'Pending',
-            status_accepted: 'Accepted',
-            status_preparing: 'Preparing',
-            status_ready: 'Ready',
-            status_picked_up: 'Picked Up',
-            status_rejected: 'Rejected',
-            tab_orders: 'Orders',
-            tab_menu: 'Menu',
-            tab_store: 'Store',
-            tab_settings: 'Settings',
-            menu_management: 'Menu Management',
-            add_item: 'Add Item',
-            item_name: 'Item Name',
-            item_price: 'Price (NZD)',
-            item_category: 'Category',
-            item_desc: 'Description',
-            cancel: 'Cancel',
-            save: 'Save',
-            item_saved: 'Item saved',
-            item_deleted: 'Item deleted',
-            confirm_delete: 'Delete this item?',
-            order_accept: 'Accept',
-            order_prepare: 'Prepare',
-            order_complete: 'Complete',
-            order_reject: 'Reject',
-            order_total: 'Total',
-            order_note: 'Note',
-            order_table: 'Table',
-            order_pickup: 'Pickup',
-            order_new: 'New Order!',
-            store_online: 'Online',
-            store_offline: 'Offline',
-            store_status_online: 'Tap to close',
-            store_status_offline: 'Tap to open',
-            kitchen_mode: 'Kitchen Display Mode',
-            kitchen_mode_desc: 'For kitchen screen display',
-            logout: 'Logout',
-            logout_success: 'Logged out',
-            no_orders: 'No orders',
-            no_menu: 'No menu items, tap to add',
-            type_food_truck: 'Food Truck',
-            type_cafe: 'Cafe',
-            type_bakery: 'Bakery',
-            type_restaurant: 'Restaurant',
-            network_error: 'Network error, please retry',
-            session_expired: 'Session expired, please login again',
-            sse_connected: 'Real-time connected',
-            sse_disconnected: 'Disconnected, reconnecting...',
-            confirm_action: 'Confirm',
-            custom_sound: 'Order Alert Sound',
-            sound_default: 'Using default alert',
-            sound_custom: 'Using custom alert',
-            sound_preview: 'Preview',
-            sound_upload: 'Upload Audio',
-            sound_record: 'Record',
-            sound_reset: 'Reset Default',
-            sound_recording: 'Recording...tap to stop',
-            sound_uploaded: 'Alert sound updated!',
-            sound_recorded: 'Recording saved as alert!',
-            sound_restored: 'Default alert restored',
-            sound_too_large: 'File too large, max 1MB',
-            sound_mic_error: 'Cannot access microphone',
-            confirm_mode: 'Confirm Mode',
-            confirm_longpress: 'Long Press',
-            confirm_swipe: 'Swipe',
-            confirm_doubleclick: 'Double Click',
-            confirm_longpress_desc: 'Hold 1.5s to confirm',
-            confirm_swipe_desc: 'Slide to confirm',
-            confirm_doubleclick_desc: 'Tap twice to confirm',
-            confirm_prompt: 'Confirm?',
-            slide_to_confirm: 'Slide to confirm',
-            confirm_quicktap: 'Quick Tap',
-            confirm_quicktap_desc: 'Tap to confirm, hold to undo',
-            longpress_duration: 'Hold Duration',
-            undo_action: 'Undo',
-            undoing: 'Undoing...'
-        }
-    };
-
-    let currentLang = localStorage.getItem('lang') || 'zh';
-
-    function t(key, vars) {
-        let s = (LANG[currentLang] && LANG[currentLang][key]) || (LANG.zh[key]) || key;
-        if (vars) Object.keys(vars).forEach(k => s = s.replace('{' + k + '}', vars[k]));
-        return s;
-    }
-
-    function applyLang() {
-        document.getElementById('langBtn').textContent = currentLang === 'zh' ? '中文' : 'EN';
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            el.textContent = t(el.dataset.i18n);
-        });
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-            el.placeholder = t(el.dataset.i18nPlaceholder);
-        });
-    }
-
-    function toggleLang() {
-        currentLang = currentLang === 'zh' ? 'en' : 'zh';
-        localStorage.setItem('lang', currentLang);
-        applyLang();
-        renderStore();
-        renderMenu();
-    }
-
-    /* ===== State ===== */
-    let token = localStorage.getItem('token');
-    let user = null;
-    let merchant = null;
-    let orders = [];
-    let menuItems = [];
-    let currentFilter = 'pending';
-    let editingItem = null;
-    let sseConnection = null;
-    let audioCtx = null;
-
-    /* ===== Toast & Loading ===== */
-    function toast(msg, type) {
-        type = type || 'info';
-        const el = document.createElement('div');
-        el.className = 'toast ' + type;
-        el.textContent = msg;
-        document.getElementById('toastBox').appendChild(el);
-        setTimeout(() => el.remove(), 3000);
-    }
-
-    function showLoading(msg) {
-        document.getElementById('loadingMsg').textContent = msg || '...';
-        document.getElementById('loadingOverlay').classList.add('active');
-    }
-
-    function hideLoading() {
-        document.getElementById('loadingOverlay').classList.remove('active');
-    }
-
-    /* ===== Audio & Custom Sound ===== */
-    let customSoundData = localStorage.getItem('customAlertSound'); // base64 data URL
-    let mediaRecorder = null;
-    let recordingChunks = [];
-
-    function updateSoundUI() {
-        const status = document.getElementById('soundStatus');
-        const resetBtn = document.getElementById('resetSoundBtn');
-        if (customSoundData) {
-            if (status) status.textContent = t('sound_custom');
-            if (resetBtn) resetBtn.style.display = 'inline-flex';
-        } else {
-            if (status) status.textContent = t('sound_default');
-            if (resetBtn) resetBtn.style.display = 'none';
-        }
-    }
-
-    /* ===== Confirm Mode ===== */
-    function getConfirmMode() {
-        return localStorage.getItem('confirmMode') || 'quicktap';
-    }
-
-    function getLongpressDuration() {
-        return parseInt(localStorage.getItem('longpressDuration')) || 1500;
-    }
-
-    function setConfirmMode(mode) {
-        localStorage.setItem('confirmMode', mode);
-        document.querySelectorAll('.confirm-mode-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
-        const desc = document.getElementById('confirmModeDesc');
-        if (desc) {
-            desc.textContent = t('confirm_' + mode + '_desc');
-        }
-        
-        // Show/hide longpress duration setting
-        const durationSetting = document.getElementById('longpressDurationSetting');
-        if (durationSetting) {
-            durationSetting.style.display = mode === 'longpress' ? 'block' : 'none';
-        }
-    }
-
-    function setLongpressDuration(duration) {
-        localStorage.setItem('longpressDuration', duration);
-        document.querySelectorAll('.duration-btn').forEach(btn => {
-            btn.classList.toggle('active', parseInt(btn.dataset.duration) === duration);
-        });
-    }
-
-    function initConfirmModeUI() {
-        const mode = getConfirmMode();
-        document.querySelectorAll('.confirm-mode-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
-        const desc = document.getElementById('confirmModeDesc');
-        if (desc) {
-            desc.textContent = t('confirm_' + mode + '_desc');
-        }
-        
-        // Show/hide longpress duration setting
-        const durationSetting = document.getElementById('longpressDurationSetting');
-        if (durationSetting) {
-            durationSetting.style.display = mode === 'longpress' ? 'block' : 'none';
-        }
-        
-        // Init duration buttons
-        const duration = getLongpressDuration();
-        document.querySelectorAll('.duration-btn').forEach(btn => {
-            btn.classList.toggle('active', parseInt(btn.dataset.duration) === duration);
-        });
-    }
-
-    // Pending clicks for double-click mode
-    let pendingClicks = {};
-
-    function confirmAction(wrapper, orderId, status, btnClass) {
-        const mode = getConfirmMode();
-        const btn = wrapper.querySelector('.order-btn');
-
-        if (mode === 'longpress') {
-            setupLongPress(wrapper, btn, orderId, status);
-        } else if (mode === 'swipe') {
-            setupSwipe(wrapper, btn, orderId, status, btnClass);
-        } else if (mode === 'doubleclick') {
-            setupDoubleClick(btn, orderId, status);
-        } else if (mode === 'quicktap') {
-            setupQuickTap(wrapper, btn, orderId, status, btnClass);
-        } else {
-            // Fallback: direct action
-            executeOrderUpdate(orderId, status);
-        }
-    }
-
-    function setupLongPress(wrapper, btn, orderId, status) {
-        let timer = null;
-        let isPressed = false;
-        const duration = getLongpressDuration();
-
-        // Add progress ring if not exists
-        if (!wrapper.querySelector('.progress-ring')) {
-            const ring = document.createElement('div');
-            ring.className = 'progress-ring';
-            ring.innerHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/><circle class="progress" cx="50" cy="50" r="45"/></svg>';
-            wrapper.appendChild(ring);
-        }
-
-        // Update progress ring animation duration
-        const progressCircle = wrapper.querySelector('.progress-ring .progress');
-        if (progressCircle) {
-            progressCircle.style.transition = `stroke-dashoffset ${duration}ms linear`;
-        }
-
-        const onDown = (e) => {
-            e.preventDefault();
-            isPressed = true;
-            wrapper.classList.add('pressing');
-            timer = setTimeout(() => {
-                if (isPressed) {
-                    executeOrderUpdate(orderId, status);
-                }
-            }, duration);
-        };
-
-        const onUp = () => {
-            isPressed = false;
-            wrapper.classList.remove('pressing');
-            if (timer) {
-                clearTimeout(timer);
-                timer = null;
-            }
-        };
-
-        btn.addEventListener('mousedown', onDown);
-        btn.addEventListener('touchstart', onDown, { passive: false });
-        btn.addEventListener('mouseup', onUp);
-        btn.addEventListener('touchend', onUp);
-        btn.addEventListener('mouseleave', onUp);
-        btn.addEventListener('touchcancel', onUp);
-    }
-
-    // Status undo mapping
-    const STATUS_UNDO_MAP = {
-        'accepted': 'pending',
-        'preparing': 'accepted',
-        'ready': 'preparing'
-    };
-
-    function setupQuickTap(wrapper, btn, orderId, status, btnClass) {
-        wrapper.classList.add('quicktap-mode');
-        
-        let undoTimer = null;
-        let isHolding = false;
-        const undoDuration = 2000;
-
-        // Add undo progress bar if not exists
-        if (!wrapper.querySelector('.undo-progress')) {
-            const progress = document.createElement('div');
-            progress.className = 'undo-progress';
-            wrapper.appendChild(progress);
-        }
-
-        const onClick = (e) => {
-            if (isHolding) return;
-            e.preventDefault();
-            // Quick tap - execute action
-            executeOrderUpdate(orderId, status);
-        };
-
-        const onDown = (e) => {
-            isHolding = false;
-            undoTimer = setTimeout(() => {
-                isHolding = true;
-                // Start undo animation
-                wrapper.classList.add('undoing');
-                btn.classList.add('undoing');
-                const originalText = btn.textContent;
-                btn.textContent = t('undoing');
-            }, 300);
-        };
-
-        const onUp = () => {
-            if (undoTimer) {
-                clearTimeout(undoTimer);
-                undoTimer = null;
-            }
-            
-            if (isHolding) {
-                // Held long enough - perform undo
-                const previousStatus = STATUS_UNDO_MAP[status];
-                if (previousStatus) {
-                    executeOrderUpdate(orderId, previousStatus);
-                }
-            }
-            
-            // Reset state
-            wrapper.classList.remove('undoing');
-            btn.classList.remove('undoing');
-            isHolding = false;
-        };
-
-        btn.addEventListener('click', onClick);
-        btn.addEventListener('mousedown', onDown);
-        btn.addEventListener('touchstart', onDown, { passive: true });
-        btn.addEventListener('mouseup', onUp);
-        btn.addEventListener('touchend', onUp);
-        btn.addEventListener('mouseleave', onUp);
-        btn.addEventListener('touchcancel', onUp);
-    }
-
-    function setupSwipe(wrapper, btn, orderId, status, btnClass) {
-        wrapper.classList.add('swipe-mode', btnClass);
-
-        // Create slider if not exists
-        if (!wrapper.querySelector('.swipe-slider')) {
-            const slider = document.createElement('div');
-            slider.className = 'swipe-slider';
-            slider.innerHTML = '<div class="slider-thumb">→</div><span class="slider-text">' + t('slide_to_confirm') + '</span>';
-            wrapper.appendChild(slider);
-
-            let startX = 0;
-            let currentX = 0;
-            const maxDistance = wrapper.offsetWidth - 40; // 40 = thumb width
-
-            const onTouchStart = (e) => {
-                startX = e.touches ? e.touches[0].clientX : e.clientX;
-                slider.style.transition = 'none';
-            };
-
-            const onTouchMove = (e) => {
-                const x = e.touches ? e.touches[0].clientX : e.clientX;
-                const diff = Math.max(0, Math.min(maxDistance, x - startX));
-                currentX = diff;
-                slider.style.transform = `translateX(${diff}px)`;
-            };
-
-            const onTouchEnd = () => {
-                slider.style.transition = 'transform 0.2s ease';
-                const threshold = maxDistance * 0.8;
-
-                if (currentX >= threshold) {
-                    // Completed - execute action
-                    executeOrderUpdate(orderId, status);
-                } else {
-                    // Not enough - bounce back
-                    slider.style.transform = 'translateX(0)';
-                }
-                currentX = 0;
-            };
-
-            slider.addEventListener('touchstart', onTouchStart, { passive: true });
-            slider.addEventListener('touchmove', onTouchMove, { passive: true });
-            slider.addEventListener('touchend', onTouchEnd);
-            slider.addEventListener('mousedown', (e) => {
-                onTouchStart(e);
-                document.addEventListener('mousemove', onTouchMove);
-                document.addEventListener('mouseup', function onUp() {
-                    onTouchEnd();
-                    document.removeEventListener('mousemove', onTouchMove);
-                    document.removeEventListener('mouseup', onUp);
-                });
-            });
-        }
-    }
-
-    function setupDoubleClick(btn, orderId, status) {
-        const wrapper = btn.closest('.confirm-btn-wrapper');
-        if (!wrapper) return;
-
-        wrapper.classList.add('doubleclick-mode');
-
-        const key = orderId + '_' + status;
-
-        if (pendingClicks[key]) {
-            // Second click - execute
-            clearTimeout(pendingClicks[key].timer);
-            delete pendingClicks[key];
-            executeOrderUpdate(orderId, status);
-        } else {
-            // First click - show pending state
-            btn.classList.add('pending-click');
-            const originalText = btn.textContent;
-            btn.textContent = t('confirm_prompt');
-
-            const timer = setTimeout(() => {
-                // Timeout - reset
-                btn.classList.remove('pending-click');
-                btn.textContent = originalText;
-                delete pendingClicks[key];
-            }, 3000);
-
-            pendingClicks[key] = { timer, originalText };
-        }
-    }
-
-    async function executeOrderUpdate(orderId, status) {
-        try {
-            await apiCall('/orders/' + orderId + '/status', {
-                method: 'PATCH',
-                body: JSON.stringify({ status })
-            });
-
-            const order = orders.find(o => o.id === orderId);
-            if (order) {
-                order.status = status;
-            }
-
-            renderOrders();
-            updateOrderCounts();
-            toast(t('confirm_action'), 'success');
-        } catch (e) {
-            toast(e.message, 'error');
-        }
-    }
-
-    function playDefaultBeep() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1);
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-        osc.start(audioCtx.currentTime);
-        osc.stop(audioCtx.currentTime + 0.4);
-    }
-
-    function playNotificationSound() {
-        try {
-            if (customSoundData) {
-                const audio = new Audio(customSoundData);
-                audio.volume = 0.7;
-                audio.play().catch(() => playDefaultBeep());
-            } else {
-                playDefaultBeep();
-            }
-        } catch (e) {
-            console.log('Audio not supported');
-        }
-    }
-
-    function previewSound() {
-        playNotificationSound();
-    }
-
-    function uploadSound(input) {
-        const file = input.files[0];
-        if (!file) return;
-        if (file.size > 1024 * 1024) {
-            toast(t('sound_too_large'), 'error');
-            input.value = '';
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            customSoundData = e.target.result;
-            localStorage.setItem('customAlertSound', customSoundData);
-            updateSoundUI();
-            toast(t('sound_uploaded'), 'success');
-            // 试听一下
-            playNotificationSound();
-        };
-        reader.readAsDataURL(file);
-        input.value = '';
-    }
-
-    function toggleRecord() {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            // 停止录音
-            mediaRecorder.stop();
-            document.getElementById('recordingIndicator').style.display = 'none';
-            document.getElementById('recordBtn').style.background = 'var(--bg-input)';
-            return;
-        }
-        // 开始录音
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-            recordingChunks = [];
-            mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.ondataavailable = function(e) {
-                recordingChunks.push(e.data);
-            };
-            mediaRecorder.onstop = function() {
-                stream.getTracks().forEach(function(t) { t.stop(); });
-                const blob = new Blob(recordingChunks, { type: 'audio/webm' });
-                if (blob.size > 1024 * 1024) {
-                    toast(t('sound_too_large'), 'error');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    customSoundData = ev.target.result;
-                    localStorage.setItem('customAlertSound', customSoundData);
-                    updateSoundUI();
-                    toast(t('sound_recorded'), 'success');
-                    playNotificationSound();
-                };
-                reader.readAsDataURL(blob);
-            };
-            mediaRecorder.start();
-            document.getElementById('recordingIndicator').style.display = 'block';
-            document.getElementById('recordBtn').style.background = 'var(--red)';
-            document.getElementById('recordBtn').style.color = '#fff';
-            // 最长10秒自动停止
-            setTimeout(function() {
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                    document.getElementById('recordingIndicator').style.display = 'none';
-                    document.getElementById('recordBtn').style.background = 'var(--bg-input)';
-                    document.getElementById('recordBtn').style.color = 'var(--text)';
-                }
-            }, 10000);
-        }).catch(function() {
-            toast(t('sound_mic_error'), 'error');
-        });
-    }
-
-    function resetSound() {
-        customSoundData = null;
-        localStorage.removeItem('customAlertSound');
-        updateSoundUI();
-        toast(t('sound_restored'), 'info');
-    }
-
-    /* ===== API ===== */
-    async function apiCall(endpoint, options) {
-        options = options || {};
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-
-        try {
-            const r = await fetch('/api' + endpoint, { 
-                method: 'GET', 
-                headers: headers, 
-                ...options 
-            });
-            
-            if (r.status === 401) {
-                localStorage.removeItem('token');
-                token = null;
-                showLoginPage();
-                toast(t('session_expired'), 'error');
-                return null;
-            }
-            
-            if (!r.ok) {
-                let err = {};
-                try { err = await r.json(); } catch(e) {}
-                throw new Error(err.error || err.message || 'Failed');
-            }
-            
-            return r.json();
-        } catch (e) {
-            if (e.message.includes('fetch')) {
-                toast(t('network_error'), 'error');
-            }
-            throw e;
-        }
-    }
-
-    /* ===== Auth ===== */
-    async function doLogin() {
-        const phone = document.getElementById('loginPhone').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        
-        if (!phone || !password) {
-            toast(currentLang === 'zh' ? '请输入手机号和密码' : 'Please enter phone and password', 'error');
-            return;
-        }
-
-        showLoading(currentLang === 'zh' ? '登录中...' : 'Logging in...');
-
-        try {
-            const data = await apiCall('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ phone, password })
-            });
-
-            if (data && data.token) {
-                token = data.token;
-                user = data.user;
-                localStorage.setItem('token', token);
-                toast(t('login_success'), 'success');
-                await initApp();
-            }
-        } catch (e) {
-            toast(e.message || t('login_failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    async function checkAuth() {
-        if (!token) {
-            showLoginPage();
-            return false;
-        }
-
-        try {
-            const data = await apiCall('/auth/me');
-            if (data && data.user) {
-                user = data.user;
-                return true;
-            }
-        } catch (e) {
-            showLoginPage();
-            return false;
-        }
-        
-        showLoginPage();
-        return false;
-    }
-
-    function showLoginPage() {
-        document.getElementById('loginPage').style.display = 'flex';
-        document.getElementById('appContainer').classList.remove('active');
-    }
-
-    function showAppPage() {
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('appContainer').classList.add('active');
-    }
-
-    function logout() {
-        localStorage.removeItem('token');
-        token = null;
-        user = null;
-        merchant = null;
-        if (sseConnection) {
-            sseConnection.close();
-            sseConnection = null;
-        }
-        toast(t('logout_success'), 'info');
-        showLoginPage();
-    }
-
-    /* ===== Merchant ===== */
-    async function loadMerchant() {
-        try {
-            const data = await apiCall('/merchants');
-            const merchants = data.merchants || data;
-            
-            if (Array.isArray(merchants) && merchants.length > 0) {
-                // Find merchant belonging to current user
-                merchant = merchants.find(m => m.ownerId === user.id || m.owner === user.id) || merchants[0];
-                document.getElementById('createStoreSection').style.display = 'none';
-                return true;
-            }
-            
-            // No merchant found, show create form
-            document.getElementById('createStoreSection').style.display = 'block';
-            return false;
-        } catch (e) {
-            document.getElementById('createStoreSection').style.display = 'block';
-            return false;
-        }
-    }
-
-    async function createStore() {
-        const name = document.getElementById('storeName').value.trim();
-        const type = document.getElementById('storeType').value;
-        const phone = document.getElementById('storePhone').value.trim();
-        const address = document.getElementById('storeAddress').value.trim();
-        const description = document.getElementById('storeDesc').value.trim();
-
-        if (!name) {
-            toast(currentLang === 'zh' ? '请输入店铺名称' : 'Please enter store name', 'error');
-            return;
-        }
-
-        showLoading(currentLang === 'zh' ? '创建中...' : 'Creating...');
-
-        try {
-            const data = await apiCall('/merchants', {
-                method: 'POST',
-                body: JSON.stringify({
-                    name,
-                    type,
-                    phone,
-                    address,
-                    description,
-                    location: { lat: -43.532, lng: 172.636 } // Default location
-                })
-            });
-
-            if (data && data.merchant) {
-                merchant = data.merchant;
-                toast(t('store_created'), 'success');
-                document.getElementById('createStoreSection').style.display = 'none';
-                await initApp();
-            }
-        } catch (e) {
-            toast(e.message || t('store_create_failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    async function toggleStoreStatus() {
-        if (!merchant) return;
-
-        showLoading(currentLang === 'zh' ? '更新中...' : 'Updating...');
-
-        try {
-            const newStatus = !merchant.online;
-            await apiCall('/merchants/' + merchant.id + '/status', {
-                method: 'PUT',
-                body: JSON.stringify({ online: newStatus })
-            });
-            
-            merchant.online = newStatus;
-            renderStore();
-            toast(newStatus ? t('store_online') : t('store_offline'), 'success');
-        } catch (e) {
-            toast(e.message, 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    function renderStore() {
-        if (!merchant) return;
-
-        const typeNames = {
-            food_truck: t('type_food_truck'),
-            cafe: t('type_cafe'),
-            bakery: t('type_bakery'),
-            restaurant: t('type_restaurant')
-        };
-
-        document.getElementById('storeCard').innerHTML = `
-            <div class="store-header">
-                <div class="store-icon">${merchant.online ? '🟢' : '🔴'}</div>
-                <div>
-                    <div class="store-name">${merchant.name}</div>
-                    <div class="store-type">${typeNames[merchant.type] || merchant.type}</div>
-                </div>
-            </div>
-            <div class="store-info-item">
-                <span class="store-info-label">📍</span>
-                <span class="store-info-value">${merchant.address || '-'}</span>
-            </div>
-            <div class="store-info-item">
-                <span class="store-info-label">📞</span>
-                <span class="store-info-value">${merchant.phone || '-'}</span>
-            </div>
-            <div class="store-info-item">
-                <span class="store-info-label">📝</span>
-                <span class="store-info-value">${merchant.description || '-'}</span>
-            </div>
-            <div class="store-status-toggle ${merchant.online ? 'online' : 'offline'}" onclick="toggleStoreStatus()">
-                <div class="store-status-label">${merchant.online ? t('store_online') : t('store_offline')}</div>
-                <button class="store-status-btn">${merchant.online ? t('store_status_online') : t('store_status_offline')}</button>
-            </div>
-        `;
-    }
-
-    /* ===== Orders ===== */
-    async function loadOrders() {
-        try {
-            const data = await apiCall('/orders/merchant');
-            orders = data.orders || data || [];
-            renderOrders();
-            updateOrderCounts();
-        } catch (e) {
-            console.error('Failed to load orders:', e);
-        }
-    }
-
-    function renderOrders() {
-        const list = document.getElementById('orderList');
-        const filtered = orders.filter(o => {
-            if (currentFilter === 'pending') return o.status === 'pending';
-            if (currentFilter === 'preparing') return o.status === 'accepted' || o.status === 'preparing';
-            if (currentFilter === 'ready') return o.status === 'ready' || o.status === 'picked_up';
-            return true;
-        });
-
-        if (!filtered.length) {
-            list.innerHTML = `<div class="empty-state">
-                <div class="em-icon">📋</div>
-                <div>${t('no_orders')}</div>
-            </div>`;
-            return;
-        }
-
-        list.innerHTML = filtered.map(order => {
-            const orderId = order.id ? order.id.slice(-6).toUpperCase() : '------';
-            const time = new Date(order.createdAt).toLocaleTimeString(currentLang === 'zh' ? 'zh-CN' : 'en-NZ', { hour: '2-digit', minute: '2-digit' });
-            
-            const itemsHtml = (order.items || []).map(item => `
-                <div class="order-item">
-                    <span class="order-item-name">${item.name}</span>
-                    <span class="order-item-qty">×${item.qty}</span>
-                </div>
-            `).join('');
-
-            const actionsHtml = getOrderActions(order);
-
-            return `
-                <div class="order-card" data-order-id="${order.id}">
-                    <div class="order-header">
-                        <span class="order-id">#${orderId}</span>
-                        <span class="order-time">${time}</span>
-                    </div>
-                    <div class="order-items">${itemsHtml}</div>
-                    <div class="order-info">
-                        <div>
-                            <span class="order-meta">${order.tableNumber ? t('order_table') + ': ' + order.tableNumber : t('order_pickup')}</span>
-                        </div>
-                        <span class="order-total">NZD $${(order.total || 0).toFixed(2)}</span>
-                    </div>
-                    ${order.note ? `<div class="order-note"><strong>${t('order_note')}:</strong> ${order.note}</div>` : ''}
-                    <div class="order-actions">${actionsHtml}</div>
-                </div>
-            `;
-        }).join('');
-
-        // Setup confirmation buttons after render
-        setupConfirmButtons();
-    }
-
-    function setupConfirmButtons() {
-        document.querySelectorAll('.confirm-btn-wrapper').forEach(wrapper => {
-            const btn = wrapper.querySelector('.order-btn');
-            if (!btn || btn.dataset.initialized) return;
-            btn.dataset.initialized = 'true';
-
-            const orderId = btn.dataset.order;
-            const status = btn.dataset.status;
-            const btnClass = btn.dataset.btnClass;
-
-            confirmAction(wrapper, orderId, status, btnClass);
-        });
-    }
-
-    function getOrderActions(order) {
-        const mode = getConfirmMode();
-        const wrapperClass = mode === 'swipe' ? 'confirm-btn-wrapper swipe-mode' : 'confirm-btn-wrapper';
-
-        switch (order.status) {
-            case 'pending':
-                return `
-                    <div class="${wrapperClass}"><button class="order-btn accept" data-order="${order.id}" data-status="accepted" data-btn-class="accept">${t('order_accept')}</button></div>
-                    <div class="${wrapperClass}"><button class="order-btn reject" data-order="${order.id}" data-status="rejected" data-btn-class="reject">${t('order_reject')}</button></div>
-                `;
-            case 'accepted':
-                return `
-                    <div class="${wrapperClass}"><button class="order-btn prepare" data-order="${order.id}" data-status="preparing" data-btn-class="prepare">${t('order_prepare')}</button></div>
-                `;
-            case 'preparing':
-                return `
-                    <div class="${wrapperClass}"><button class="order-btn complete" data-order="${order.id}" data-status="ready" data-btn-class="complete">${t('order_complete')}</button></div>
-                `;
-            default:
-                return '';
-        }
-    }
-
-    function updateOrderCounts() {
-        const pending = orders.filter(o => o.status === 'pending').length;
-        const preparing = orders.filter(o => o.status === 'accepted' || o.status === 'preparing').length;
-        const ready = orders.filter(o => o.status === 'ready' || o.status === 'picked_up').length;
-
-        document.getElementById('pendingCount').textContent = pending;
-        document.getElementById('preparingCount').textContent = preparing;
-        document.getElementById('readyCount').textContent = ready;
-
-        const badge = document.getElementById('ordersBadge');
-        if (pending > 0) {
-            badge.textContent = pending;
-            badge.classList.remove('hidden');
-        } else {
-            badge.classList.add('hidden');
-        }
-    }
-
-    function filterOrders(status) {
-        currentFilter = status;
-        document.querySelectorAll('.status-card').forEach(card => {
-            card.classList.toggle('active', card.dataset.status === status);
-        });
-        renderOrders();
-    }
-
-    /* ===== SSE ===== */
-    let sseRetryCount = 0;
-
-    function connectSSE() {
-        if (!token || sseConnection) return;
-
-        try {
-            const eventSource = new EventSource('/api/orders/merchant/stream?token=' + encodeURIComponent(token));
-            
-            eventSource.onopen = () => {
-                console.log('SSE connected');
-                if (sseRetryCount > 0) {
-                    // 重连成功，静默恢复，不打扰用户
-                    console.log('SSE reconnected after ' + sseRetryCount + ' retries');
-                }
-                sseRetryCount = 0;
-            };
-
-            eventSource.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    handleNewOrder(data);
-                } catch (e) {
-                    console.error('SSE parse error:', e);
+    const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+
+    const app = createApp({
+        setup() {
+            const LANG = {
+                zh: {
+                    merchant_portal: '商家管理后台', phone: '手机号', password: '密码', phone_placeholder: '+64 ...', password_placeholder: '••••••',
+                    login_btn: '登录', login_success: '登录成功', login_failed: '登录失败', create_store: '创建您的店铺', store_name: '店铺名称',
+                    store_name_placeholder: '我的美食店', store_type: '店铺类型', store_phone: '联系电话', store_address: '店铺地址', store_address_placeholder: '街道地址', store_desc: '店铺简介', store_desc_placeholder: '简单介绍一下...', create_store_btn: '创建店铺',
+                    store_created: '店铺创建成功', store_create_failed: '创建店铺失败', status_pending: '待接单', status_accepted: '已接单',
+                    status_preparing: '制作中', status_ready: '已完成', status_picked_up: '已取餐', status_rejected: '已拒绝', tab_orders: '订单',
+                    tab_menu: '菜单', tab_store: '店铺', tab_settings: '设置', menu_management: '菜单管理', add_item: '添加菜品',
+                    item_name: '菜品名称', item_price: '价格 (NZD)', item_category: '分类', item_desc: '描述', cancel: '取消', save: '保存',
+                    item_saved: '菜品已保存', item_deleted: '菜品已删除', order_accept: '接单', order_prepare: '开始制作',
+                    order_complete: '完成', order_reject: '拒绝', order_total: '合计', order_note: '备注', order_table: '桌号', order_pickup: '自取',
+                    order_new: '新订单！', store_online: '营业中', store_offline: '已打烊', store_status_online: '点击打烊', store_status_offline: '点击营业',
+                    kitchen_mode: '厨房挂屏模式', kitchen_mode_desc: '适合厨房大屏显示', logout: '退出登录', logout_success: '已退出登录',
+                    no_orders: '暂无订单', no_menu: '暂无菜单，点击添加菜品', type_food_truck: '餐车', type_cafe: '咖啡店', type_bakery: '烘焙店',
+                    type_restaurant: '餐厅', network_error: '网络错误，请重试', session_expired: '登录已过期，请重新登录', sse_connected: '实时连接已建立',
+                    sse_disconnected: '连接断开，正在重连...', confirm_action: '确认操作', custom_sound: '订单提示音', sound_default: '使用默认提示音',
+                    sound_custom: '使用自定义提示音', sound_preview: '试听', sound_upload: '上传音频', sound_record: '录音', sound_reset: '恢复默认',
+                    sound_recording: '录音中...点击停止', sound_uploaded: '提示音已更新！', sound_recorded: '录音已保存为提示音！',
+                    sound_restored: '已恢复默认提示音', sound_too_large: '文件太大，请选择小于1MB的音频', sound_mic_error: '无法访问麦克风',
+                    confirm_mode: '操作确认方式', confirm_longpress: '长按确认', confirm_swipe: '滑动确认', confirm_doubleclick: '二次点击',
+                    confirm_longpress_desc: '按住1.5秒确认', confirm_swipe_desc: '滑动到底确认', confirm_doubleclick_desc: '点两次确认',
+                    confirm_quicktap: '一键通过', confirm_quicktap_desc: '点击确认，长按回退', longpress_duration: '长按时长', undo_action: '回退', undoing: '回退中...'
+                },
+                en: {
+                    merchant_portal: 'Merchant Portal', phone: 'Phone', password: 'Password', phone_placeholder: '+64 ...', password_placeholder: '••••••',
+                    login_btn: 'Login', login_success: 'Login successful', login_failed: 'Login failed', create_store: 'Create Your Store', store_name: 'Store Name',
+                    store_name_placeholder: 'My Food Store', store_type: 'Store Type', store_phone: 'Contact Phone', store_address: 'Store Address', store_address_placeholder: 'Street address', store_desc: 'Store Description', store_desc_placeholder: 'Brief description...', create_store_btn: 'Create Store',
+                    store_created: 'Store created successfully', store_create_failed: 'Failed to create store', status_pending: 'Pending', status_accepted: 'Accepted',
+                    status_preparing: 'Preparing', status_ready: 'Ready', status_picked_up: 'Picked Up', status_rejected: 'Rejected', tab_orders: 'Orders',
+                    tab_menu: 'Menu', tab_store: 'Store', tab_settings: 'Settings', menu_management: 'Menu Management', add_item: 'Add Item',
+                    item_name: 'Item Name', item_price: 'Price (NZD)', item_category: 'Category', item_desc: 'Description', cancel: 'Cancel', save: 'Save',
+                    item_saved: 'Item saved', item_deleted: 'Item deleted', order_accept: 'Accept', order_prepare: 'Prepare',
+                    order_complete: 'Complete', order_reject: 'Reject', order_total: 'Total', order_note: 'Note', order_table: 'Table', order_pickup: 'Pickup',
+                    order_new: 'New Order!', store_online: 'Online', store_offline: 'Offline', store_status_online: 'Tap to close', store_status_offline: 'Tap to open',
+                    kitchen_mode: 'Kitchen Display Mode', kitchen_mode_desc: 'For kitchen screen display', logout: 'Logout', logout_success: 'Logged out',
+                    no_orders: 'No orders', no_menu: 'No menu items, tap to add', type_food_truck: 'Food Truck', type_cafe: 'Cafe', type_bakery: 'Bakery',
+                    type_restaurant: 'Restaurant', network_error: 'Network error, please retry', session_expired: 'Session expired, please login again',
+                    sse_connected: 'Real-time connected', sse_disconnected: 'Disconnected, reconnecting...', confirm_action: 'Confirm',
+                    custom_sound: 'Order Alert Sound', sound_default: 'Using default alert', sound_custom: 'Using custom alert', sound_preview: 'Preview',
+                    sound_upload: 'Upload Audio', sound_record: 'Record', sound_reset: 'Reset Default', sound_recording: 'Recording...tap to stop',
+                    sound_uploaded: 'Alert sound updated!', sound_recorded: 'Recording saved as alert!', sound_restored: 'Default alert restored',
+                    sound_too_large: 'File too large, max 1MB', sound_mic_error: 'Cannot access microphone', confirm_mode: 'Confirm Mode',
+                    confirm_longpress: 'Long Press', confirm_swipe: 'Swipe', confirm_doubleclick: 'Double Click', confirm_longpress_desc: 'Hold 1.5s to confirm',
+                    confirm_swipe_desc: 'Slide to confirm', confirm_doubleclick_desc: 'Tap twice to confirm', confirm_quicktap: 'Quick Tap', confirm_quicktap_desc: 'Tap to confirm, hold to undo',
+                    longpress_duration: 'Hold Duration', undo_action: 'Undo', undoing: 'Undoing...'
                 }
             };
 
-            eventSource.onerror = () => {
-                eventSource.close();
-                sseConnection = null;
-                sseRetryCount++;
-                // 只有连续失败3次以上才提示用户
-                if (sseRetryCount >= 3) {
-                    toast(t('sse_disconnected'), 'error');
-                }
-                setTimeout(connectSSE, 5000);
-            };
+            const currentLang = ref(localStorage.getItem('lang') || 'zh');
+            const t = (key) => LANG[currentLang.value]?.[key] || LANG.zh[key] || key;
+            const toggleLang = () => { currentLang.value = currentLang.value === 'zh' ? 'en' : 'zh'; localStorage.setItem('lang', currentLang.value); };
 
-            sseConnection = eventSource;
-        } catch (e) {
-            console.error('SSE error:', e);
-            sseRetryCount++;
-            setTimeout(connectSSE, 5000);
-        }
-    }
-
-    function handleNewOrder(order) {
-        // Check if order already exists
-        const existing = orders.find(o => o.id === order.id);
-        if (existing) {
-            // Update existing order
-            Object.assign(existing, order);
-        } else {
-            // Add new order
-            orders.unshift(order);
+            const themeVars = { primaryColor: '#ff6b35' };
             
-            // Play notification sound
-            playNotificationSound();
-            
-            // Highlight new order card
-            toast(t('order_new'), 'info');
-        }
-        
-        renderOrders();
-        updateOrderCounts();
-    }
+            // State
+            const token = ref(localStorage.getItem('token'));
+            const user = ref(null);
+            const merchant = ref(null);
+            const orders = ref([]);
+            const menuItems = ref([]);
+            const currentFilter = ref('pending');
+            const editingItem = ref(null);
+            const sseConnection = ref(null);
+            const audioCtx = ref(null);
+            const customSoundData = ref(localStorage.getItem('customAlertSound'));
+            const mediaRecorder = ref(null);
+            const recordingChunks = ref([]);
+            const isRecording = ref(false);
 
-    /* ===== Menu ===== */
-    async function loadMenu() {
-        if (!merchant || !merchant.menu) return;
-        menuItems = merchant.menu || [];
-        renderMenu();
-    }
+            // UI State
+            const loading = ref(false);
+            const loadingText = ref('');
+            const showLoading = (msg) => { loading.value = true; loadingText.value = msg || ''; };
+            const hideLoading = () => { loading.value = false; };
+            const isLoggedIn = computed(() => !!token.value);
+            const showCreateStore = ref(false);
+            const showMenuModal = ref(false);
+            const activeTab = ref('orders');
+            const orderFilter = ref('pending');
+            const refreshing = ref(false);
+            const activeCategories = ref([]);
+            const confirmMode = ref(localStorage.getItem('confirmMode') || 'quicktap');
+            const longpressDuration = ref(parseInt(localStorage.getItem('longpressDuration')) || 1500);
 
-    function renderMenu() {
-        const list = document.getElementById('menuList');
-        
-        if (!menuItems.length) {
-            list.innerHTML = `<div class="empty-state">
-                <div class="em-icon">📝</div>
-                <div>${t('no_menu')}</div>
-            </div>`;
-            return;
-        }
+            // Forms
+            const loginForm = ref({ phone: '', password: '' });
+            const storeForm = ref({ name: '', type: 'food_truck', phone: '', address: '', description: '' });
+            const menuForm = ref({ name: '', price: '', category: '', description: '' });
 
-        // Group by category
-        const categories = {};
-        menuItems.forEach(item => {
-            const cat = item.category || '其他';
-            if (!categories[cat]) categories[cat] = [];
-            categories[cat].push(item);
-        });
-
-        list.innerHTML = Object.entries(categories).map(([cat, items]) => `
-            <div class="menu-category">
-                <div class="menu-category-name">${cat}</div>
-                ${items.map(item => `
-                    <div class="menu-item-card" data-item-id="${item.id}">
-                        <div class="menu-item-info">
-                            <div class="menu-item-name">${item.name}</div>
-                            <div class="menu-item-price">NZD $${item.price.toFixed(2)}</div>
-                            ${item.description ? `<div class="menu-item-desc">${item.description}</div>` : ''}
-                        </div>
-                        <div class="menu-item-actions">
-                            <div class="menu-item-toggle ${item.available !== false ? 'on' : ''}" onclick="toggleItemAvailability('${item.id}')"></div>
-                            <button class="menu-item-edit" onclick="editMenuItem('${item.id}')">${currentLang === 'zh' ? '编辑' : 'Edit'}</button>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `).join('');
-    }
-
-    function showAddMenuModal() {
-        editingItem = null;
-        document.getElementById('menuModalTitle').textContent = t('add_item');
-        document.getElementById('itemName').value = '';
-        document.getElementById('itemPrice').value = '';
-        document.getElementById('itemCategory').value = '';
-        document.getElementById('itemDesc').value = '';
-        document.getElementById('menuModal').classList.add('show');
-    }
-
-    function editMenuItem(itemId) {
-        const item = menuItems.find(i => i.id === itemId);
-        if (!item) return;
-
-        editingItem = item;
-        document.getElementById('menuModalTitle').textContent = currentLang === 'zh' ? '编辑菜品' : 'Edit Item';
-        document.getElementById('itemName').value = item.name;
-        document.getElementById('itemPrice').value = item.price;
-        document.getElementById('itemCategory').value = item.category || '';
-        document.getElementById('itemDesc').value = item.description || '';
-        document.getElementById('menuModal').classList.add('show');
-    }
-
-    function closeMenuModal(event) {
-        if (event && event.target !== event.currentTarget) return;
-        document.getElementById('menuModal').classList.remove('show');
-    }
-
-    async function saveMenuItem() {
-        const name = document.getElementById('itemName').value.trim();
-        const price = parseFloat(document.getElementById('itemPrice').value) || 0;
-        const category = document.getElementById('itemCategory').value.trim();
-        const description = document.getElementById('itemDesc').value.trim();
-
-        if (!name) {
-            toast(currentLang === 'zh' ? '请输入菜品名称' : 'Please enter item name', 'error');
-            return;
-        }
-
-        if (editingItem) {
-            // Update existing
-            Object.assign(editingItem, { name, price, category, description });
-        } else {
-            // Add new
-            menuItems.push({
-                id: 'item_' + Date.now(),
-                name,
-                price,
-                category,
-                description,
-                available: true
-            });
-        }
-
-        await saveMenu();
-        closeMenuModal();
-        renderMenu();
-        toast(t('item_saved'), 'success');
-    }
-
-    function toggleItemAvailability(itemId) {
-        const item = menuItems.find(i => i.id === itemId);
-        if (item) {
-            item.available = item.available === false ? true : false;
-            saveMenu();
-            renderMenu();
-        }
-    }
-
-    async function saveMenu() {
-        if (!merchant) return;
-
-        try {
-            await apiCall('/merchants/' + merchant.id + '/menu', {
-                method: 'PUT',
-                body: JSON.stringify({ menuItems })
-            });
-            
-            merchant.menu = menuItems;
-        } catch (e) {
-            toast(e.message, 'error');
-        }
-    }
-
-    /* ===== Navigation ===== */
-    function switchPage(page) {
-        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        
-        document.getElementById(page + 'Page').classList.add('active');
-        document.querySelector('.tab-item[data-page="' + page + '"]').classList.add('active');
-    }
-
-    function switchToKitchen() {
-        window.location.href = '/kitchen';
-    }
-
-    /* ===== Init ===== */
-    async function initApp() {
-        showLoading(currentLang === 'zh' ? '加载中...' : 'Loading...');
-
-        const hasMerchant = await loadMerchant();
-        
-        if (hasMerchant) {
-            showAppPage();
-            await Promise.all([
-                loadOrders(),
-                loadMenu()
+            const storeTypeColumns = computed(() => [
+                { text: t('type_food_truck'), value: 'food_truck' },
+                { text: t('type_cafe'), value: 'cafe' },
+                { text: t('type_bakery'), value: 'bakery' },
+                { text: t('type_restaurant'), value: 'restaurant' }
             ]);
-            renderStore();
-            connectSSE();
-        }
 
-        hideLoading();
-    }
+            // Computed
+            const pendingCount = computed(() => orders.value.filter(o => o.status === 'pending').length);
+            const preparingCount = computed(() => orders.value.filter(o => o.status === 'accepted' || o.status === 'preparing').length);
+            const readyCount = computed(() => orders.value.filter(o => o.status === 'ready' || o.status === 'picked_up').length);
+            const pendingOrdersCount = computed(() => pendingCount.value);
+            const filteredOrders = computed(() => {
+                if (orderFilter.value === 'pending') return orders.value.filter(o => o.status === 'pending');
+                if (orderFilter.value === 'preparing') return orders.value.filter(o => o.status === 'accepted' || o.status === 'preparing');
+                if (orderFilter.value === 'ready') return orders.value.filter(o => o.status === 'ready' || o.status === 'picked_up');
+                return orders.value;
+            });
+            const groupedMenuItems = computed(() => {
+                const groups = {};
+                menuItems.value.forEach(item => {
+                    const cat = item.category || '其他';
+                    if (!groups[cat]) groups[cat] = [];
+                    groups[cat].push(item);
+                });
+                return groups;
+            });
+            const customSoundStatus = computed(() => customSoundData.value ? t('sound_custom') : t('sound_default'));
 
-    // Entry point
-    document.addEventListener('DOMContentLoaded', async () => {
-        applyLang();
-        updateSoundUI();
-        initConfirmModeUI();
-        
-        const isAuth = await checkAuth();
-        if (isAuth) {
-            await initApp();
+            // Methods
+            const formatTime = (date) => new Date(date).toLocaleTimeString(currentLang.value === 'zh' ? 'zh-CN' : 'en-NZ', { hour: '2-digit', minute: '2-digit' });
+            
+            const showNotify = (msg, type = 'success') => { vantNotify({ message: msg, type, duration: 3000 }); };
+            
+            const apiCall = async (endpoint, options = {}) => {
+                const headers = { 'Content-Type': 'application/json' };
+                if (token.value) headers['Authorization'] = 'Bearer ' + token.value;
+                try {
+                    const r = await fetch('/api' + endpoint, { method: 'GET', headers, ...options });
+                    if (r.status === 401) { localStorage.removeItem('token'); token.value = null; showNotify(t('session_expired'), 'danger'); return null; }
+                    if (!r.ok) { let err = {}; try { err = await r.json(); } catch(e) {} throw new Error(err.error || err.message || 'Failed'); }
+                    return r.json();
+                } catch (e) { if (e.message.includes('fetch')) showNotify(t('network_error'), 'danger'); throw e; }
+            };
+
+            const doLogin = async () => {
+                if (!loginForm.value.phone || !loginForm.value.password) { showNotify(currentLang.value === 'zh' ? '请输入手机号和密码' : 'Please enter phone and password', 'danger'); return; }
+                showLoading(currentLang.value === 'zh' ? '登录中...' : 'Logging in...');
+                try {
+                    const data = await apiCall('/auth/login', { method: 'POST', body: JSON.stringify({ phone: loginForm.value.phone, password: loginForm.value.password }) });
+                    if (data && data.token) { token.value = data.token; user.value = data.user; localStorage.setItem('token', token.value); showNotify(t('login_success')); await initApp(); }
+                } catch (e) { showNotify(e.message || t('login_failed'), 'danger'); }
+                finally { hideLoading(); }
+            };
+
+            const checkAuth = async () => {
+                if (!token.value) return false;
+                try {
+                    const data = await apiCall('/auth/me');
+                    if (data && data.user) { user.value = data.user; return true; }
+                } catch (e) { return false; }
+                return false;
+            };
+
+            const loadMerchant = async () => {
+                try {
+                    const data = await apiCall('/merchants');
+                    const merchants = data.merchants || data;
+                    if (Array.isArray(merchants) && merchants.length > 0) {
+                        merchant.value = merchants.find(m => m.ownerId === user.value?.id || m.owner === user.value?.id) || merchants[0];
+                        showCreateStore.value = false;
+                        return true;
+                    }
+                    showCreateStore.value = true;
+                    return false;
+                } catch (e) { showCreateStore.value = true; return false; }
+            };
+
+            const createStore = async () => {
+                if (!storeForm.value.name) { showNotify(currentLang.value === 'zh' ? '请输入店铺名称' : 'Please enter store name', 'danger'); return; }
+                showLoading(currentLang.value === 'zh' ? '创建中...' : 'Creating...');
+                try {
+                    const data = await apiCall('/merchants', { method: 'POST', body: JSON.stringify({ name: storeForm.value.name, type: storeForm.value.type, phone: storeForm.value.phone, address: storeForm.value.address, description: storeForm.value.description, location: { lat: -43.532, lng: 172.636 } }) });
+                    if (data && data.merchant) { merchant.value = data.merchant; showNotify(t('store_created')); showCreateStore.value = false; await initApp(); }
+                } catch (e) { showNotify(e.message || t('store_create_failed'), 'danger'); }
+                finally { hideLoading(); }
+            };
+
+            const toggleStoreStatus = async () => {
+                if (!merchant.value) return;
+                showLoading(currentLang.value === 'zh' ? '更新中...' : 'Updating...');
+                try {
+                    const newStatus = !merchant.value.online;
+                    await apiCall('/merchants/' + merchant.value.id + '/status', { method: 'PUT', body: JSON.stringify({ online: newStatus }) });
+                    merchant.value.online = newStatus;
+                    showNotify(newStatus ? t('store_online') : t('store_offline'));
+                } catch (e) { showNotify(e.message, 'danger'); }
+                finally { hideLoading(); }
+            };
+
+            const loadOrders = async () => {
+                try {
+                    const data = await apiCall('/orders/merchant');
+                    orders.value = data.orders || data || [];
+                    refreshing.value = false;
+                } catch (e) { console.error('Failed to load orders:', e); refreshing.value = false; }
+            };
+
+            const handleOrderAction = async (orderId, status) => {
+                try {
+                    await apiCall('/orders/' + orderId + '/status', { method: 'PATCH', body: JSON.stringify({ status }) });
+                    const order = orders.value.find(o => o.id === orderId);
+                    if (order) order.status = status;
+                    showNotify(t('confirm_action'));
+                } catch (e) { showNotify(e.message, 'danger'); }
+            };
+
+            const confirmReject = (order) => {
+                vantDialog.confirm({ title: t('confirm_action'), message: t('confirm_delete'), confirmButtonText: t('order_reject'), cancelButtonText: t('cancel') }).then(() => handleOrderAction(order.id, 'rejected')).catch(() => {});
+            };
+
+            const loadMenu = async () => {
+                if (!merchant.value || !merchant.value.menu) return;
+                menuItems.value = merchant.value.menu || [];
+            };
+
+            const showAddMenuModal = () => { editingItem.value = null; menuForm.value = { name: '', price: '', category: '', description: '' }; showMenuModal.value = true; };
+            
+            const saveMenuItem = async () => {
+                if (!menuForm.value.name) { showNotify(currentLang.value === 'zh' ? '请输入菜品名称' : 'Please enter item name', 'danger'); return; }
+                if (editingItem.value) { Object.assign(editingItem.value, { name: menuForm.value.name, price: parseFloat(menuForm.value.price) || 0, category: menuForm.value.category, description: menuForm.value.description }); }
+                else { menuItems.value.push({ id: 'item_' + Date.now(), name: menuForm.value.name, price: parseFloat(menuForm.value.price) || 0, category: menuForm.value.category, description: menuForm.value.description, available: true }); }
+                await saveMenu();
+                showMenuModal.value = false;
+                showNotify(t('item_saved'));
+            };
+
+            const toggleItemAvailability = async (itemId) => { await saveMenu(); };
+            const deleteMenuItem = (itemId) => { menuItems.value = menuItems.value.filter(i => i.id !== itemId); saveMenu(); showNotify(t('item_deleted')); };
+
+            const saveMenu = async () => {
+                if (!merchant.value) return;
+                try { await apiCall('/merchants/' + merchant.value.id + '/menu', { method: 'PUT', body: JSON.stringify({ menuItems: menuItems.value }) }); merchant.value.menu = menuItems.value; }
+                catch (e) { showNotify(e.message, 'danger'); }
+            };
+
+            // Sound
+            const playDefaultBeep = () => {
+                if (!audioCtx.value) audioCtx.value = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.value.createOscillator();
+                const gain = audioCtx.value.createGain();
+                osc.connect(gain); gain.connect(audioCtx.value.destination);
+                osc.frequency.setValueAtTime(800, audioCtx.value.currentTime);
+                osc.frequency.setValueAtTime(600, audioCtx.value.currentTime + 0.1);
+                osc.frequency.setValueAtTime(800, audioCtx.value.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, audioCtx.value.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.value.currentTime + 0.4);
+                osc.start(audioCtx.value.currentTime); osc.stop(audioCtx.value.currentTime + 0.4);
+            };
+
+            const playNotificationSound = () => {
+                try { if (customSoundData.value) { const audio = new Audio(customSoundData.value); audio.volume = 0.7; audio.play().catch(() => playDefaultBeep()); } else { playDefaultBeep(); } }
+                catch (e) { console.log('Audio not supported'); }
+            };
+
+            const previewSound = () => playNotificationSound();
+            
+            const triggerSoundUpload = () => document.querySelector('input[type="file"]')?.click();
+            
+            const uploadSound = (input) => {
+                const file = input.target.files[0];
+                if (!file) return;
+                if (file.size > 1024 * 1024) { showNotify(t('sound_too_large'), 'danger'); input.target.value = ''; return; }
+                const reader = new FileReader();
+                reader.onload = (e) => { customSoundData.value = e.target.result; localStorage.setItem('customAlertSound', customSoundData.value); showNotify(t('sound_uploaded')); playNotificationSound(); };
+                reader.readAsDataURL(file);
+                input.target.value = '';
+            };
+
+            const toggleRecord = () => {
+                if (mediaRecorder.value && mediaRecorder.value.state === 'recording') { mediaRecorder.value.stop(); isRecording.value = false; return; }
+                navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+                    recordingChunks.value = [];
+                    mediaRecorder.value = new MediaRecorder(stream);
+                    mediaRecorder.value.ondataavailable = (e) => recordingChunks.value.push(e.data);
+                    mediaRecorder.value.onstop = () => {
+                        stream.getTracks().forEach(t => t.stop());
+                        const blob = new Blob(recordingChunks.value, { type: 'audio/webm' });
+                        if (blob.size > 1024 * 1024) { showNotify(t('sound_too_large'), 'danger'); return; }
+                        const reader = new FileReader();
+                        reader.onload = (ev) => { customSoundData.value = ev.target.result; localStorage.setItem('customAlertSound', customSoundData.value); showNotify(t('sound_recorded')); playNotificationSound(); };
+                        reader.readAsDataURL(blob);
+                    };
+                    mediaRecorder.value.start();
+                    isRecording.value = true;
+                    setTimeout(() => { if (mediaRecorder.value?.state === 'recording') { mediaRecorder.value.stop(); isRecording.value = false; } }, 10000);
+                }).catch(() => { showNotify(t('sound_mic_error'), 'danger'); });
+            };
+
+            const resetSound = () => { customSoundData.value = null; localStorage.removeItem('customAlertSound'); showNotify(t('sound_restored')); };
+
+            // Confirm Mode
+            const setConfirmMode = (mode) => { confirmMode.value = mode; localStorage.setItem('confirmMode', mode); };
+            const setLongpressDuration = (duration) => { longpressDuration.value = duration; localStorage.setItem('longpressDuration', duration); };
+
+            const switchToKitchen = () => { window.location.href = '/kitchen'; };
+            
+            const logout = () => { localStorage.removeItem('token'); token.value = null; user.value = null; merchant.value = null; if (sseConnection.value) { sseConnection.value.close(); sseConnection.value = null; } showNotify(t('logout_success')); };
+
+            // SSE
+            const connectSSE = () => {
+                if (!token.value || sseConnection.value) return;
+                try {
+                    const eventSource = new EventSource('/api/orders/merchant/stream?token=' + encodeURIComponent(token.value));
+                    eventSource.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            const existing = orders.value.find(o => o.id === data.id);
+                            if (existing) { Object.assign(existing, data); }
+                            else { orders.value.unshift(data); data.isNew = true; playNotificationSound(); showNotify(t('order_new')); }
+                        } catch (e) { console.error('SSE parse error:', e); }
+                    };
+                    eventSource.onerror = () => { eventSource.close(); sseConnection.value = null; setTimeout(connectSSE, 5000); };
+                    sseConnection.value = eventSource;
+                } catch (e) { console.error('SSE error:', e); setTimeout(connectSSE, 5000); }
+            };
+
+            const initApp = async () => {
+                showLoading(currentLang.value === 'zh' ? '加载中...' : 'Loading...');
+                const hasMerchant = await loadMerchant();
+                if (hasMerchant) { await Promise.all([loadOrders(), loadMenu()]); connectSSE(); }
+                hideLoading();
+            };
+
+            onMounted(async () => {
+                const isAuth = await checkAuth();
+                if (isAuth) await initApp();
+            });
+
+            return {
+                t, toggleLang, themeVars, currentLang,
+                loginForm, storeForm, menuForm, storeTypeColumns, onStoreTypeChange: (p) => storeForm.value.type = p.selectedOptions[0].value,
+                loading, loadingText, isLoggedIn, showCreateStore, showMenuModal, activeTab, orderFilter, refreshing, activeCategories, confirmMode, longpressDuration,
+                pendingCount, preparingCount, readyCount, pendingOrdersCount, filteredOrders, groupedMenuItems, customSoundStatus,
+                merchant, orders, menuItems, isRecording,
+                doLogin, createStore, toggleStoreStatus, loadOrders, handleOrderAction, confirmReject, showAddMenuModal, saveMenuItem, toggleItemAvailability, deleteMenuItem,
+                previewSound, triggerSoundUpload, uploadSound, toggleRecord, resetSound, setConfirmMode, setLongpressDuration, switchToKitchen, logout, formatTime
+            };
         }
     });
+
+    app.use(vant);
+    app.mount('#app');
     </script>
 </body>
 </html>

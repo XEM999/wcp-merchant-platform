@@ -5,71 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NearBite — 发现美食</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍜</text></svg>">
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Vant CSS -->
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/vant@4/lib/index.css"/>
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #ff6b35;
+            --van-primary-color: #ff6b35;
+            --van-success-color: #22c55e;
+            --van-danger-color: #ef4444;
+            --van-warning-color: #f59e0b;
+            --van-background: #f7f8fa;
+            --van-text-color: #111827;
+            --van-text-color-2: #6b7280;
+            --van-text-color-3: #9ca3af;
+            --van-border-color: #e5e7eb;
+            --van-radius-lg: 16px;
+            --van-radius-md: 10px;
             --primary-light: #fff7ed;
             --primary-dark: #ea580c;
-            --bg: #fafafa;
-            --bg-card: #ffffff;
-            --bg-input: #f3f4f6;
-            --text: #111827;
-            --text-2: #6b7280;
-            --text-3: #9ca3af;
-            --green: #22c55e;
-            --green-bg: #f0fdf4;
-            --red: #ef4444;
-            --blue: #3b82f6;
-            --border: #e5e7eb;
-            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-            --shadow-lg: 0 4px 12px rgba(0,0,0,.1);
-            --radius: 16px;
-            --radius-sm: 10px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            background: var(--van-background);
+            color: var(--van-text-color);
             min-height: 100vh;
-            padding-bottom: 100px;
+            padding-bottom: env(safe-area-inset-bottom, 20px);
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== Header ===== */
-        .app-header {
-            position: sticky;
-            top: 0;
-            z-index: 500;
-            background: rgba(255,255,255,.95);
+        /* App Container */
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Customization */
+        .app-header .van-nav-bar {
+            --van-nav-bar-background: rgba(255,255,255,.95);
+            --van-nav-bar-title-font-size: 20px;
+            --van-nav-bar-title-font-weight: 800;
             backdrop-filter: blur(20px);
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
         }
 
-        .header-left {
+        .header-logo {
+            font-size: 28px;
+            margin-right: 4px;
+        }
+
+        .header-brand {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--van-primary-color);
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .header-logo { font-size: 28px; }
-        .header-brand { font-size: 20px; font-weight: 800; color: var(--primary-dark); letter-spacing: -0.5px; }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .merchant-btn {
+        .merchant-link {
             padding: 8px 14px;
             background: var(--primary-light);
             color: var(--primary-dark);
@@ -77,64 +80,58 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            cursor: pointer;
             text-decoration: none;
             transition: all .2s;
         }
 
-        .merchant-btn:hover { background: var(--primary); color: white; }
-
-        .user-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--primary);
+        .merchant-link:active {
+            background: var(--van-primary-color);
             color: white;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .lang-btn {
-            padding: 6px 12px;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            background: white;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text-2);
-        }
-
-        /* ===== Location Bar ===== */
+        /* Location Bar */
         .location-bar {
             display: flex;
             align-items: center;
             gap: 6px;
             padding: 10px 16px;
             font-size: 13px;
-            color: var(--text-2);
+            color: var(--van-text-color-2);
             background: white;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--van-border-color);
         }
 
-        .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .dot.ok { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,.4); }
-        .dot.wait { background: #f59e0b; animation: pulse 1s infinite; }
-        .dot.fail { background: var(--red); }
+        .loc-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
 
-        @keyframes pulse { 50% { opacity: .4; } }
+        .loc-dot.ok {
+            background: var(--van-success-color);
+            box-shadow: 0 0 6px rgba(34,197,94,.4);
+        }
 
-        /* ===== Map ===== */
+        .loc-dot.wait {
+            background: var(--van-warning-color);
+            animation: pulse 1s infinite;
+        }
+
+        .loc-dot.fail {
+            background: var(--van-danger-color);
+        }
+
+        @keyframes pulse {
+            50% { opacity: .4; }
+        }
+
+        /* Map Container */
         #map-container {
             height: 55vh;
             min-height: 300px;
             position: relative;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--van-border-color);
         }
 
         #map {
@@ -142,88 +139,60 @@
             width: 100%;
         }
 
-        .map-refresh {
+        .map-refresh-btn {
             position: absolute;
             top: 12px;
             right: 12px;
             z-index: 1000;
-            width: 40px;
-            height: 40px;
-            background: white;
-            border: none;
-            border-radius: 50%;
-            box-shadow: var(--shadow-lg);
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        /* ===== Search ===== */
+        /* Search Section */
         .search-section {
             padding: 12px 16px;
             background: white;
         }
 
-        .search-bar {
-            display: flex;
-            gap: 8px;
+        .search-section .van-search {
+            padding: 0;
         }
 
-        .search-input {
-            flex: 1;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border: 1px solid transparent;
-            border-radius: var(--radius);
-            font-size: 14px;
-            font-family: inherit;
-        }
-
-        .search-input:focus {
-            border-color: var(--primary);
-            outline: none;
-            background: white;
-        }
-
-        /* ===== Merchant List ===== */
+        /* Merchant Section */
         .merchant-section {
             padding: 16px;
-            background: var(--bg);
+            background: var(--van-background);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
         }
 
         .section-title {
             font-size: 18px;
             font-weight: 700;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .section-count {
             font-size: 13px;
-            color: var(--text-3);
+            color: var(--van-text-color-3);
             font-weight: 500;
         }
 
-        .merchant-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
+        /* Merchant Card */
         .merchant-card {
-            background: var(--bg-card);
-            border-radius: var(--radius);
+            background: white;
+            border-radius: var(--van-radius-lg);
             padding: 16px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
             transition: all .2s;
         }
 
-        .merchant-card:active { transform: scale(.99); }
+        .merchant-card:active {
+            transform: scale(.99);
+        }
 
         .mc-header {
             display: flex;
@@ -258,12 +227,12 @@
 
         .mc-meta {
             font-size: 12px;
-            color: var(--text-2);
+            color: var(--van-text-color-2);
         }
 
         .mc-dist {
             background: var(--primary-light);
-            color: var(--primary);
+            color: var(--van-primary-color);
             padding: 4px 10px;
             border-radius: 20px;
             font-size: 12px;
@@ -274,13 +243,19 @@
         .mc-rating {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             margin: 8px 0;
         }
 
-        .mc-stars { color: #f59e0b; font-size: 13px; }
-        .mc-rating-num { font-weight: 700; font-size: 14px; }
-        .mc-rating-cnt { color: var(--text-3); font-size: 12px; }
+        .mc-rating-num {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .mc-rating-cnt {
+            color: var(--van-text-color-3);
+            font-size: 12px;
+        }
 
         .mc-actions {
             display: flex;
@@ -288,49 +263,17 @@
             margin-top: 10px;
         }
 
-        .mc-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: transform .15s;
-        }
-
-        .mc-btn:active { transform: scale(.96); }
-
-        .mc-btn.primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .mc-btn.secondary {
-            background: var(--primary-light);
-            color: var(--primary-dark);
-        }
-
-        /* ===== Menu Expand ===== */
+        /* Menu Expand */
         .menu-expand {
-            display: none;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid var(--border);
-        }
-
-        .menu-expand.show { display: block; animation: slideDown .25s ease; }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: none; }
+            border-top: 1px solid var(--van-border-color);
         }
 
         .menu-category {
             font-size: 12px;
             font-weight: 600;
-            color: var(--text-2);
+            color: var(--van-text-color-2);
             margin: 12px 0 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -344,139 +287,66 @@
             border-bottom: 1px solid #f3f4f6;
         }
 
-        .menu-item:last-child { border-bottom: none; }
-
-        .menu-item-info { flex: 1; }
-        .menu-item-name { font-size: 14px; font-weight: 500; }
-        .menu-item-price { color: var(--primary-dark); font-size: 14px; font-weight: 700; margin-top: 2px; }
-
-        .menu-item-add {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform .15s;
+        .menu-item:last-child {
+            border-bottom: none;
         }
 
-        .menu-item-add:active { transform: scale(.9); }
+        .menu-item-info {
+            flex: 1;
+        }
 
-        /* ===== Cart Floating Button ===== */
+        .menu-item-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .menu-item-price {
+            color: var(--primary-dark);
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* Cart Floating Button */
         .cart-float {
             position: fixed;
-            bottom: 20px;
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
             right: 20px;
             z-index: 900;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(255,107,53,.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform .2s;
         }
 
-        .cart-float:active { transform: scale(.95); }
-
-        .cart-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: var(--red);
-            color: white;
-            font-size: 12px;
-            font-weight: 700;
-            min-width: 22px;
-            height: 22px;
-            border-radius: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 6px;
-        }
-
-        .cart-float.hidden { display: none; }
-
-        /* ===== Cart Panel ===== */
-        .cart-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.4);
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all .3s;
-        }
-
-        .cart-overlay.show { opacity: 1; visibility: visible; }
-
+        /* Cart Panel */
         .cart-panel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
             border-radius: 24px 24px 0 0;
             max-height: 80vh;
-            transform: translateY(100%);
-            transition: transform .3s ease;
-            z-index: 1001;
             display: flex;
             flex-direction: column;
         }
 
-        .cart-overlay.show .cart-panel { transform: translateY(0); }
-
-        .cart-handle {
-            width: 40px;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            margin: 12px auto;
-        }
-
         .cart-header {
-            padding: 0 20px 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--van-border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border);
         }
 
-        .cart-title { font-size: 18px; font-weight: 700; }
-
-        .cart-close {
-            background: var(--bg-input);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+        .cart-title {
             font-size: 18px;
-            cursor: pointer;
+            font-weight: 700;
         }
 
         .cart-items {
             flex: 1;
             overflow-y: auto;
             padding: 12px 20px;
+            max-height: 40vh;
         }
 
         .cart-empty {
             text-align: center;
             padding: 40px;
-            color: var(--text-3);
+            color: var(--van-text-color-3);
         }
 
         .cart-item {
@@ -484,38 +354,36 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--van-border-color);
         }
 
-        .cart-item-info { flex: 1; }
-        .cart-item-name { font-size: 14px; font-weight: 500; }
-        .cart-item-price { color: var(--primary-dark); font-size: 13px; }
-
-        .cart-item-qty {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .cart-item:last-child {
+            border-bottom: none;
         }
 
-        .qty-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--bg-input);
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .cart-item-price {
+            color: var(--primary-dark);
+            font-size: 13px;
         }
 
         .cart-item-total {
             font-weight: 700;
-            min-width: 60px;
+            min-width: 70px;
             text-align: right;
         }
 
         .cart-footer {
-            padding: 16px 20px 24px;
-            border-top: 1px solid var(--border);
+            padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+            border-top: 1px solid var(--van-border-color);
             background: white;
         }
 
@@ -527,14 +395,18 @@
             margin-bottom: 12px;
         }
 
-        .cart-total-amount { color: var(--primary-dark); }
+        .cart-total-amount {
+            color: var(--primary-dark);
+        }
 
-        .order-options { margin-bottom: 12px; }
+        .order-options {
+            margin-bottom: 12px;
+        }
 
         .option-label {
             font-size: 13px;
-            color: var(--text-2);
-            margin-bottom: 6px;
+            color: var(--van-text-color-2);
+            margin-bottom: 8px;
         }
 
         .option-row {
@@ -542,70 +414,19 @@
             gap: 8px;
         }
 
-        .option-btn {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: white;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all .2s;
-            font-family: inherit;
-        }
-
-        .option-btn.active {
-            border-color: var(--primary);
-            background: var(--primary-light);
-            color: var(--primary-dark);
-        }
-
         .cart-note {
             width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
             margin-bottom: 12px;
         }
 
-        .cart-note:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .checkout-btn:active { transform: scale(.98); }
-
-        /* ===== Order Status ===== */
+        /* Order Status Panel */
         .order-panel {
-            position: fixed;
-            top: 60px;
-            left: 16px;
-            right: 16px;
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
+            border-radius: var(--van-radius-lg);
             padding: 20px;
-            z-index: 800;
-            display: none;
+            margin: 16px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,.1);
         }
-
-        .order-panel.show { display: block; animation: slideDown .3s ease; }
 
         .order-header {
             display: flex;
@@ -616,15 +437,7 @@
 
         .order-id {
             font-size: 12px;
-            color: var(--text-2);
-        }
-
-        .order-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--text-2);
+            color: var(--van-text-color-2);
         }
 
         .order-status-title {
@@ -648,7 +461,7 @@
             left: 20px;
             right: 20px;
             height: 4px;
-            background: var(--border);
+            background: var(--van-border-color);
             border-radius: 2px;
         }
 
@@ -657,7 +470,7 @@
             top: 14px;
             left: 20px;
             height: 4px;
-            background: var(--green);
+            background: var(--van-success-color);
             border-radius: 2px;
             transition: width .5s ease;
         }
@@ -673,8 +486,8 @@
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: var(--bg-input);
-            border: 3px solid var(--border);
+            background: var(--van-background);
+            border: 3px solid var(--van-border-color);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -684,27 +497,27 @@
         }
 
         .status-step.done .status-icon {
-            background: var(--green);
-            border-color: var(--green);
+            background: var(--van-success-color);
+            border-color: var(--van-success-color);
             color: white;
         }
 
         .status-step.active .status-icon {
-            background: var(--primary);
-            border-color: var(--primary);
+            background: var(--van-primary-color);
+            border-color: var(--van-primary-color);
             color: white;
             animation: pulse 1s infinite;
         }
 
         .status-label {
             font-size: 10px;
-            color: var(--text-3);
+            color: var(--van-text-color-3);
             text-align: center;
         }
 
         .status-step.done .status-label,
         .status-step.active .status-label {
-            color: var(--text);
+            color: var(--van-text-color);
             font-weight: 600;
         }
 
@@ -713,43 +526,13 @@
             margin-top: 16px;
         }
 
-        .order-action button {
-            padding: 10px 20px;
-            background: var(--bg-input);
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        /* ===== Modal ===== */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.5);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all .3s;
-            padding: 20px;
-        }
-
-        .modal-overlay.show { opacity: 1; visibility: visible; }
-
-        .modal {
-            background: white;
+        /* Login Modal */
+        .login-modal {
             border-radius: 20px;
-            width: 100%;
-            max-width: 400px;
             padding: 24px;
-            transform: scale(.9);
-            transition: transform .3s;
+            width: 90%;
+            max-width: 400px;
         }
-
-        .modal-overlay.show .modal { transform: scale(1); }
 
         .modal-title {
             font-size: 20px;
@@ -758,142 +541,62 @@
             margin-bottom: 20px;
         }
 
-        .form-group { margin-bottom: 16px; }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-2);
-            margin-bottom: 6px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-        }
-
-        .form-input:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        .form-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            margin-bottom: 10px;
-        }
-
-        .form-btn.primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .form-btn.secondary {
-            background: var(--bg-input);
-            color: var(--text);
-        }
-
         .form-toggle {
             text-align: center;
             font-size: 13px;
-            color: var(--text-2);
-        }
-
-        .form-toggle button {
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        /* ===== Toast ===== */
-        .toast-container {
-            position: fixed;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-        }
-
-        .toast {
-            background: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: var(--shadow-lg);
-            animation: toastIn .3s ease;
-        }
-
-        .toast.success { border-left: 4px solid var(--green); }
-        .toast.error { border-left: 4px solid var(--red); }
-        .toast.info { border-left: 4px solid var(--blue); }
-
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-12px); }
-            to { opacity: 1; transform: none; }
-        }
-
-        /* ===== Loading ===== */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(255,255,255,.9);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .loading-overlay.active { display: flex; }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin .6s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loading-msg {
+            color: var(--van-text-color-2);
             margin-top: 12px;
-            font-size: 13px;
-            color: var(--text-2);
         }
 
-        /* ===== Leaflet overrides ===== */
-        .leaflet-popup-content-wrapper { border-radius: 12px !important; }
-        .leaflet-popup-content { margin: 12px 16px !important; font-family: 'Inter', sans-serif !important; }
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--van-text-color-3);
+        }
 
-        .popup-rich .pr-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-        .popup-rich .pr-type { font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
-        .popup-rich .pr-stars { color: #f59e0b; font-size: 12px; }
-        .popup-rich .pr-dist { font-size: 12px; color: var(--primary); font-weight: 600; }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        /* Leaflet Popup Overrides */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px !important;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px 16px !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        .popup-rich .pr-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .popup-rich .pr-type {
+            font-size: 12px;
+            color: var(--van-text-color-2);
+            margin-bottom: 4px;
+        }
+
+        .popup-rich .pr-stars {
+            color: #f59e0b;
+            font-size: 12px;
+        }
+
+        .popup-rich .pr-dist {
+            font-size: 12px;
+            color: var(--van-primary-color);
+            font-weight: 600;
+        }
+
         .popup-rich .pr-action {
             margin-top: 8px;
             padding: 6px 12px;
-            background: var(--primary);
+            background: var(--van-primary-color);
             color: white;
             border: none;
             border-radius: 6px;
@@ -902,814 +605,1069 @@
             width: 100%;
         }
 
-        /* ===== Empty State ===== */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-3);
+        /* Responsive adjustments */
+        @media screen and (max-width: 320px) {
+            .mc-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+            .mc-name {
+                font-size: 14px;
+            }
+            .section-title {
+                font-size: 16px;
+            }
         }
 
-        .empty-state .em-icon { font-size: 48px; margin-bottom: 12px; }
+        @media screen and (min-width: 430px) {
+            .merchant-section {
+                max-width: 430px;
+                margin: 0 auto;
+            }
+            #map-container {
+                max-height: 350px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="app-header">
-        <div class="header-left">
-            <span class="header-logo">🍜</span>
-            <span class="header-brand">NearBite</span>
-        </div>
-        <div class="header-right">
-            <a href="/merchant" class="merchant-btn" data-i18n="im_merchant">我是商家</a>
-            <button class="user-btn" id="userBtn" onclick="showLoginModal()">👤</button>
-            <button class="lang-btn" id="langBtn" onclick="toggleLang()">中文</button>
-        </div>
-    </header>
-
-    <!-- Location Bar -->
-    <div class="location-bar">
-        <span class="dot wait" id="locDot"></span>
-        <span id="locText" data-i18n="locating">正在获取位置…</span>
-    </div>
-
-    <!-- Map -->
-    <div id="map-container">
-        <div id="map"></div>
-        <button class="map-refresh" onclick="refreshLocation()">🔄</button>
-    </div>
-
-    <!-- Search -->
-    <div class="search-section">
-        <div class="search-bar">
-            <input type="text" class="search-input" id="searchInput" data-i18n-placeholder="search_placeholder" placeholder="搜索商户或菜品...">
-        </div>
-    </div>
-
-    <!-- Merchant List -->
-    <div class="merchant-section">
-        <h3 class="section-title">
-            <span data-i18n="nearby_merchants">附近商户</span>
-            <span class="section-count" id="merchantCount"></span>
-        </h3>
-        <div class="merchant-list" id="merchantList"></div>
-    </div>
-
-    <!-- Cart Floating Button -->
-    <button class="cart-float hidden" id="cartFloat" onclick="showCartPanel()">
-        🛒
-        <span class="cart-badge" id="cartBadge">0</span>
-    </button>
-
-    <!-- Cart Panel -->
-    <div class="cart-overlay" id="cartOverlay" onclick="closeCartPanel(event)">
-        <div class="cart-panel" onclick="event.stopPropagation()">
-            <div class="cart-handle"></div>
-            <div class="cart-header">
-                <span class="cart-title" data-i18n="cart">购物车</span>
-                <button class="cart-close" onclick="closeCartPanel()">✕</button>
-            </div>
-            <div class="cart-items" id="cartItems">
-                <div class="cart-empty" data-i18n="cart_empty">购物车是空的</div>
-            </div>
-            <div class="cart-footer">
-                <div class="cart-total">
-                    <span data-i18n="total">合计</span>
-                    <span class="cart-total-amount" id="cartTotal">NZD $0</span>
+    <div id="app">
+        <!-- Header -->
+        <van-nav-bar class="app-header" fixed placeholder>
+            <template #left>
+                <div class="header-actions" style="display: flex; align-items: center;">
+                    <span class="header-logo">🍜</span>
+                    <span class="header-brand">NearBite</span>
                 </div>
-                <div class="order-options">
-                    <div class="option-label" data-i18n="pickup_method">取餐方式</div>
-                    <div class="option-row">
-                        <button class="option-btn active" data-method="self" onclick="selectPickup(this)" data-i18n="self_pickup">自取</button>
-                        <button class="option-btn" data-method="table" onclick="selectPickup(this)" data-i18n="delivery_table">送到桌</button>
+            </template>
+            <template #right>
+                <div class="header-actions">
+                    <a href="/merchant" class="merchant-link">{{ t('im_merchant') }}</a>
+                    <van-button 
+                        type="primary" 
+                        size="small" 
+                        round 
+                        icon="user-o"
+                        @click="showLoginModal = true"
+                    ></van-button>
+                    <van-button 
+                        size="small" 
+                        round 
+                        plain
+                        @click="toggleLang"
+                    >{{ currentLang === 'zh' ? '中文' : 'EN' }}</van-button>
+                </div>
+            </template>
+        </van-nav-bar>
+
+        <!-- Location Bar -->
+        <div class="location-bar">
+            <span class="loc-dot" :class="locationStatus"></span>
+            <span>{{ locationText }}</span>
+        </div>
+
+        <!-- Map -->
+        <div id="map-container">
+            <div id="map"></div>
+            <van-button 
+                class="map-refresh-btn" 
+                icon="replay" 
+                round 
+                type="default"
+                size="small"
+                @click="refreshLocation"
+            ></van-button>
+        </div>
+
+        <!-- Search -->
+        <div class="search-section">
+            <van-search 
+                v-model="searchQuery" 
+                :placeholder="t('search_placeholder')"
+                shape="round"
+                background="transparent"
+                @search="onSearch"
+            />
+        </div>
+
+        <!-- Merchant List -->
+        <div class="merchant-section">
+            <div class="section-header">
+                <h3 class="section-title">{{ t('nearby_merchants') }}</h3>
+                <span class="section-count">{{ t('merchant_count', { n: merchants.length }) }}</span>
+            </div>
+
+            <!-- Pull Refresh -->
+            <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+                <div v-if="loading && !merchants.length" style="padding: 20px;">
+                    <van-skeleton title avatar :row="3" />
+                    <van-skeleton title avatar :row="3" style="margin-top: 16px;" />
+                </div>
+
+                <div v-else-if="!merchants.length" class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <div>{{ t('no_merchants_nearby') }}</div>
+                </div>
+
+                <div v-else class="merchant-list">
+                    <div 
+                        v-for="merchant in filteredMerchants" 
+                        :key="merchant.id" 
+                        class="merchant-card"
+                    >
+                        <div class="mc-header">
+                            <div class="mc-info">
+                                <div class="mc-icon">{{ getTypeIcon(merchant.type) }}</div>
+                                <div>
+                                    <div class="mc-name">{{ merchant.name }}</div>
+                                    <div class="mc-meta">
+                                        {{ typeName(merchant.type) }}
+                                        <span v-if="merchant.address"> · {{ merchant.address }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <van-tag type="primary" round>{{ merchant.distance || '?' }}km</van-tag>
+                        </div>
+
+                        <div class="mc-rating">
+                            <van-rate 
+                                :model-value="merchant.rating" 
+                                :count="5" 
+                                readonly 
+                                size="14"
+                                color="#f59e0b"
+                                void-color="#e5e7eb"
+                            />
+                            <span class="mc-rating-num">{{ merchant.rating }}</span>
+                            <span class="mc-rating-cnt">({{ merchant.reviewCount || 0 }})</span>
+                        </div>
+
+                        <div class="mc-actions">
+                            <van-button 
+                                type="default" 
+                                size="small" 
+                                round
+                                icon="orders-o"
+                                @click="toggleMenu(merchant.id)"
+                            >
+                                {{ t('view_menu') }}
+                            </van-button>
+                        </div>
+
+                        <!-- Menu Expand -->
+                        <van-collapse v-model="expandedMenus">
+                            <van-collapse-item :name="merchant.id" v-show="expandedMenus.includes(merchant.id)">
+                                <template #title></template>
+                                <div class="menu-expand" v-if="merchant.menu && merchant.menu.length">
+                                    <div 
+                                        v-for="(item, idx) in merchant.menu" 
+                                        :key="idx" 
+                                        class="menu-item"
+                                    >
+                                        <div class="menu-item-info">
+                                            <div class="menu-item-name">{{ item.name }}</div>
+                                            <div class="menu-item-price">NZD ${{ item.price }}</div>
+                                        </div>
+                                        <van-button 
+                                            type="primary" 
+                                            size="small" 
+                                            round 
+                                            icon="plus"
+                                            @click="addToCart(merchant.id, item.name, item.price)"
+                                        />
+                                    </div>
+                                </div>
+                            </van-collapse-item>
+                        </van-collapse>
                     </div>
                 </div>
-                <input type="text" class="cart-note" id="cartNote" data-i18n-placeholder="order_note" placeholder="备注：桌号或特殊要求">
-                <button class="checkout-btn" onclick="submitOrder()" data-i18n="confirm_order">确认下单</button>
-            </div>
+            </van-pull-refresh>
         </div>
+
+        <!-- Cart Floating Button -->
+        <van-badge 
+            :content="cartTotalQty" 
+            :show="cartTotalQty > 0"
+            class="cart-float"
+        >
+            <van-button 
+                type="primary" 
+                round 
+                size="large"
+                icon="shopping-cart-o"
+                @click="showCartPopup = true"
+            />
+        </van-badge>
+
+        <!-- Cart Popup -->
+        <van-popup 
+            v-model:show="showCartPopup" 
+            position="bottom" 
+            round
+            :style="{ height: '70%' }"
+        >
+            <div class="cart-panel">
+                <div class="cart-header">
+                    <span class="cart-title">{{ t('cart') }}</span>
+                    <van-button icon="cross" round size="small" @click="showCartPopup = false" />
+                </div>
+
+                <div class="cart-items">
+                    <div v-if="!cart.length" class="cart-empty">
+                        {{ t('cart_empty') }}
+                    </div>
+                    <div v-for="(item, idx) in cart" :key="idx" class="cart-item">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">{{ item.name }}</div>
+                            <div class="cart-item-price">NZD ${{ item.price }} × {{ item.qty }}</div>
+                        </div>
+                        <van-stepper 
+                            :model-value="item.qty" 
+                            @change="(val) => updateCartQty(item.name, item.price, val)"
+                            min="0"
+                            theme="round"
+                        />
+                        <div class="cart-item-total">NZD ${{ (item.price * item.qty).toFixed(2) }}</div>
+                    </div>
+                </div>
+
+                <div class="cart-footer">
+                    <div class="cart-total">
+                        <span>{{ t('total') }}</span>
+                        <span class="cart-total-amount">NZD ${{ cartTotalAmount.toFixed(2) }}</span>
+                    </div>
+
+                    <div class="order-options">
+                        <div class="option-label">{{ t('pickup_method') }}</div>
+                        <van-radio-group v-model="pickupMethod" direction="horizontal">
+                            <van-radio name="self">{{ t('self_pickup') }}</van-radio>
+                            <van-radio name="table">{{ t('delivery_table') }}</van-radio>
+                        </van-radio-group>
+                    </div>
+
+                    <van-field
+                        v-model="orderNote"
+                        :placeholder="t('order_note')"
+                        type="textarea"
+                        rows="1"
+                        autosize
+                        class="cart-note"
+                    />
+
+                    <van-button 
+                        type="primary" 
+                        block 
+                        round 
+                        size="large"
+                        @click="submitOrder"
+                    >
+                        {{ t('confirm_order') }}
+                    </van-button>
+                </div>
+            </div>
+        </van-popup>
+
+        <!-- Order Status Panel -->
+        <van-popup 
+            v-model:show="showOrderPanel" 
+            position="top"
+            :style="{ padding: '0' }"
+            round
+        >
+            <div class="order-panel">
+                <div class="order-header">
+                    <span class="order-id">{{ t('order_id') }}{{ currentOrder?.id?.substring(0, 8) || '---' }}</span>
+                    <van-button icon="cross" round size="small" @click="showOrderPanel = false" />
+                </div>
+
+                <div class="order-status-title">{{ orderStatusTitle }}</div>
+
+                <div class="status-progress">
+                    <div class="status-progress-fill" :style="{ width: orderProgress + '%' }"></div>
+                    <div 
+                        v-for="(step, idx) in statusSteps" 
+                        :key="idx"
+                        class="status-step"
+                        :class="{
+                            'done': statusStepClass(step.status) === 'done',
+                            'active': statusStepClass(step.status) === 'active'
+                        }"
+                    >
+                        <div class="status-icon">{{ step.icon }}</div>
+                        <span class="status-label">{{ step.label }}</span>
+                    </div>
+                </div>
+
+                <div class="order-action">
+                    <van-button size="small" round @click="showOrderPanel = false">
+                        {{ t('close') }}
+                    </van-button>
+                </div>
+            </div>
+        </van-popup>
+
+        <!-- Login Modal -->
+        <van-dialog 
+            v-model:show="showLoginModal" 
+            :title="isRegister ? t('register') : t('login')"
+            show-cancel-button
+            :confirm-button-text="isRegister ? t('register_btn') : t('login_btn')"
+            :cancel-button-text="isRegister ? t('login_btn') : t('register_btn')"
+            @confirm="isRegister ? doRegister() : doLogin()"
+            @cancel="isRegister = !isRegister"
+        >
+            <div class="login-modal">
+                <van-cell-group inset>
+                    <van-field
+                        v-model="loginPhone"
+                        :label="t('phone')"
+                        :placeholder="t('phone_placeholder')"
+                        type="tel"
+                        clearable
+                    />
+                    <van-field
+                        v-model="loginPassword"
+                        :label="t('password')"
+                        :placeholder="t('password_placeholder')"
+                        type="password"
+                        clearable
+                    />
+                </van-cell-group>
+                <div class="form-toggle">
+                    <span>{{ t('no_account') }}</span>
+                    <van-button type="primary" size="small" plain @click="isRegister = !isRegister">
+                        {{ t('register_now') }}
+                    </van-button>
+                </div>
+            </div>
+        </van-dialog>
+
+        <!-- Loading Overlay -->
+        <van-overlay :show="loading">
+            <div class="loading-wrapper" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                <van-loading type="spinner" size="36px" vertical>{{ loadingText }}</van-loading>
+            </div>
+        </van-overlay>
     </div>
 
-    <!-- Order Status Panel -->
-    <div class="order-panel" id="orderPanel">
-        <div class="order-header">
-            <span class="order-id" id="orderId">订单 #---</span>
-            <button class="order-close" onclick="closeOrderPanel()">✕</button>
-        </div>
-        <div class="order-status-title" id="orderStatusTitle" data-i18n="order_pending">等待商家接单...</div>
-        <div class="status-progress">
-            <div class="status-progress-fill" id="progressFill" style="width: 0%"></div>
-            <div class="status-step" data-status="pending">
-                <div class="status-icon">⏳</div>
-                <span class="status-label" data-i18n="status_pending">待接单</span>
-            </div>
-            <div class="status-step" data-status="accepted">
-                <div class="status-icon">✓</div>
-                <span class="status-label" data-i18n="status_accepted">已接单</span>
-            </div>
-            <div class="status-step" data-status="preparing">
-                <div class="status-icon">👨‍🍳</div>
-                <span class="status-label" data-i18n="status_preparing">制作中</span>
-            </div>
-            <div class="status-step" data-status="ready">
-                <div class="status-icon">🍽️</div>
-                <span class="status-label" data-i18n="status_ready">已完成</span>
-            </div>
-        </div>
-        <div class="order-action">
-            <button onclick="closeOrderPanel()" data-i18n="close">关闭</button>
-        </div>
-    </div>
-
-    <!-- Login Modal -->
-    <div class="modal-overlay" id="loginModal" onclick="closeLoginModal(event)">
-        <div class="modal" onclick="event.stopPropagation()">
-            <h2 class="modal-title" id="loginTitle" data-i18n="login">登录</h2>
-            <div class="form-group">
-                <label class="form-label" data-i18n="phone">手机号</label>
-                <input type="tel" class="form-input" id="loginPhone" data-i18n-placeholder="phone_placeholder" placeholder="+64 ...">
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="password">密码</label>
-                <input type="password" class="form-input" id="loginPassword" data-i18n-placeholder="password_placeholder" placeholder="••••••">
-            </div>
-            <button class="form-btn primary" onclick="doLogin()" data-i18n="login_btn">登录</button>
-            <button class="form-btn secondary" onclick="doRegister()" data-i18n="register_btn">注册新账号</button>
-            <div class="form-toggle">
-                <span data-i18n="no_account">还没有账号？</span>
-                <button onclick="showRegister()" data-i18n="register_now">立即注册</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div class="loading-msg" id="loadingMsg">Loading...</div>
-    </div>
-
-    <!-- Toast -->
-    <div class="toast-container" id="toastBox"></div>
-
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Vue 3 -->
+    <script src="https://fastly.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <!-- Vant 4 -->
+    <script src="https://fastly.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
+
     <script>
-    /* ===== i18n ===== */
-    const LANG = {
-        zh: {
-            im_merchant: '我是商家',
-            locating: '正在获取位置…',
-            located: '已定位',
-            location_fail: '定位失败，使用默认位置',
-            search_placeholder: '搜索商户或菜品...',
-            nearby_merchants: '附近商户',
-            merchant_count: '{n} 家',
-            view_menu: '查看菜单',
-            add_to_cart: '加入购物车',
-            cart: '购物车',
-            cart_empty: '购物车是空的',
-            total: '合计',
-            pickup_method: '取餐方式',
-            self_pickup: '自取',
-            delivery_table: '送到桌',
-            order_note: '备注：桌号或特殊要求',
-            confirm_order: '确认下单',
-            order_pending: '等待商家接单...',
-            order_accepted: '商家已接单',
-            order_preparing: '正在准备中',
-            order_ready: '请取餐',
-            order_delivered: '已送到 Table {n}',
-            status_pending: '待接单',
-            status_accepted: '已接单',
-            status_preparing: '制作中',
-            status_ready: '已完成',
-            close: '关闭',
-            login: '登录',
-            phone: '手机号',
-            password: '密码',
-            phone_placeholder: '+64 ...',
-            password_placeholder: '••••••',
-            login_btn: '登录',
-            register_btn: '注册新账号',
-            no_account: '还没有账号？',
-            register_now: '立即注册',
-            register: '注册',
-            login_success: '登录成功',
-            register_success: '注册成功',
-            order_success: '下单成功！',
-            added_to_cart: '已加入购物车',
-            cart_updated: '购物车已更新',
-            no_merchants_nearby: '附近没有在线商户',
-            empty_cart_warning: '购物车是空的',
-            select_merchant: '请先选择商户',
-            order_id: '订单 #'
-        },
-        en: {
-            im_merchant: 'Merchant',
-            locating: 'Getting location...',
-            located: '📍 Located',
-            location_fail: 'Location failed, using default',
-            search_placeholder: 'Search merchants or dishes...',
-            nearby_merchants: 'Nearby Merchants',
-            merchant_count: '{n} found',
-            view_menu: 'View Menu',
-            add_to_cart: 'Add to Cart',
-            cart: 'Cart',
-            cart_empty: 'Cart is empty',
-            total: 'Total',
-            pickup_method: 'Pickup Method',
-            self_pickup: 'Self Pickup',
-            delivery_table: 'Delivery to Table',
-            order_note: 'Note: Table# or special requests',
-            confirm_order: 'Confirm Order',
-            order_pending: 'Waiting for merchant...',
-            order_accepted: 'Merchant accepted',
-            order_preparing: 'Preparing your order',
-            order_ready: 'Ready for pickup!',
-            order_delivered: 'Delivered to Table {n}',
-            status_pending: 'Pending',
-            status_accepted: 'Accepted',
-            status_preparing: 'Preparing',
-            status_ready: 'Ready',
-            close: 'Close',
-            login: 'Login',
-            phone: 'Phone',
-            password: 'Password',
-            phone_placeholder: '+64 ...',
-            password_placeholder: '••••••',
-            login_btn: 'Login',
-            register_btn: 'Create Account',
-            no_account: 'No account?',
-            register_now: 'Register now',
-            register: 'Register',
-            login_success: 'Login successful',
-            register_success: 'Registration successful',
-            order_success: 'Order placed!',
-            added_to_cart: 'Added to cart',
-            cart_updated: 'Cart updated',
-            no_merchants_nearby: 'No merchants nearby',
-            empty_cart_warning: 'Cart is empty',
-            select_merchant: 'Please select a merchant',
-            order_id: 'Order #'
-        }
-    };
-
-    let currentLang = localStorage.getItem('lang') || 'zh';
-
-    function t(key, vars) {
-        let s = (LANG[currentLang] && LANG[currentLang][key]) || (LANG.zh[key]) || key;
-        if (vars) Object.keys(vars).forEach(k => s = s.replace('{' + k + '}', vars[k]));
-        return s;
-    }
-
-    function applyLang() {
-        document.getElementById('langBtn').textContent = currentLang === 'zh' ? '中文' : 'EN';
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            el.textContent = t(el.dataset.i18n);
-        });
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-            el.placeholder = t(el.dataset.i18nPlaceholder);
-        });
-    }
-
-    function toggleLang() {
-        currentLang = currentLang === 'zh' ? 'en' : 'zh';
-        localStorage.setItem('lang', currentLang);
-        applyLang();
-        if (merchants.length) renderMerchants();
-    }
-
-    /* ===== Config ===== */
-    const API_BASE = '/api';
-    const DEFAULT_CENTER = { lat: -43.532, lng: 172.636 };
-    const TYPE_ICON = { food_truck:'🚚', cafe:'☕', bakery:'🍞', other:'📦' };
-
-    function typeName(type) {
-        const key = 'type_' + type;
-        return t(key) || type;
-    }
-
-    /* ===== State ===== */
-    let map = null, markers = [], merchants = [], currentMerchantId = null;
-    let userLoc = null, userLocMarker = null;
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    let currentOrder = null;
-    let sseConnection = null;
-    let pickupMethod = 'self';
-
-    /* ===== Toast ===== */
-    function toast(msg, type) {
-        type = type || 'info';
-        const el = document.createElement('div');
-        el.className = 'toast ' + type;
-        el.textContent = msg;
-        document.getElementById('toastBox').appendChild(el);
-        setTimeout(function() { el.remove(); }, 3000);
-    }
-
-    function showLoading(msg) {
-        document.getElementById('loadingMsg').textContent = msg || '...';
-        document.getElementById('loadingOverlay').classList.add('active');
-    }
-
-    function hideLoading() {
-        document.getElementById('loadingOverlay').classList.remove('active');
-    }
-
-    /* ===== GPS ===== */
-    function getGPS() {
-        return new Promise(function(resolve) {
-            if (!navigator.geolocation) return resolve(null);
-            navigator.geolocation.getCurrentPosition(
-                function(p) { resolve({ lat: p.coords.latitude, lng: p.coords.longitude }); },
-                function() { resolve(null); },
-                { enableHighAccuracy: true, timeout: 8000 }
-            );
-        });
-    }
-
-    async function initUserLocation() {
-        var dot = document.getElementById('locDot');
-        var txt = document.getElementById('locText');
-        dot.className = 'dot wait';
-        txt.textContent = t('locating');
-
-        var loc = await getGPS();
-        if (loc) {
-            userLoc = loc;
-            dot.className = 'dot ok';
-            txt.textContent = t('located') + ' (' + loc.lat.toFixed(3) + ', ' + loc.lng.toFixed(3) + ')';
-            if (map) map.setView([loc.lat, loc.lng], 14);
-            showUserMarker();
-        } else {
-            userLoc = DEFAULT_CENTER;
-            dot.className = 'dot fail';
-            txt.textContent = t('location_fail');
-        }
-    }
-
-    function refreshLocation() {
-        initUserLocation().then(function() { searchMerchants(); });
-    }
-
-    function showUserMarker() {
-        if (!map || !userLoc) return;
-        if (userLocMarker) map.removeLayer(userLocMarker);
-        userLocMarker = L.circleMarker([userLoc.lat, userLoc.lng], {
-            radius: 8,
-            fillColor: '#ff6b35',
-            color: '#fff',
-            weight: 2,
-            fillOpacity: 1
-        }).addTo(map).bindPopup('📍 You');
-    }
-
-    /* ===== Map ===== */
-    function initMap() {
-        if (map) return;
-        var c = userLoc || DEFAULT_CENTER;
-        map = L.map('map').setView([c.lat, c.lng], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-    }
-
-    /* ===== API ===== */
-    async function apiCall(endpoint, options) {
-        options = options || {};
-        var token = localStorage.getItem('token');
-        var headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-
-        var r = await fetch(API_BASE + endpoint, { method: 'GET', headers: headers, ...options });
-        if (!r.ok) {
-            var err = {};
-            try { err = await r.json(); } catch(e) {}
-            throw new Error(err.error || err.message || 'Failed');
-        }
-        return r.json();
-    }
-
-    /* ===== Stars ===== */
-    function starsStr(r) {
-        var f = Math.round(r);
-        return '★'.repeat(f) + '☆'.repeat(5 - f);
-    }
-
-    /* ===== Mock Data ===== */
-    function getMockMerchants() {
-        return [
-            { id: 1, name: '川味小馆', nameEn: 'Sichuan Kitchen', type: 'food_truck', lat: -43.529, lng: 172.638, rating: 4.5, reviewCount: 28, distance: 0.5, status: 'online', phone: '+64 21 123 456', address: 'Cathedral Square',
-             menu: [{ name: '麻婆豆腐 Mapo Tofu', price: 18 }, { name: '宫保鸡丁 Kung Pao Chicken', price: 22 }, { name: '酸辣汤 Hot & Sour Soup', price: 10 }] },
-            { id: 2, name: '寿司太郎', nameEn: 'Sushi Taro', type: 'food_truck', lat: -43.535, lng: 172.634, rating: 4.8, reviewCount: 56, distance: 0.8, status: 'online', phone: '+64 21 234 567', address: 'Riccarton',
-             menu: [{ name: '三文鱼刺身 Salmon Sashimi', price: 28 }, { name: '鳗鱼寿司 Eel Sushi', price: 15 }] },
-            { id: 3, name: '咖啡小镇', nameEn: 'Coffee Town', type: 'cafe', lat: -43.533, lng: 172.635, rating: 4.6, reviewCount: 42, distance: 0.3, status: 'online', phone: '+64 21 345 678', address: 'New Regent Street',
-             menu: [{ name: '拿铁 Latte', price: 6 }, { name: '卡布奇诺 Cappuccino', price: 6.5 }, { name: '牛角包 Croissant', price: 5 }] },
-            { id: 4, name: '甜蜜时光', nameEn: 'Sweet Time', type: 'bakery', lat: -43.531, lng: 172.637, rating: 4.7, reviewCount: 33, distance: 0.4, status: 'online', phone: '+64 21 456 789', address: 'Colombo Street',
-             menu: [{ name: '法式可颂 Croissant', price: 5.5 }, { name: '巧克力蛋糕 Chocolate Cake', price: 12 }, { name: '肉桂卷 Cinnamon Roll', price: 7 }] }
-        ];
-    }
-
-    /* ===== Search ===== */
-    async function searchMerchants() {
-        showLoading(currentLang === 'zh' ? '搜索中…' : 'Searching…');
-        var loc = userLoc || DEFAULT_CENTER;
-        try {
-            var data = await apiCall('/merchants/nearby?lat=' + loc.lat + '&lng=' + loc.lng + '&radius=10');
-            merchants = data.merchants || [];
-            if (!merchants.length) throw new Error('empty');
-        } catch (e) {
-            merchants = getMockMerchants().filter(function(m) { return m.status === 'online'; });
-        }
-        renderMerchants();
-        updateMapMarkers();
-        hideLoading();
-    }
-
-    /* ===== Render ===== */
-    function renderMerchants() {
-        var list = document.getElementById('merchantList');
-        document.getElementById('merchantCount').textContent = t('merchant_count', { n: merchants.length });
-
-        if (!merchants.length) {
-            list.innerHTML = '<div class="empty-state"><div class="em-icon">🔍</div><div>' + t('no_merchants_nearby') + '</div></div>';
-            return;
-        }
-
-        list.innerHTML = merchants.map(function(m) {
-            var icon = TYPE_ICON[m.type] || '📦';
-            var menuHtml = (m.menu || []).map(function(item) {
-                return '<div class="menu-item">' +
-                    '<div class="menu-item-info"><div class="menu-item-name">' + item.name + '</div><div class="menu-item-price">NZD $' + item.price + '</div></div>' +
-                    '<button class="menu-item-add" onclick="addToCart(' + m.id + ', \'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ')">+</button></div>';
-            }).join('');
-
-            return '<div class="merchant-card">' +
-                '<div class="mc-header"><div class="mc-info"><div class="mc-icon">' + icon + '</div><div><div class="mc-name">' + m.name + '</div><div class="mc-meta">' + typeName(m.type) + (m.address ? ' · ' + m.address : '') + '</div></div></div>' +
-                '<span class="mc-dist">' + (m.distance || '?') + 'km</span></div>' +
-                '<div class="mc-rating"><span class="mc-stars">' + starsStr(m.rating) + '</span><span class="mc-rating-num">' + m.rating + '</span><span class="mc-rating-cnt">(' + (m.reviewCount || 0) + ')</span></div>' +
-                '<div class="mc-actions"><button class="mc-btn secondary" onclick="toggleMenu(' + m.id + ')">📋 ' + t('view_menu') + '</button></div>' +
-                '<div class="menu-expand" id="menu-' + m.id + '">' + menuHtml + '</div></div>';
-        }).join('');
-    }
-
-    function toggleMenu(id) {
-        var el = document.getElementById('menu-' + id);
-        if (el) el.classList.toggle('show');
-    }
-
-    function updateMapMarkers() {
-        markers.forEach(function(m) { map.removeLayer(m); });
-        markers = [];
-        merchants.forEach(function(m) {
-            var icon = TYPE_ICON[m.type] || '📦';
-            var divIcon = L.divIcon({
-                html: '<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));">' + icon + '</div>',
-                className: '',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
-            });
-            var mk = L.marker([m.lat, m.lng], { icon: divIcon }).addTo(map);
-            mk.bindPopup('<div class="popup-rich"><div class="pr-name">' + icon + ' ' + m.name + '</div><div class="pr-type">' + typeName(m.type) + '</div><div class="pr-stars">' + starsStr(m.rating) + ' ' + m.rating + '</div><div class="pr-dist">📍 ' + (m.distance || '?') + 'km</div><button class="pr-action" onclick="scrollToMerchant(' + m.id + ')">' + t('view_menu') + '</button></div>');
-            markers.push(mk);
-        });
-        if (merchants.length) {
-            var group = L.featureGroup(markers);
-            if (userLocMarker) group.addLayer(userLocMarker);
-            map.fitBounds(group.getBounds().pad(0.15));
-        }
-        showUserMarker();
-    }
-
-    function scrollToMerchant(id) {
-        var el = document.getElementById('menu-' + id);
-        if (el) {
-            el.classList.add('show');
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
-    /* ===== Cart ===== */
-    function addToCart(merchantId, name, price) {
-        var token = localStorage.getItem('token');
-        if (!token) {
-            showLoginModal();
-            return;
-        }
-
-        if (currentMerchantId && currentMerchantId !== merchantId) {
-            if (!confirm(currentLang === 'zh' ? '清空当前购物车并添加新商户的菜品？' : 'Clear cart and add items from different merchant?')) {
-                return;
-            }
-            cart = [];
-        }
-        currentMerchantId = merchantId;
-
-        var existing = cart.find(function(item) { return item.name === name && item.price === price; });
-        if (existing) {
-            existing.qty++;
-        } else {
-            cart.push({ merchantId: merchantId, name: name, price: price, qty: 1 });
-        }
-
-        saveCart();
-        updateCartUI();
-        toast(t('added_to_cart'), 'success');
-    }
-
-    function updateCartQty(name, price, delta) {
-        var item = cart.find(function(i) { return i.name === name && i.price === price; });
-        if (!item) return;
-
-        item.qty += delta;
-        if (item.qty <= 0) {
-            cart = cart.filter(function(i) { return i !== item; });
-        }
-
-        saveCart();
-        updateCartUI();
-    }
-
-    function saveCart() {
-        localStorage.setItem('cart', JSON.stringify(cart));
-    }
-
-    function updateCartUI() {
-        var cartFloat = document.getElementById('cartFloat');
-        var cartBadge = document.getElementById('cartBadge');
-        var totalQty = cart.reduce(function(sum, item) { return sum + item.qty; }, 0);
-
-        if (totalQty > 0) {
-            cartFloat.classList.remove('hidden');
-            cartBadge.textContent = totalQty;
-        } else {
-            cartFloat.classList.add('hidden');
-        }
-
-        var cartItems = document.getElementById('cartItems');
-        var cartTotal = document.getElementById('cartTotal');
-
-        if (!cart.length) {
-            cartItems.innerHTML = '<div class="cart-empty">' + t('cart_empty') + '</div>';
-            cartTotal.textContent = 'NZD $0';
-            return;
-        }
-
-        var total = 0;
-        cartItems.innerHTML = cart.map(function(item) {
-            var itemTotal = item.price * item.qty;
-            total += itemTotal;
-            return '<div class="cart-item">' +
-                '<div class="cart-item-info"><div class="cart-item-name">' + item.name + '</div><div class="cart-item-price">NZD $' + item.price + ' × ' + item.qty + '</div></div>' +
-                '<div class="cart-item-qty"><button class="qty-btn" onclick="updateCartQty(\'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ', -1)">-</button><span>' + item.qty + '</span><button class="qty-btn" onclick="updateCartQty(\'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ', 1)">+</button></div>' +
-                '<div class="cart-item-total">NZD $' + itemTotal.toFixed(2) + '</div></div>';
-        }).join('');
-
-        cartTotal.textContent = 'NZD $' + total.toFixed(2);
-    }
-
-    function showCartPanel() {
-        document.getElementById('cartOverlay').classList.add('show');
-    }
-
-    function closeCartPanel(event) {
-        if (event && event.target !== event.currentTarget) return;
-        document.getElementById('cartOverlay').classList.remove('show');
-    }
-
-    function selectPickup(btn) {
-        document.querySelectorAll('.option-btn').forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        pickupMethod = btn.dataset.method;
-    }
-
-    /* ===== Order ===== */
-    async function submitOrder() {
-        if (!cart.length) {
-            toast(t('empty_cart_warning'), 'error');
-            return;
-        }
-
-        var token = localStorage.getItem('token');
-        if (!token) {
-            showLoginModal();
-            return;
-        }
-
-        var note = document.getElementById('cartNote').value;
-        var items = cart.map(function(item) {
-            return { name: item.name, qty: item.qty, price: item.price };
-        });
-
-        showLoading(currentLang === 'zh' ? '下单中…' : 'Placing order...');
-
-        try {
-            var data = await apiCall('/orders', {
-                method: 'POST',
-                body: JSON.stringify({
-                    merchantId: currentMerchantId,
-                    items: items,
-                    pickupMethod: pickupMethod,
-                    note: note
-                })
-            });
-
-            cart = [];
-            currentMerchantId = null;
-            saveCart();
-            updateCartUI();
-            closeCartPanel();
-
-            currentOrder = data.order;
-            showOrderPanel(data.order);
-
-            connectSSE(data.order.id);
-
-            toast(t('order_success'), 'success');
-        } catch (e) {
-            toast(e.message || (currentLang === 'zh' ? '下单失败' : 'Order failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    function showOrderPanel(order) {
-        var panel = document.getElementById('orderPanel');
-        document.getElementById('orderId').textContent = t('order_id') + order.id.substring(0, 8);
-        panel.classList.add('show');
-        updateOrderStatus(order.status || 'pending');
-    }
-
-    function closeOrderPanel() {
-        document.getElementById('orderPanel').classList.remove('show');
-    }
-
-    function updateOrderStatus(status) {
-        var statusTitle = document.getElementById('orderStatusTitle');
-        var progressFill = document.getElementById('progressFill');
-
-        var statusMap = {
-            pending: { title: t('order_pending'), progress: 0 },
-            accepted: { title: t('order_accepted'), progress: 33 },
-            preparing: { title: t('order_preparing'), progress: 66 },
-            ready: { title: t('order_ready'), progress: 100 }
-        };
-
-        var info = statusMap[status] || statusMap.pending;
-        statusTitle.textContent = info.title;
-        progressFill.style.width = info.progress + '%';
-
-        document.querySelectorAll('.status-step').forEach(function(step) {
-            var stepStatus = step.dataset.status;
-            step.classList.remove('done', 'active');
-            if (['pending', 'accepted', 'preparing', 'ready'].indexOf(stepStatus) < ['pending', 'accepted', 'preparing', 'ready'].indexOf(status)) {
-                step.classList.add('done');
-            } else if (stepStatus === status) {
-                step.classList.add('active');
-            }
-        });
-    }
-
-    /* ===== SSE ===== */
-    function connectSSE(orderId) {
-        if (sseConnection) {
-            sseConnection.close();
-        }
-
-        var token = localStorage.getItem('token');
-        if (!token) return;
-
-        sseConnection = new EventSource('/api/orders/' + orderId + '/stream');
-
-        sseConnection.onmessage = function(event) {
-            try {
-                var data = JSON.parse(event.data);
-                if (data.type === 'connected' || data.type === 'ping') return;
-
-                if (data.type === 'order_status_changed' || data.type === 'order_updated') {
-                    var order = data.data || data.order;
-                    if (order) {
-                        currentOrder = order;
-                        updateOrderStatus(order.status);
-                    }
+    const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+
+    const app = createApp({
+        setup() {
+            // ===== i18n =====
+            const LANG = {
+                zh: {
+                    im_merchant: '我是商家',
+                    locating: '正在获取位置…',
+                    located: '已定位',
+                    location_fail: '定位失败，使用默认位置',
+                    search_placeholder: '搜索商户或菜品...',
+                    nearby_merchants: '附近商户',
+                    merchant_count: '{n} 家',
+                    view_menu: '查看菜单',
+                    add_to_cart: '加入购物车',
+                    cart: '购物车',
+                    cart_empty: '购物车是空的',
+                    total: '合计',
+                    pickup_method: '取餐方式',
+                    self_pickup: '自取',
+                    delivery_table: '送到桌',
+                    order_note: '备注：桌号或特殊要求',
+                    confirm_order: '确认下单',
+                    order_pending: '等待商家接单...',
+                    order_accepted: '商家已接单',
+                    order_preparing: '正在准备中',
+                    order_ready: '请取餐',
+                    order_delivered: '已送到 Table {n}',
+                    status_pending: '待接单',
+                    status_accepted: '已接单',
+                    status_preparing: '制作中',
+                    status_ready: '已完成',
+                    close: '关闭',
+                    login: '登录',
+                    phone: '手机号',
+                    password: '密码',
+                    phone_placeholder: '+64 ...',
+                    password_placeholder: '••••••',
+                    login_btn: '登录',
+                    register_btn: '注册新账号',
+                    no_account: '还没有账号？',
+                    register_now: '立即注册',
+                    register: '注册',
+                    login_success: '登录成功',
+                    register_success: '注册成功',
+                    order_success: '下单成功！',
+                    added_to_cart: '已加入购物车',
+                    cart_updated: '购物车已更新',
+                    no_merchants_nearby: '附近没有在线商户',
+                    empty_cart_warning: '购物车是空的',
+                    select_merchant: '请先选择商户',
+                    order_id: '订单 #',
+                    type_food_truck: '美食车',
+                    type_cafe: '咖啡厅',
+                    type_bakery: '烘焙店',
+                    type_other: '其他',
+                    searching: '搜索中…',
+                    logging_in: '登录中…',
+                    registering: '注册中…',
+                    placing_order: '下单中…'
+                },
+                en: {
+                    im_merchant: 'Merchant',
+                    locating: 'Getting location...',
+                    located: '📍 Located',
+                    location_fail: 'Location failed, using default',
+                    search_placeholder: 'Search merchants or dishes...',
+                    nearby_merchants: 'Nearby Merchants',
+                    merchant_count: '{n} found',
+                    view_menu: 'View Menu',
+                    add_to_cart: 'Add to Cart',
+                    cart: 'Cart',
+                    cart_empty: 'Cart is empty',
+                    total: 'Total',
+                    pickup_method: 'Pickup Method',
+                    self_pickup: 'Self Pickup',
+                    delivery_table: 'Delivery to Table',
+                    order_note: 'Note: Table# or special requests',
+                    confirm_order: 'Confirm Order',
+                    order_pending: 'Waiting for merchant...',
+                    order_accepted: 'Merchant accepted',
+                    order_preparing: 'Preparing your order',
+                    order_ready: 'Ready for pickup!',
+                    order_delivered: 'Delivered to Table {n}',
+                    status_pending: 'Pending',
+                    status_accepted: 'Accepted',
+                    status_preparing: 'Preparing',
+                    status_ready: 'Ready',
+                    close: 'Close',
+                    login: 'Login',
+                    phone: 'Phone',
+                    password: 'Password',
+                    phone_placeholder: '+64 ...',
+                    password_placeholder: '••••••',
+                    login_btn: 'Login',
+                    register_btn: 'Create Account',
+                    no_account: 'No account?',
+                    register_now: 'Register now',
+                    register: 'Register',
+                    login_success: 'Login successful',
+                    register_success: 'Registration successful',
+                    order_success: 'Order placed!',
+                    added_to_cart: 'Added to cart',
+                    cart_updated: 'Cart updated',
+                    no_merchants_nearby: 'No merchants nearby',
+                    empty_cart_warning: 'Cart is empty',
+                    select_merchant: 'Please select a merchant',
+                    order_id: 'Order #',
+                    type_food_truck: 'Food Truck',
+                    type_cafe: 'Cafe',
+                    type_bakery: 'Bakery',
+                    type_other: 'Other',
+                    searching: 'Searching…',
+                    logging_in: 'Logging in...',
+                    registering: 'Registering...',
+                    placing_order: 'Placing order...'
                 }
-            } catch (e) {
-                console.error('SSE parse error:', e);
+            };
+
+            const currentLang = ref(localStorage.getItem('lang') || 'zh');
+
+            function t(key, vars) {
+                let s = (LANG[currentLang.value] && LANG[currentLang.value][key]) || (LANG.zh[key]) || key;
+                if (vars) {
+                    Object.keys(vars).forEach(k => {
+                        s = s.replace('{' + k + '}', vars[k]);
+                    });
+                }
+                return s;
             }
-        };
 
-        sseConnection.onerror = function() {
-            console.log('SSE connection error, retrying...');
-        };
-    }
+            function toggleLang() {
+                currentLang.value = currentLang.value === 'zh' ? 'en' : 'zh';
+                localStorage.setItem('lang', currentLang.value);
+            }
 
-    /* ===== Auth ===== */
-    function showLoginModal() {
-        document.getElementById('loginModal').classList.add('show');
-    }
+            // ===== Config =====
+            const API_BASE = '/api';
+            const DEFAULT_CENTER = { lat: -43.532, lng: 172.636 };
+            const TYPE_ICON = { food_truck: '🚚', cafe: '☕', bakery: '🍞', other: '📦' };
 
-    function closeLoginModal(event) {
-        if (event && event.target !== event.currentTarget) return;
-        document.getElementById('loginModal').classList.remove('show');
-    }
+            function getTypeIcon(type) {
+                return TYPE_ICON[type] || '📦';
+            }
 
-    function showRegister() {
-        document.getElementById('loginTitle').textContent = t('register');
-        document.querySelector('#loginModal .form-btn.primary').textContent = t('register');
-        document.querySelector('#loginModal .form-btn.secondary').textContent = t('login_btn');
-        document.querySelector('#loginModal .form-btn.primary').onclick = doRegister;
-        document.querySelector('#loginModal .form-btn.secondary').onclick = doLogin;
-    }
+            function typeName(type) {
+                return t('type_' + type) || type;
+            }
 
-    function showLogin() {
-        document.getElementById('loginTitle').textContent = t('login');
-        document.querySelector('#loginModal .form-btn.primary').textContent = t('login_btn');
-        document.querySelector('#loginModal .form-btn.secondary').textContent = t('register_btn');
-        document.querySelector('#loginModal .form-btn.primary').onclick = doLogin;
-        document.querySelector('#loginModal .form-btn.secondary').onclick = doRegister;
-    }
+            // ===== State =====
+            const map = ref(null);
+            const markers = ref([]);
+            const merchants = ref([]);
+            const expandedMenus = ref([]);
+            const userLoc = ref(null);
+            const userLocMarker = ref(null);
+            const searchQuery = ref('');
 
-    async function doLogin() {
-        var phone = document.getElementById('loginPhone').value;
-        var password = document.getElementById('loginPassword').value;
+            // Cart state
+            const cart = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
+            const currentMerchantId = ref(null);
+            const showCartPopup = ref(false);
+            const pickupMethod = ref('self');
+            const orderNote = ref('');
 
-        if (!phone || !password) {
-            toast(currentLang === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields', 'error');
-            return;
-        }
+            // Order state
+            const currentOrder = ref(null);
+            const showOrderPanel = ref(false);
+            const sseConnection = ref(null);
 
-        showLoading(currentLang === 'zh' ? '登录中…' : 'Logging in...');
+            // Auth state
+            const showLoginModal = ref(false);
+            const isRegister = ref(false);
+            const loginPhone = ref('');
+            const loginPassword = ref('');
 
-        try {
-            var data = await apiCall('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ phone: phone, password: password })
+            // UI state
+            const loading = ref(false);
+            const loadingText = ref('');
+            const refreshing = ref(false);
+
+            // Location state
+            const locationStatus = ref('wait');
+            const locationText = ref('');
+
+            // Status steps
+            const statusSteps = computed(() => [
+                { status: 'pending', icon: '⏳', label: t('status_pending') },
+                { status: 'accepted', icon: '✓', label: t('status_accepted') },
+                { status: 'preparing', icon: '👨‍🍳', label: t('status_preparing') },
+                { status: 'ready', icon: '🍽️', label: t('status_ready') }
+            ]);
+
+            // Computed
+            const cartTotalQty = computed(() => {
+                return cart.value.reduce((sum, item) => sum + item.qty, 0);
             });
-            localStorage.setItem('token', data.token);
-            closeLoginModal();
-            toast(t('login_success'), 'success');
-            updateUserUI();
-        } catch (e) {
-            toast(e.message || (currentLang === 'zh' ? '登录失败' : 'Login failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
 
-    async function doRegister() {
-        var phone = document.getElementById('loginPhone').value;
-        var password = document.getElementById('loginPassword').value;
-
-        if (!phone || !password) {
-            toast(currentLang === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields', 'error');
-            return;
-        }
-
-        if (password.length < 6) {
-            toast(currentLang === 'zh' ? '密码至少6位' : 'Password min 6 chars', 'error');
-            return;
-        }
-
-        showLoading(currentLang === 'zh' ? '注册中…' : 'Registering...');
-
-        try {
-            var data = await apiCall('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify({ phone: phone, password: password })
+            const cartTotalAmount = computed(() => {
+                return cart.value.reduce((sum, item) => sum + item.price * item.qty, 0);
             });
-            localStorage.setItem('token', data.token);
-            closeLoginModal();
-            toast(t('register_success'), 'success');
-            updateUserUI();
-        } catch (e) {
-            toast(e.message || (currentLang === 'zh' ? '注册失败' : 'Registration failed'), 'error');
-        } finally {
-            hideLoading();
+
+            const filteredMerchants = computed(() => {
+                if (!searchQuery.value) return merchants.value;
+                const q = searchQuery.value.toLowerCase();
+                return merchants.value.filter(m => {
+                    const nameMatch = m.name?.toLowerCase().includes(q);
+                    const nameEnMatch = m.nameEn?.toLowerCase().includes(q);
+                    const menuMatch = m.menu?.some(item => item.name?.toLowerCase().includes(q));
+                    return nameMatch || nameEnMatch || menuMatch;
+                });
+            });
+
+            const orderStatusTitle = computed(() => {
+                const status = currentOrder.value?.status || 'pending';
+                const map = {
+                    pending: t('order_pending'),
+                    accepted: t('order_accepted'),
+                    preparing: t('order_preparing'),
+                    ready: t('order_ready')
+                };
+                return map[status] || t('order_pending');
+            });
+
+            const orderProgress = computed(() => {
+                const status = currentOrder.value?.status || 'pending';
+                const map = { pending: 0, accepted: 33, preparing: 66, ready: 100 };
+                return map[status] || 0;
+            });
+
+            function statusStepClass(stepStatus) {
+                const status = currentOrder.value?.status || 'pending';
+                const order = ['pending', 'accepted', 'preparing', 'ready'];
+                const stepIdx = order.indexOf(stepStatus);
+                const currentIdx = order.indexOf(status);
+                if (stepIdx < currentIdx) return 'done';
+                if (stepIdx === currentIdx) return 'active';
+                return '';
+            }
+
+            // ===== API =====
+            async function apiCall(endpoint, options = {}) {
+                const token = localStorage.getItem('token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const r = await fetch(API_BASE + endpoint, {
+                    method: 'GET',
+                    headers,
+                    ...options
+                });
+
+                if (!r.ok) {
+                    let err = {};
+                    try { err = await r.json(); } catch (e) {}
+                    throw new Error(err.error || err.message || 'Failed');
+                }
+                return r.json();
+            }
+
+            // ===== GPS =====
+            function getGPS() {
+                return new Promise((resolve) => {
+                    if (!navigator.geolocation) return resolve(null);
+                    navigator.geolocation.getCurrentPosition(
+                        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+                        () => resolve(null),
+                        { enableHighAccuracy: true, timeout: 8000 }
+                    );
+                });
+            }
+
+            async function initUserLocation() {
+                locationStatus.value = 'wait';
+                locationText.value = t('locating');
+
+                const loc = await getGPS();
+                if (loc) {
+                    userLoc.value = loc;
+                    locationStatus.value = 'ok';
+                    locationText.value = t('located') + ` (${loc.lat.toFixed(3)}, ${loc.lng.toFixed(3)})`;
+                    if (map.value) {
+                        map.value.setView([loc.lat, loc.lng], 14);
+                    }
+                    showUserMarker();
+                } else {
+                    userLoc.value = DEFAULT_CENTER;
+                    locationStatus.value = 'fail';
+                    locationText.value = t('location_fail');
+                }
+            }
+
+            function refreshLocation() {
+                initUserLocation().then(() => searchMerchants());
+            }
+
+            function showUserMarker() {
+                if (!map.value || !userLoc.value) return;
+                if (userLocMarker.value) {
+                    map.value.removeLayer(userLocMarker.value);
+                }
+                userLocMarker.value = L.circleMarker([userLoc.value.lat, userLoc.value.lng], {
+                    radius: 8,
+                    fillColor: '#ff6b35',
+                    color: '#fff',
+                    weight: 2,
+                    fillOpacity: 1
+                }).addTo(map.value).bindPopup('📍 You');
+            }
+
+            // ===== Map =====
+            function initMap() {
+                if (map.value) return;
+                const c = userLoc.value || DEFAULT_CENTER;
+                map.value = L.map('map').setView([c.lat, c.lng], 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(map.value);
+            }
+
+            function updateMapMarkers() {
+                markers.value.forEach(m => map.value.removeLayer(m));
+                markers.value = [];
+
+                merchants.value.forEach(m => {
+                    const icon = TYPE_ICON[m.type] || '📦';
+                    const divIcon = L.divIcon({
+                        html: `<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));">${icon}</div>`,
+                        className: '',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                    });
+                    const mk = L.marker([m.lat, m.lng], { icon: divIcon }).addTo(map.value);
+                    mk.bindPopup(`<div class="popup-rich">
+                        <div class="pr-name">${icon} ${m.name}</div>
+                        <div class="pr-type">${typeName(m.type)}</div>
+                        <div class="pr-stars">${'★'.repeat(Math.round(m.rating))}${'☆'.repeat(5 - Math.round(m.rating))} ${m.rating}</div>
+                        <div class="pr-dist">📍 ${m.distance || '?'}km</div>
+                        <button class="pr-action" onclick="window.scrollToMerchant(${m.id})">${t('view_menu')}</button>
+                    </div>`);
+                    markers.value.push(mk);
+                });
+
+                if (merchants.value.length) {
+                    const group = L.featureGroup(markers.value);
+                    if (userLocMarker.value) group.addLayer(userLocMarker.value);
+                    map.value.fitBounds(group.getBounds().pad(0.15));
+                }
+                showUserMarker();
+            }
+
+            // Expose scrollToMerchant globally for popup button
+            window.scrollToMerchant = function(id) {
+                expandedMenus.value.push(id);
+                nextTick(() => {
+                    const el = document.querySelector(`.merchant-card:nth-child(${merchants.value.findIndex(m => m.id === id) + 1})`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
+            };
+
+            // ===== Mock Data =====
+            function getMockMerchants() {
+                return [
+                    {
+                        id: 1, name: '川味小馆', nameEn: 'Sichuan Kitchen', type: 'food_truck',
+                        lat: -43.529, lng: 172.638, rating: 4.5, reviewCount: 28, distance: 0.5,
+                        status: 'online', phone: '+64 21 123 456', address: 'Cathedral Square',
+                        menu: [
+                            { name: '麻婆豆腐 Mapo Tofu', price: 18 },
+                            { name: '宫保鸡丁 Kung Pao Chicken', price: 22 },
+                            { name: '酸辣汤 Hot & Sour Soup', price: 10 }
+                        ]
+                    },
+                    {
+                        id: 2, name: '寿司太郎', nameEn: 'Sushi Taro', type: 'food_truck',
+                        lat: -43.535, lng: 172.634, rating: 4.8, reviewCount: 56, distance: 0.8,
+                        status: 'online', phone: '+64 21 234 567', address: 'Riccarton',
+                        menu: [
+                            { name: '三文鱼刺身 Salmon Sashimi', price: 28 },
+                            { name: '鳗鱼寿司 Eel Sushi', price: 15 }
+                        ]
+                    },
+                    {
+                        id: 3, name: '咖啡小镇', nameEn: 'Coffee Town', type: 'cafe',
+                        lat: -43.533, lng: 172.635, rating: 4.6, reviewCount: 42, distance: 0.3,
+                        status: 'online', phone: '+64 21 345 678', address: 'New Regent Street',
+                        menu: [
+                            { name: '拿铁 Latte', price: 6 },
+                            { name: '卡布奇诺 Cappuccino', price: 6.5 },
+                            { name: '牛角包 Croissant', price: 5 }
+                        ]
+                    },
+                    {
+                        id: 4, name: '甜蜜时光', nameEn: 'Sweet Time', type: 'bakery',
+                        lat: -43.531, lng: 172.637, rating: 4.7, reviewCount: 33, distance: 0.4,
+                        status: 'online', phone: '+64 21 456 789', address: 'Colombo Street',
+                        menu: [
+                            { name: '法式可颂 Croissant', price: 5.5 },
+                            { name: '巧克力蛋糕 Chocolate Cake', price: 12 },
+                            { name: '肉桂卷 Cinnamon Roll', price: 7 }
+                        ]
+                    }
+                ];
+            }
+
+            // ===== Search =====
+            async function searchMerchants() {
+                loading.value = true;
+                loadingText.value = t('searching');
+                const loc = userLoc.value || DEFAULT_CENTER;
+
+                try {
+                    const data = await apiCall(`/merchants/nearby?lat=${loc.lat}&lng=${loc.lng}&radius=10`);
+                    merchants.value = data.merchants || [];
+                    if (!merchants.value.length) throw new Error('empty');
+                } catch (e) {
+                    merchants.value = getMockMerchants().filter(m => m.status === 'online');
+                }
+
+                updateMapMarkers();
+                loading.value = false;
+            }
+
+            async function onRefresh() {
+                refreshing.value = true;
+                await searchMerchants();
+                refreshing.value = false;
+            }
+
+            function onSearch() {
+                // Search is handled by filteredMerchants computed
+            }
+
+            // ===== Menu =====
+            function toggleMenu(id) {
+                const idx = expandedMenus.value.indexOf(id);
+                if (idx > -1) {
+                    expandedMenus.value.splice(idx, 1);
+                } else {
+                    expandedMenus.value.push(id);
+                }
+            }
+
+            // ===== Cart =====
+            function addToCart(merchantId, name, price) {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    showLoginModal.value = true;
+                    return;
+                }
+
+                if (currentMerchantId.value && currentMerchantId.value !== merchantId) {
+                    const confirmMsg = currentLang.value === 'zh'
+                        ? '清空当前购物车并添加新商户的菜品？'
+                        : 'Clear cart and add items from different merchant?';
+                    if (!confirm(confirmMsg)) return;
+                    cart.value = [];
+                }
+                currentMerchantId.value = merchantId;
+
+                const existing = cart.value.find(item => item.name === name && item.price === price);
+                if (existing) {
+                    existing.qty++;
+                } else {
+                    cart.value.push({ merchantId, name, price, qty: 1 });
+                }
+
+                saveCart();
+                vant.showToast(t('added_to_cart'));
+            }
+
+            function updateCartQty(name, price, newQty) {
+                const item = cart.value.find(i => i.name === name && i.price === price);
+                if (!item) return;
+
+                item.qty = newQty;
+                if (item.qty <= 0) {
+                    cart.value = cart.value.filter(i => i !== item);
+                }
+
+                saveCart();
+            }
+
+            function saveCart() {
+                localStorage.setItem('cart', JSON.stringify(cart.value));
+            }
+
+            // ===== Order =====
+            async function submitOrder() {
+                if (!cart.value.length) {
+                    vant.showToast(t('empty_cart_warning'));
+                    return;
+                }
+
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    showLoginModal.value = true;
+                    return;
+                }
+
+                const items = cart.value.map(item => ({
+                    name: item.name,
+                    qty: item.qty,
+                    price: item.price
+                }));
+
+                loading.value = true;
+                loadingText.value = t('placing_order');
+
+                try {
+                    const data = await apiCall('/orders', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            merchantId: currentMerchantId.value,
+                            items,
+                            pickupMethod: pickupMethod.value,
+                            note: orderNote.value
+                        })
+                    });
+
+                    cart.value = [];
+                    currentMerchantId.value = null;
+                    saveCart();
+                    showCartPopup.value = false;
+
+                    currentOrder.value = data.order;
+                    showOrderPanel.value = true;
+
+                    connectSSE(data.order.id);
+
+                    vant.showToast(t('order_success'));
+                } catch (e) {
+                    vant.showToast.fail(e.message || (currentLang.value === 'zh' ? '下单失败' : 'Order failed'));
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            // ===== SSE =====
+            function connectSSE(orderId) {
+                if (sseConnection.value) {
+                    sseConnection.value.close();
+                }
+
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                sseConnection.value = new EventSource(`/api/orders/${orderId}/stream`);
+
+                sseConnection.value.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'connected' || data.type === 'ping') return;
+
+                        if (data.type === 'order_status_changed' || data.type === 'order_updated') {
+                            const order = data.data || data.order;
+                            if (order) {
+                                currentOrder.value = order;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('SSE parse error:', e);
+                    }
+                };
+
+                sseConnection.value.onerror = function() {
+                    console.log('SSE connection error, retrying...');
+                };
+            }
+
+            // ===== Auth =====
+            async function doLogin() {
+                if (!loginPhone.value || !loginPassword.value) {
+                    vant.showToast(currentLang.value === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields');
+                    return;
+                }
+
+                loading.value = true;
+                loadingText.value = t('logging_in');
+
+                try {
+                    const data = await apiCall('/auth/login', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            phone: loginPhone.value,
+                            password: loginPassword.value
+                        })
+                    });
+                    localStorage.setItem('token', data.token);
+                    showLoginModal.value = false;
+                    vant.showToast(t('login_success'));
+                } catch (e) {
+                    vant.showToast.fail(e.message || (currentLang.value === 'zh' ? '登录失败' : 'Login failed'));
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            async function doRegister() {
+                if (!loginPhone.value || !loginPassword.value) {
+                    vant.showToast(currentLang.value === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields');
+                    return;
+                }
+
+                if (loginPassword.value.length < 6) {
+                    vant.showToast(currentLang.value === 'zh' ? '密码至少6位' : 'Password min 6 chars');
+                    return;
+                }
+
+                loading.value = true;
+                loadingText.value = t('registering');
+
+                try {
+                    const data = await apiCall('/auth/register', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            phone: loginPhone.value,
+                            password: loginPassword.value
+                        })
+                    });
+                    localStorage.setItem('token', data.token);
+                    showLoginModal.value = false;
+                    vant.showToast(t('register_success'));
+                } catch (e) {
+                    vant.showToast.fail(e.message || (currentLang.value === 'zh' ? '注册失败' : 'Registration failed'));
+                } finally {
+                    loading.value = false;
+                }
+            }
+
+            // ===== Init =====
+            onMounted(async () => {
+                initMap();
+                await initUserLocation();
+                showUserMarker();
+                searchMerchants();
+            });
+
+            // Watch cart changes
+            watch(cart, () => {
+                saveCart();
+            }, { deep: true });
+
+            return {
+                // i18n
+                t,
+                currentLang,
+                toggleLang,
+                typeName,
+                getTypeIcon,
+
+                // Location
+                locationStatus,
+                locationText,
+                refreshLocation,
+
+                // Map
+                initMap,
+
+                // Search
+                searchQuery,
+                onSearch,
+
+                // Merchants
+                merchants,
+                filteredMerchants,
+                expandedMenus,
+                toggleMenu,
+
+                // UI
+                loading,
+                loadingText,
+                refreshing,
+                onRefresh,
+
+                // Cart
+                cart,
+                cartTotalQty,
+                cartTotalAmount,
+                showCartPopup,
+                pickupMethod,
+                orderNote,
+                addToCart,
+                updateCartQty,
+
+                // Order
+                currentOrder,
+                showOrderPanel,
+                orderStatusTitle,
+                orderProgress,
+                statusSteps,
+                statusStepClass,
+                submitOrder,
+
+                // Auth
+                showLoginModal,
+                isRegister,
+                loginPhone,
+                loginPassword,
+                doLogin,
+                doRegister
+            };
         }
-    }
-
-    function updateUserUI() {
-        var token = localStorage.getItem('token');
-        var userBtn = document.getElementById('userBtn');
-        if (token) {
-            userBtn.textContent = '👤';
-        }
-    }
-
-    function logout() {
-        localStorage.removeItem('token');
-        updateUserUI();
-        toast(currentLang === 'zh' ? '已退出登录' : 'Logged out', 'info');
-    }
-
-    /* ===== Init ===== */
-    window.addEventListener('DOMContentLoaded', async function() {
-        applyLang();
-        initMap();
-        await initUserLocation();
-        showUserMarker();
-        searchMerchants();
-        updateCartUI();
-        updateUserUI();
     });
+
+    // Register all Vant components
+    app.use(vant);
+    app.mount('#app');
     </script>
 </body>
 </html>

@@ -2,6 +2,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 import { EventEmitter } from 'events';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import xss from 'xss';
 import {
   createMerchant,
   getMerchant,
@@ -102,7 +105,60 @@ const SSE_HEARTBEAT_INTERVAL = 10000; // 10秒心跳，更频繁避免Railway/pr
 // ==================== Express ====================
 
 const app = express();
-app.use(cors());
+
+// ==================== 安全中间件 ====================
+
+// 安全HTTP头
+app.use(helmet({
+  contentSecurityPolicy: false, // 因为我们serve前端HTML
+}));
+
+// CORS限制
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:3000'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // 允许无origin的请求（如移动app、curl）
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // 暂时宽松，上线后收紧
+    }
+  },
+  credentials: true,
+}));
+
+// 全局速率限制
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,  // 1分钟
+  max: 100,             // 每IP 100次
+  message: { error: '请求过于频繁，请稍后重试' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', globalLimiter);
+
+// 认证接口严格限制
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 10,                   // 每IP 10次
+  message: { error: '登录/注册尝试过于频繁，请15分钟后重试' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/', authLimiter);
+
+// ==================== 输入消毒工具 ====================
+
+function sanitizeInput(input: string, maxLength: number = 500): string {
+  if (typeof input !== 'string') return '';
+  return xss(input.trim().slice(0, maxLength));
+}
+
+// ==================== Express 基础中间件 ====================
+
 app.use(express.json());
 
 // ==================== 认证接口 ====================
@@ -149,7 +205,15 @@ app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
 
 // --- 商户注册 (需登录) ---
 app.post('/api/merchants', authMiddleware, async (req: Request, res: Response) => {
-  const { name, type, phone, email, description, location, address } = req.body;
+  // 输入消毒
+  const name = sanitizeInput(req.body.name, 100);
+  const type = sanitizeInput(req.body.type, 50);
+  const phone = sanitizeInput(req.body.phone, 20);
+  const email = req.body.email ? sanitizeInput(req.body.email, 100) : undefined;
+  const description = req.body.description ? sanitizeInput(req.body.description, 500) : undefined;
+  const address = req.body.address ? sanitizeInput(req.body.address, 200) : undefined;
+  const location = req.body.location;
+  
   if (!name || !type || !phone) return err(res, 400, 'name/type/phone 必填');
   if (!location?.lat || !location?.lng) return err(res, 400, 'location{lat,lng} 必填');
 
@@ -305,8 +369,16 @@ app.put('/api/merchants/:id/menu', authMiddleware, async (req: Request, res: Res
       return err(res, 403, '商家账号已停权/到期，无法操作');
     }
 
-    const items = req.body.items;
-    if (!Array.isArray(items)) return err(res, 400, 'items 必须是数组');
+    const rawItems = req.body.items;
+    if (!Array.isArray(rawItems)) return err(res, 400, 'items 必须是数组');
+
+    // 输入消毒：对菜单项的文本字段进行消毒
+    const items = rawItems.map((item: any) => ({
+      ...item,
+      name: sanitizeInput(item.name, 100),
+      description: item.description ? sanitizeInput(item.description, 300) : undefined,
+      category: item.category ? sanitizeInput(item.category, 50) : undefined,
+    }));
 
     const updated = await updateMenu(req.params.id, items);
     res.json({ message: '菜单已更新', menuItems: updated?.menuItems });
@@ -322,7 +394,10 @@ app.post('/api/merchants/:id/reviews', authMiddleware, async (req: Request, res:
     const m = await getMerchant(req.params.id);
     if (!m) return err(res, 404, '商户不存在');
 
-    const { score, comment } = req.body;
+    const { score } = req.body;
+    // 输入消毒
+    const comment = sanitizeInput(req.body.comment, 500);
+    
     if (!score || score < 1 || score > 5) return err(res, 400, 'score 必须 1-5');
     if (!comment) return err(res, 400, 'comment 必填');
 
@@ -358,7 +433,10 @@ app.get('/api/merchants/:id/reviews', async (req: Request, res: Response) => {
  * 请求体: { merchantId, items: [{name, qty, price, note?}], tableNumber?, pickupMethod?, note? }
  */
 app.post('/api/orders', authMiddleware, async (req: Request, res: Response) => {
-  const { merchantId, items, tableNumber, pickupMethod, note } = req.body;
+  const { merchantId, items, tableNumber, pickupMethod } = req.body;
+  // 输入消毒
+  const note = req.body.note ? sanitizeInput(req.body.note, 500) : '';
+  
   const user = (req as any).user;
   const userId = (req as any).userId;
 
@@ -404,7 +482,7 @@ app.post('/api/orders', authMiddleware, async (req: Request, res: Response) => {
       items: items as OrderItem[],
       tableNumber: tableNumber || null,
       pickupMethod: pickupMethod || 'self',
-      note: note || '',
+      note,
     });
 
     // 发送订单创建事件（通知商家）
