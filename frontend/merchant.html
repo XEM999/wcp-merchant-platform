@@ -1539,8 +1539,7 @@
                 <button class="form-btn primary" style="width:auto;padding:0 16px" onclick="addKitchenStation()">+</button>
             </div>
             <div class="modal-footer">
-                <button class="form-btn secondary" onclick="closeKitchenStationsModal()" data-i18n="cancel">取消</button>
-                <button class="form-btn primary" onclick="saveKitchenStations()" data-i18n="save">保存</button>
+                <button class="form-btn primary" onclick="closeKitchenStationsModal()" style="width:100%">✓ 完成</button>
             </div>
         </div>
     </div>
@@ -3364,16 +3363,17 @@
         }).join('');
     }
 
-    function addKitchenStation() {
+    async function addKitchenStation() {
         var nameZh = document.getElementById('newStationNameZh').value.trim();
         var nameEn = document.getElementById('newStationNameEn').value.trim();
         
-        if (!nameZh || !nameEn) {
-            toast(currentLang === 'zh' ? '请输入中文名和英文名' : 'Please enter both Chinese and English names', 'error');
+        if (!nameZh) {
+            toast(currentLang === 'zh' ? '请输入中文名' : 'Please enter Chinese name', 'error');
             return;
         }
+        // 英文名不填则自动用中文名
+        if (!nameEn) nameEn = nameZh;
         
-        // 生成UUID格式的ID
         var id = 'station_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         kitchenStationsData.push({
             id: id,
@@ -3384,12 +3384,15 @@
         document.getElementById('newStationNameZh').value = '';
         document.getElementById('newStationNameEn').value = '';
         renderKitchenStations();
+        // 自动保存到服务器
+        await saveKitchenStations();
     }
 
-    function deleteKitchenStation(index) {
+    async function deleteKitchenStation(index) {
         if (confirm(currentLang === 'zh' ? '确定删除此工位？' : 'Delete this station?')) {
             kitchenStationsData.splice(index, 1);
             renderKitchenStations();
+            await saveKitchenStations();
         }
     }
 
