@@ -216,7 +216,8 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
 
   try {
     const result = await register(phone, password);
-    res.status(201).json({ message: '注册成功', token: result.token, user: result.user });
+    const merchantId = await getUserMerchantId(result.user.id);
+    res.status(201).json({ message: '注册成功', token: result.token, user: { ...result.user, merchantId: merchantId || null } });
   } catch (e: any) {
     if (e.message.includes('已注册')) {
       return err(res, 400, e.message);
@@ -233,17 +234,20 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
 
   try {
     const result = await login(phone, password);
-    res.json({ message: '登录成功', token: result.token, user: result.user });
+    const merchantId = await getUserMerchantId(result.user.id);
+    res.json({ message: '登录成功', token: result.token, user: { ...result.user, merchantId: merchantId || null } });
   } catch (e: any) {
     return err(res, 401, e.message || '手机号或密码错误');
   }
 });
 
 // --- 获取当前用户信息 ---
-app.get('/api/auth/me', authMiddleware, (req: Request, res: Response) => {
+app.get('/api/auth/me', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
   const { passwordHash, ...userWithoutPassword } = user;
-  res.json(userWithoutPassword);
+  // 附带merchantId方便前端路由
+  const merchantId = await getUserMerchantId(user.id);
+  res.json({ ...userWithoutPassword, merchantId: merchantId || null });
 });
 
 // ==================== 商户接口 ====================

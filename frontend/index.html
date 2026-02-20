@@ -1061,7 +1061,6 @@
             <span class="header-brand">NearBite</span>
         </div>
         <div class="header-right">
-            <a href="/merchant" class="merchant-btn" id="merchantBtn" data-i18n="im_merchant">我是商家</a>
             <button class="user-btn" id="userBtn" onclick="showLoginModal()">👤</button>
             <select class="lang-select" id="langSelect" onchange="switchLang(this.value)">
                 <option value="zh">🇨🇳 中文</option>
@@ -1989,6 +1988,20 @@
     /* ===== Auth ===== */
     var currentUser = null; // 当前登录用户
 
+    // 根据用户角色跳转到对应页面
+    function routeByRole(user) {
+        if (user.role === 'admin') {
+            window.location.href = '/admin';
+            return true;
+        }
+        if (user.merchantId) {
+            window.location.href = '/merchant';
+            return true;
+        }
+        // 普通消费者，留在当前页
+        return false;
+    }
+
     function showLoginModal() {
         document.getElementById('loginModal').classList.add('show');
     }
@@ -2057,9 +2070,11 @@
             currentUser = data.user;
             closeLoginModal();
             toast(t('login_success'), 'success');
-            updateUserUI();
-            // 登录成功后隐藏登录页，显示主内容
-            hideFullLoginPage();
+            // 根据角色跳转
+            if (!routeByRole(data.user)) {
+                updateUserUI();
+                hideFullLoginPage();
+            }
         } catch (e) {
             toast(e.message || (currentLang === 'zh' ? '登录失败' : 'Login failed'), 'error');
         } finally {
@@ -2093,9 +2108,10 @@
             currentUser = data.user;
             closeLoginModal();
             toast(t('register_success'), 'success');
-            updateUserUI();
-            // 注册成功后隐藏登录页，显示主内容
-            hideFullLoginPage();
+            if (!routeByRole(data.user)) {
+                updateUserUI();
+                hideFullLoginPage();
+            }
         } catch (e) {
             toast(e.message || (currentLang === 'zh' ? '注册失败' : 'Registration failed'), 'error');
         } finally {
@@ -2106,23 +2122,13 @@
     function updateUserUI() {
         var token = localStorage.getItem('token');
         var userBtn = document.getElementById('userBtn');
-        var merchantBtn = document.querySelector('.merchant-btn');
         
         if (token && currentUser) {
             userBtn.textContent = '👤';
             userBtn.onclick = logout;
-            // 登录后显示"商家后台"按钮（merchant.html自己判断是否有店铺）
-            if (merchantBtn) {
-                merchantBtn.style.display = 'inline-block';
-                merchantBtn.textContent = t('merchant_portal') || '商家后台';
-            }
         } else {
             userBtn.textContent = '👤';
             userBtn.onclick = showLoginModal;
-            // 未登录时隐藏商家后台按钮
-            if (merchantBtn) {
-                merchantBtn.style.display = 'none';
-            }
         }
     }
 
@@ -2139,6 +2145,8 @@
         if (savedUser) {
             try {
                 currentUser = JSON.parse(savedUser);
+                // 用缓存的用户信息先做角色路由
+                if (routeByRole(currentUser)) return;
                 updateUserUI();
                 hideFullLoginPage();
             } catch (e) {
@@ -2152,6 +2160,8 @@
             if (data && data.id) {
                 currentUser = data;
                 localStorage.setItem('user', JSON.stringify(data));
+                // 验证后再次检查角色路由（可能merchantId刚关联）
+                if (routeByRole(data)) return;
                 updateUserUI();
             } else {
                 // token无效，清除并显示登录页
@@ -2198,8 +2208,10 @@
             localStorage.setItem('user', JSON.stringify(data.user));
             currentUser = data.user;
             toast(t('login_success'), 'success');
-            updateUserUI();
-            hideFullLoginPage();
+            if (!routeByRole(data.user)) {
+                updateUserUI();
+                hideFullLoginPage();
+            }
         } catch (e) {
             toast(e.message || (currentLang === 'zh' ? '登录失败' : 'Login failed'), 'error');
         } finally {
@@ -2233,8 +2245,10 @@
             localStorage.setItem('user', JSON.stringify(data.user));
             currentUser = data.user;
             toast(t('register_success'), 'success');
-            updateUserUI();
-            hideFullLoginPage();
+            if (!routeByRole(data.user)) {
+                updateUserUI();
+                hideFullLoginPage();
+            }
         } catch (e) {
             toast(e.message || (currentLang === 'zh' ? '注册失败' : 'Registration failed'), 'error');
         } finally {
