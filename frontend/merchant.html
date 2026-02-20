@@ -1226,6 +1226,247 @@
         .image-preview-container.loading .image-upload-loading {
             display: flex;
         }
+
+        /* ===== Location Schedule ===== */
+        .schedule-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .schedule-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .schedule-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .schedule-desc {
+            font-size: 13px;
+            color: var(--text-3);
+            margin-bottom: 16px;
+        }
+
+        .schedule-day-card {
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .schedule-day-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .schedule-day-toggle {
+            position: relative;
+            width: 44px;
+            height: 26px;
+            background: var(--border);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background .2s;
+            flex-shrink: 0;
+        }
+
+        .schedule-day-toggle.on {
+            background: var(--green);
+        }
+
+        .schedule-day-toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform .2s;
+            box-shadow: var(--shadow);
+        }
+
+        .schedule-day-toggle.on::after {
+            transform: translateX(18px);
+        }
+
+        .schedule-day-name {
+            font-size: 15px;
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        .schedule-day-status {
+            font-size: 12px;
+            color: var(--text-3);
+            margin-left: auto;
+        }
+
+        .schedule-day-content {
+            display: none;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 10px;
+        }
+
+        .schedule-day-card.enabled .schedule-day-content {
+            display: block;
+        }
+
+        .schedule-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .schedule-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .schedule-label {
+            font-size: 12px;
+            color: var(--text-2);
+            min-width: 50px;
+        }
+
+        .schedule-input {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+        }
+
+        .schedule-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255,107,53,.1);
+        }
+
+        .schedule-time-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .schedule-time-input {
+            width: 100px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+        }
+
+        .schedule-time-separator {
+            color: var(--text-3);
+            font-size: 14px;
+        }
+
+        .schedule-advanced-toggle {
+            font-size: 12px;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 4px 8px;
+            background: var(--primary-light);
+            border-radius: 6px;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        .schedule-advanced {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .schedule-advanced.show {
+            display: block;
+        }
+
+        .schedule-coords {
+            display: flex;
+            gap: 8px;
+        }
+
+        .schedule-coords input {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .schedule-save-btn {
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .schedule-save-btn:active {
+            transform: scale(.98);
+        }
+
+        .followers-display {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--text-2);
+            padding: 8px 12px;
+            background: var(--red-bg);
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+
+        .followers-count {
+            font-weight: 700;
+            color: var(--red);
+        }
+
+        @media (max-width: 400px) {
+            .schedule-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .schedule-label {
+                min-width: auto;
+            }
+            .schedule-input {
+                min-width: auto;
+            }
+            .schedule-time-row {
+                flex-wrap: wrap;
+            }
+            .schedule-time-input {
+                flex: 1;
+                min-width: 80px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1717,7 +1958,29 @@
             kitchen_stations_desc: '设置厨房屏幕和工位',
             push_to_stations: '推送到工位',
             qr_code: '点餐二维码',
-            qr_code_desc: '生成二维码让顾客扫码点餐'
+            qr_code_desc: '生成二维码让顾客扫码点餐',
+            location_schedule: '位置日程',
+            schedule_desc: '设置每天的营业地点和时间',
+            mon: '周一',
+            tue: '周二',
+            wed: '周三',
+            thu: '周四',
+            fri: '周五',
+            sat: '周六',
+            sun: '周日',
+            open_time: '开门',
+            close_time: '关门',
+            schedule_saved: '日程已保存',
+            schedule_deleted: '日程已删除',
+            gps_updating: '正在获取位置...',
+            gps_updated: '位置已更新',
+            gps_failed: '无法获取位置',
+            followers: '粉丝',
+            address_label: '地址',
+            lat_label: '纬度',
+            lng_label: '经度',
+            advanced_settings: '高级设置',
+            use_default_location: '使用默认位置'
         },
         en: {
             merchant_portal: 'Merchant Portal',
@@ -1831,7 +2094,301 @@
             kitchen_stations_desc: 'Configure kitchen screens and stations',
             push_to_stations: 'Push to Stations',
             qr_code: 'QR Code',
-            qr_code_desc: 'Generate QR code for customer ordering'
+            qr_code_desc: 'Generate QR code for customer ordering',
+            location_schedule: 'Location Schedule',
+            schedule_desc: 'Set daily location and hours',
+            mon: 'Mon',
+            tue: 'Tue',
+            wed: 'Wed',
+            thu: 'Thu',
+            fri: 'Fri',
+            sat: 'Sat',
+            sun: 'Sun',
+            open_time: 'Open',
+            close_time: 'Close',
+            schedule_saved: 'Schedule saved',
+            schedule_deleted: 'Schedule deleted',
+            gps_updating: 'Getting location...',
+            gps_updated: 'Location updated',
+            gps_failed: 'Cannot get location',
+            followers: 'Followers',
+            address_label: 'Address',
+            lat_label: 'Lat',
+            lng_label: 'Lng',
+            advanced_settings: 'Advanced',
+            use_default_location: 'Use default location'
+        },
+        ja: {
+            merchant_portal: 'マーチャント管理画面',
+            phone: '電話番号',
+            password: 'パスワード',
+            phone_placeholder: '+64 ...',
+            password_placeholder: '••••••',
+            login_btn: 'ログイン',
+            login_success: 'ログイン成功',
+            login_failed: 'ログイン失敗',
+            create_store: '店舗を作成',
+            store_name: '店舗名',
+            store_name_placeholder: '私の店舗',
+            store_type: '店舗タイプ',
+            store_phone: '連絡先',
+            store_address: '住所',
+            store_address_placeholder: '住所',
+            store_desc: '店舗説明',
+            store_desc_placeholder: '店舗の説明...',
+            create_store_btn: '店舗作成',
+            store_created: '店舗作成成功',
+            store_create_failed: '店舗作成失敗',
+            status_pending: '承認待ち',
+            status_accepted: '承認済み',
+            status_preparing: '準備中',
+            status_ready: '完成',
+            status_picked_up: '受取済み',
+            status_rejected: '拒否',
+            tab_orders: '注文',
+            tab_menu: 'メニュー',
+            tab_store: '店舗',
+            tab_settings: '設定',
+            menu_management: 'メニュー管理',
+            add_item: 'アイテム追加',
+            item_name: 'アイテム名',
+            item_price: '価格 (NZD)',
+            item_category: 'カテゴリー',
+            item_desc: '説明',
+            cancel: 'キャンセル',
+            save: '保存',
+            item_saved: 'アイテム保存済み',
+            item_deleted: 'アイテム削除済み',
+            confirm_delete: 'このアイテムを削除しますか？',
+            order_accept: '承認',
+            order_prepare: '準備開始',
+            order_complete: '完了',
+            order_reject: '拒否',
+            order_total: '合計',
+            order_note: 'メモ',
+            order_table: 'テーブル',
+            order_pickup: '受取',
+            order_new: '新規注文！',
+            store_online: '営業中',
+            store_offline: '休業中',
+            store_status_online: 'タップで閉店',
+            store_status_offline: 'タップで開店',
+            kitchen_mode: 'キッチン表示モード',
+            kitchen_mode_desc: 'キッチンスクリーン用',
+            logout: 'ログアウト',
+            logout_success: 'ログアウト済み',
+            no_orders: '注文なし',
+            no_menu: 'メニューなし、追加してください',
+            type_food_truck: 'フードトラック',
+            type_cafe: 'カフェ',
+            type_bakery: 'ベーカリー',
+            type_restaurant: 'レストラン',
+            network_error: 'ネットワークエラー、再試行してください',
+            session_expired: 'セッション期限切れ、再ログインしてください',
+            sse_connected: 'リアルタイム接続済み',
+            sse_disconnected: '切断、再接続中...',
+            confirm_action: '確認',
+            custom_sound: '注文通知音',
+            sound_default: 'デフォルト通知音',
+            sound_custom: 'カスタム通知音',
+            sound_preview: '試聴',
+            sound_upload: 'アップロード',
+            sound_record: '録音',
+            sound_reset: 'デフォルトに戻す',
+            sound_recording: '録音中...タップで停止',
+            sound_uploaded: '通知音更新済み！',
+            sound_recorded: '録音を通知音に設定！',
+            sound_restored: 'デフォルト通知音に復元',
+            sound_too_large: 'ファイルが大きすぎます、1MB以下',
+            sound_mic_error: 'マイクにアクセスできません',
+            confirm_mode: '確認モード',
+            confirm_longpress: '長押し',
+            confirm_swipe: 'スワイプ',
+            confirm_doubleclick: 'ダブルクリック',
+            confirm_longpress_desc: '1.5秒長押しで確認',
+            confirm_swipe_desc: 'スワイプで確認',
+            confirm_doubleclick_desc: '2回タップで確認',
+            confirm_prompt: '確認？',
+            slide_to_confirm: 'スワイプで確認',
+            confirm_quicktap: 'クイックタップ',
+            confirm_quicktap_desc: 'タップで確認、長押しで戻す',
+            longpress_duration: '長押し時間',
+            undo_action: '戻す',
+            undoing: '戻し中...',
+            pickup_methods: '受取方法',
+            pickup_methods_desc: '顧客の受取オプションを設定',
+            preset_options: 'プリセットオプション',
+            custom_options: 'カスタムオプション',
+            add_custom: 'カスタム追加',
+            require_table: 'テーブル番号必要',
+            method_enabled: '有効',
+            method_disabled: '無効',
+            method_saved: '受取方法保存済み',
+            delete_method: '削除',
+            confirm_delete_method: 'この受取方法を削除しますか？',
+            kitchen_stations: 'キッチンステーション',
+            kitchen_stations_desc: 'キッチンスクリーンとステーションを設定',
+            push_to_stations: 'ステーションに送信',
+            qr_code: 'QRコード',
+            qr_code_desc: '顧客注文用QRコードを生成',
+            location_schedule: '出店スケジュール',
+            schedule_desc: '毎日の営業場所と時間を設定',
+            mon: '月',
+            tue: '火',
+            wed: '水',
+            thu: '木',
+            fri: '金',
+            sat: '土',
+            sun: '日',
+            open_time: '開店',
+            close_time: '閉店',
+            schedule_saved: 'スケジュール保存済み',
+            schedule_deleted: 'スケジュール削除済み',
+            gps_updating: '位置取得中...',
+            gps_updated: '位置更新済み',
+            gps_failed: '位置を取得できません',
+            followers: 'フォロワー',
+            address_label: '住所',
+            lat_label: '緯度',
+            lng_label: '経度',
+            advanced_settings: '詳細設定',
+            use_default_location: 'デフォルト位置を使用'
+        },
+        ko: {
+            merchant_portal: '가맹점 관리',
+            phone: '전화번호',
+            password: '비밀번호',
+            phone_placeholder: '+64 ...',
+            password_placeholder: '••••••',
+            login_btn: '로그인',
+            login_success: '로그인 성공',
+            login_failed: '로그인 실패',
+            create_store: '가게 만들기',
+            store_name: '가게 이름',
+            store_name_placeholder: '내 가게',
+            store_type: '가게 유형',
+            store_phone: '연락처',
+            store_address: '주소',
+            store_address_placeholder: '주소',
+            store_desc: '가게 설명',
+            store_desc_placeholder: '가게 설명...',
+            create_store_btn: '가게 생성',
+            store_created: '가게 생성 완료',
+            store_create_failed: '가게 생성 실패',
+            status_pending: '대기중',
+            status_accepted: '수락됨',
+            status_preparing: '준비중',
+            status_ready: '완료',
+            status_picked_up: '수령완료',
+            status_rejected: '거절됨',
+            tab_orders: '주문',
+            tab_menu: '메뉴',
+            tab_store: '가게',
+            tab_settings: '설정',
+            menu_management: '메뉴 관리',
+            add_item: '메뉴 추가',
+            item_name: '메뉴명',
+            item_price: '가격 (NZD)',
+            item_category: '카테고리',
+            item_desc: '설명',
+            cancel: '취소',
+            save: '저장',
+            item_saved: '메뉴 저장됨',
+            item_deleted: '메뉴 삭제됨',
+            confirm_delete: '이 메뉴를 삭제하시겠습니까?',
+            order_accept: '수락',
+            order_prepare: '준비시작',
+            order_complete: '완료',
+            order_reject: '거절',
+            order_total: '합계',
+            order_note: '메모',
+            order_table: '테이블',
+            order_pickup: '픽업',
+            order_new: '새 주문!',
+            store_online: '영업중',
+            store_offline: '영업종료',
+            store_status_online: '눌러서 종료',
+            store_status_offline: '눌러서 시작',
+            kitchen_mode: '주방 화면 모드',
+            kitchen_mode_desc: '주방 스크린용',
+            logout: '로그아웃',
+            logout_success: '로그아웃 됨',
+            no_orders: '주문 없음',
+            no_menu: '메뉴 없음, 추가해 주세요',
+            type_food_truck: '푸드트럭',
+            type_cafe: '카페',
+            type_bakery: '베이커리',
+            type_restaurant: '레스토랑',
+            network_error: '네트워크 오류, 다시 시도하세요',
+            session_expired: '세션 만료, 다시 로그인하세요',
+            sse_connected: '실시간 연결됨',
+            sse_disconnected: '연결 끊김, 재연결중...',
+            confirm_action: '확인',
+            custom_sound: '주문 알림음',
+            sound_default: '기본 알림음',
+            sound_custom: '사용자 알림음',
+            sound_preview: '미리듣기',
+            sound_upload: '업로드',
+            sound_record: '녹음',
+            sound_reset: '기본으로 복원',
+            sound_recording: '녹음중...눌러서 중지',
+            sound_uploaded: '알림음 업데이트됨!',
+            sound_recorded: '녹음이 알림음으로 저장됨!',
+            sound_restored: '기본 알림음으로 복원됨',
+            sound_too_large: '파일이 너무 큽니다, 1MB 이하',
+            sound_mic_error: '마이크에 접근할 수 없습니다',
+            confirm_mode: '확인 모드',
+            confirm_longpress: '길게 누르기',
+            confirm_swipe: '스와이프',
+            confirm_doubleclick: '더블클릭',
+            confirm_longpress_desc: '1.5초 눌러서 확인',
+            confirm_swipe_desc: '스와이프로 확인',
+            confirm_doubleclick_desc: '두 번 눌러서 확인',
+            confirm_prompt: '확인?',
+            slide_to_confirm: '스와이프하여 확인',
+            confirm_quicktap: '빠른 탭',
+            confirm_quicktap_desc: '탭으로 확인, 길게 눌러서 되돌리기',
+            longpress_duration: '누르기 시간',
+            undo_action: '되돌리기',
+            undoing: '되돌리는중...',
+            pickup_methods: '픽업 방법',
+            pickup_methods_desc: '고객 픽업 옵션 설정',
+            preset_options: '기본 옵션',
+            custom_options: '사용자 옵션',
+            add_custom: '사용자 추가',
+            require_table: '테이블 번호 필요',
+            method_enabled: '사용함',
+            method_disabled: '사용안함',
+            method_saved: '픽업 방법 저장됨',
+            delete_method: '삭제',
+            confirm_delete_method: '이 픽업 방법을 삭제하시겠습니까?',
+            kitchen_stations: '주방 스테이션',
+            kitchen_stations_desc: '주방 스크린과 스테이션 설정',
+            push_to_stations: '스테이션으로 전송',
+            qr_code: 'QR코드',
+            qr_code_desc: '고객 주문용 QR코드 생성',
+            location_schedule: '위치 일정',
+            schedule_desc: '매일의 영업 위치와 시간 설정',
+            mon: '월',
+            tue: '화',
+            wed: '수',
+            thu: '목',
+            fri: '금',
+            sat: '토',
+            sun: '일',
+            open_time: '오픈',
+            close_time: '마감',
+            schedule_saved: '일정 저장됨',
+            schedule_deleted: '일정 삭제됨',
+            gps_updating: '위치 확인 중...',
+            gps_updated: '위치 업데이트됨',
+            gps_failed: '위치를 가져올 수 없습니다',
+            followers: '팔로워',
+            address_label: '주소',
+            lat_label: '위도',
+            lng_label: '경도',
+            advanced_settings: '고급 설정',
+            use_default_location: '기본 위치 사용'
         }
     };
 
@@ -1844,7 +2401,8 @@
     }
 
     function applyLang() {
-        document.getElementById('langBtn').textContent = currentLang === 'zh' ? '中文' : 'EN';
+        const langLabels = { zh: '中文', en: 'EN', ja: '日本語', ko: '한국어' };
+        document.getElementById('langBtn').textContent = langLabels[currentLang] || '中文';
         document.querySelectorAll('[data-i18n]').forEach(el => {
             el.textContent = t(el.dataset.i18n);
         });
@@ -1854,7 +2412,9 @@
     }
 
     function toggleLang() {
-        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+        const langOrder = ['zh', 'en', 'ja', 'ko'];
+        const idx = langOrder.indexOf(currentLang);
+        currentLang = langOrder[(idx + 1) % langOrder.length];
         localStorage.setItem('lang', currentLang);
         applyLang();
         renderStore();
@@ -2501,10 +3061,34 @@
     async function toggleStoreStatus() {
         if (!merchant) return;
 
-        showLoading(currentLang === 'zh' ? '更新中...' : 'Updating...');
+        const newStatus = !merchant.online;
+
+        // If turning online, try to get GPS location first
+        if (newStatus) {
+            showLoading(t('gps_updating'));
+            
+            try {
+                var position = await getGPSPosition();
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+                
+                // Upload actual location
+                await apiCall('/merchant/actual-location', {
+                    method: 'POST',
+                    body: JSON.stringify({ lat: lat, lng: lng })
+                });
+                
+                toast(t('gps_updated'), 'success');
+            } catch (e) {
+                // GPS failed, still allow online but show warning
+                console.error('GPS error:', e);
+                toast(t('gps_failed'), 'info');
+            }
+        } else {
+            showLoading(currentLang === 'zh' ? '更新中...' : 'Updating...');
+        }
 
         try {
-            const newStatus = !merchant.online;
             await apiCall('/merchants/' + merchant.id + '/status', {
                 method: 'PUT',
                 body: JSON.stringify({ online: newStatus })
@@ -2520,6 +3104,25 @@
         }
     }
 
+    function getGPSPosition() {
+        return new Promise(function(resolve, reject) {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation not supported'));
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                resolve,
+                reject,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        });
+    }
+
     function renderStore() {
         if (!merchant) return;
 
@@ -2530,6 +3133,8 @@
             restaurant: t('type_restaurant')
         };
 
+        const followerCount = merchant.follower_count || 0;
+
         document.getElementById('storeCard').innerHTML = `
             <div class="store-header">
                 <div class="store-icon">${merchant.online ? '🟢' : '🔴'}</div>
@@ -2537,6 +3142,11 @@
                     <div class="store-name">${merchant.name}</div>
                     <div class="store-type">${typeNames[merchant.type] || merchant.type}</div>
                 </div>
+            </div>
+            <div class="followers-display">
+                <span>❤️</span>
+                <span>${t('followers')}:</span>
+                <span class="followers-count">${followerCount}</span>
             </div>
             <div class="store-info-item">
                 <span class="store-info-label">📍</span>
@@ -2555,6 +3165,186 @@
                 <button class="store-status-btn">${merchant.online ? t('store_status_online') : t('store_status_offline')}</button>
             </div>
         `;
+
+        // Render location schedule card
+        renderScheduleCard();
+    }
+
+    // ===== Location Schedule =====
+    var schedulesData = {};
+    var defaultLocation = { lat: -43.532, lng: 172.636 };
+
+    async function loadSchedules() {
+        if (!merchant) return;
+        try {
+            var data = await apiCall('/merchants/' + merchant.id + '/schedules');
+            var schedules = data.schedules || data || [];
+            schedulesData = {};
+            schedules.forEach(function(s) {
+                schedulesData[s.dayOfWeek] = s;
+            });
+            // Update default location from merchant
+            if (merchant.location) {
+                defaultLocation = { lat: merchant.location.lat, lng: merchant.location.lng };
+            }
+            renderScheduleCard();
+        } catch (e) {
+            console.error('Failed to load schedules:', e);
+        }
+    }
+
+    function renderScheduleCard() {
+        var container = document.getElementById('storeCard');
+        if (!container || !merchant) return;
+
+        // Check if schedule card already exists
+        var existingCard = document.getElementById('scheduleCard');
+        if (existingCard) {
+            existingCard.remove();
+        }
+
+        var days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+        var dayNames = {
+            mon: t('mon'), tue: t('tue'), wed: t('wed'), thu: t('thu'),
+            fri: t('fri'), sat: t('sat'), sun: t('sun')
+        };
+
+        var daysHtml = days.map(function(day) {
+            var schedule = schedulesData[day] || {};
+            var enabled = schedule.enabled || false;
+            var address = schedule.address || '';
+            var openTime = schedule.openTime || '09:00';
+            var closeTime = schedule.closeTime || '18:00';
+            var lat = schedule.lat || defaultLocation.lat;
+            var lng = schedule.lng || defaultLocation.lng;
+
+            return '<div class="schedule-day-card ' + (enabled ? 'enabled' : '') + '" data-day="' + day + '">' +
+                '<div class="schedule-day-header">' +
+                    '<div class="schedule-day-toggle ' + (enabled ? 'on' : '') + '" onclick="toggleScheduleDay(\'' + day + '\')"></div>' +
+                    '<div class="schedule-day-name">' + dayNames[day] + '</div>' +
+                    '<div class="schedule-day-status">' + (enabled ? openTime + ' - ' + closeTime : '-') + '</div>' +
+                '</div>' +
+                '<div class="schedule-day-content">' +
+                    '<div class="schedule-row">' +
+                        '<span class="schedule-label">' + t('address_label') + '</span>' +
+                        '<input type="text" class="schedule-input schedule-address" value="' + address + '" placeholder="' + t('address_label') + '">' +
+                    '</div>' +
+                    '<div class="schedule-row">' +
+                        '<span class="schedule-label">' + t('open_time') + '</span>' +
+                        '<div class="schedule-time-row">' +
+                            '<input type="time" class="schedule-time-input schedule-open" value="' + openTime + '">' +
+                            '<span class="schedule-time-separator">—</span>' +
+                            '<input type="time" class="schedule-time-input schedule-close" value="' + closeTime + '">' +
+                            '<span class="schedule-label">' + t('close_time') + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="schedule-advanced-toggle" onclick="toggleScheduleAdvanced(this)">' + t('advanced_settings') + '</div>' +
+                    '<div class="schedule-advanced">' +
+                        '<div class="schedule-row">' +
+                            '<span class="schedule-label">' + t('lat_label') + '</span>' +
+                            '<input type="number" step="0.0001" class="schedule-input schedule-lat" value="' + lat + '" placeholder="' + t('lat_label') + '">' +
+                        '</div>' +
+                        '<div class="schedule-row">' +
+                            '<span class="schedule-label">' + t('lng_label') + '</span>' +
+                            '<input type="number" step="0.0001" class="schedule-input schedule-lng" value="' + lng + '" placeholder="' + t('lng_label') + '">' +
+                        '</div>' +
+                    '</div>' +
+                    '<button class="schedule-save-btn" onclick="saveSchedule(\'' + day + '\')">' + t('save') + '</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        var scheduleHtml = '<div class="schedule-card" id="scheduleCard">' +
+            '<div class="schedule-header">' +
+                '<div class="schedule-title">📅 ' + t('location_schedule') + '</div>' +
+            '</div>' +
+            '<div class="schedule-desc">' + t('schedule_desc') + '</div>' +
+            daysHtml +
+        '</div>';
+
+        container.insertAdjacentHTML('beforeend', scheduleHtml);
+    }
+
+    function toggleScheduleDay(day) {
+        var card = document.querySelector('.schedule-day-card[data-day="' + day + '"]');
+        var toggle = card.querySelector('.schedule-day-toggle');
+        var enabled = toggle.classList.contains('on');
+        
+        if (enabled) {
+            // Disable - delete schedule
+            toggle.classList.remove('on');
+            card.classList.remove('enabled');
+            deleteSchedule(day);
+        } else {
+            // Enable
+            toggle.classList.add('on');
+            card.classList.add('enabled');
+        }
+    }
+
+    function toggleScheduleAdvanced(el) {
+        var advanced = el.nextElementSibling;
+        advanced.classList.toggle('show');
+        el.textContent = advanced.classList.contains('show') ? t('advanced_settings') + ' ▲' : t('advanced_settings');
+    }
+
+    async function saveSchedule(day) {
+        var card = document.querySelector('.schedule-day-card[data-day="' + day + '"]');
+        var address = card.querySelector('.schedule-address').value.trim();
+        var openTime = card.querySelector('.schedule-open').value;
+        var closeTime = card.querySelector('.schedule-close').value;
+        var lat = parseFloat(card.querySelector('.schedule-lat').value) || defaultLocation.lat;
+        var lng = parseFloat(card.querySelector('.schedule-lng').value) || defaultLocation.lng;
+
+        showLoading(currentLang === 'zh' ? '保存中...' : 'Saving...');
+
+        try {
+            await apiCall('/merchant/schedules', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    dayOfWeek: day,
+                    lat: lat,
+                    lng: lng,
+                    address: address,
+                    openTime: openTime,
+                    closeTime: closeTime,
+                    enabled: true
+                })
+            });
+
+            schedulesData[day] = {
+                dayOfWeek: day,
+                lat: lat,
+                lng: lng,
+                address: address,
+                openTime: openTime,
+                closeTime: closeTime,
+                enabled: true
+            };
+
+            // Update status display
+            var status = card.querySelector('.schedule-day-status');
+            status.textContent = openTime + ' - ' + closeTime;
+
+            toast(t('schedule_saved'), 'success');
+        } catch (e) {
+            toast(e.message, 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function deleteSchedule(day) {
+        try {
+            await apiCall('/merchant/schedules/' + day, {
+                method: 'DELETE'
+            });
+            delete schedulesData[day];
+            toast(t('schedule_deleted'), 'info');
+        } catch (e) {
+            // Silent fail for delete
+            console.error('Delete schedule error:', e);
+        }
     }
 
     /* ===== Orders ===== */
@@ -3078,7 +3868,8 @@
         if (hasMerchant) {
             await Promise.all([
                 loadOrders(),
-                loadMenu()
+                loadMenu(),
+                loadSchedules()
             ]);
             renderStore();
             connectSSE();
