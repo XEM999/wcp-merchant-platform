@@ -1000,6 +1000,57 @@
         }
 
         .empty-state .em-icon { font-size: 48px; margin-bottom: 12px; }
+
+        /* ===== Full-Screen Login Page ===== */
+        .full-login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-light) 0%, white 100%);
+            padding: 20px;
+        }
+
+        .full-login-page {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .full-login-logo {
+            font-size: 80px;
+            margin-bottom: 16px;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .full-login-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .full-login-subtitle {
+            font-size: 16px;
+            color: var(--text-2);
+            margin-bottom: 32px;
+        }
+
+        .full-login-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-lg);
+        }
     </style>
 </head>
 <body>
@@ -1010,7 +1061,7 @@
             <span class="header-brand">NearBite</span>
         </div>
         <div class="header-right">
-            <a href="/merchant" class="merchant-btn" data-i18n="im_merchant">我是商家</a>
+            <a href="/merchant" class="merchant-btn" id="merchantBtn" data-i18n="im_merchant">我是商家</a>
             <button class="user-btn" id="userBtn" onclick="showLoginModal()">👤</button>
             <select class="lang-select" id="langSelect" onchange="switchLang(this.value)">
                 <option value="zh">🇨🇳 中文</option>
@@ -1124,7 +1175,29 @@
         </div>
     </div>
 
-    <!-- Login Modal -->
+    <!-- Full-Screen Login Page (shown before auth) -->
+    <div class="full-login-overlay" id="fullLoginOverlay" style="display:none">
+        <div class="full-login-page">
+            <div class="full-login-logo">🍜</div>
+            <h1 class="full-login-title">NearBite</h1>
+            <p class="full-login-subtitle" data-i18n="login_subtitle">发现身边的美食</p>
+            
+            <div class="full-login-card">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="phone">手机号</label>
+                    <input type="tel" class="form-input" id="fullLoginPhone" data-i18n-placeholder="phone_placeholder" placeholder="+64 ...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-i18n="password">密码</label>
+                    <input type="password" class="form-input" id="fullLoginPassword" data-i18n-placeholder="password_placeholder" placeholder="••••••">
+                </div>
+                <button class="form-btn primary" onclick="doFullLogin()" data-i18n="login_btn">登录</button>
+                <button class="form-btn secondary" onclick="doFullRegister()" data-i18n="register_btn">注册新账号</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal (for add to cart when already logged in) -->
     <div class="modal-overlay" id="loginModal" onclick="closeLoginModal(event)">
         <div class="modal" onclick="event.stopPropagation()">
             <h2 class="modal-title" id="loginTitle" data-i18n="login">登录</h2>
@@ -1160,6 +1233,8 @@
     const LANG = {
         zh: {
             im_merchant: '我是商家',
+            merchant_portal: '商家后台',
+            login_subtitle: '发现身边的美食',
             locating: '正在获取位置…',
             located: '已定位',
             location_fail: '定位失败，使用默认位置',
@@ -1213,6 +1288,8 @@
         },
         en: {
             im_merchant: 'Merchant',
+            merchant_portal: 'Merchant Portal',
+            login_subtitle: 'Discover local flavors',
             locating: 'Getting location...',
             located: '📍 Located',
             location_fail: 'Location failed, using default',
@@ -1266,6 +1343,8 @@
         },
         ja: {
             im_merchant: '店舗向け',
+            merchant_portal: '店舗管理',
+            login_subtitle: '近くのグルメを発見',
             locating: '位置情報を取得中…',
             located: '📍 位置情報取得済み',
             location_fail: '位置情報の取得に失敗しました',
@@ -1319,6 +1398,8 @@
         },
         ko: {
             im_merchant: '점주용',
+            merchant_portal: '가맹점 관리',
+            login_subtitle: '주변 맛집을 발견하세요',
             locating: '위치 확인 중…',
             located: '📍 위치 확인됨',
             location_fail: '위치 확인 실패, 기본 위치 사용',
@@ -1906,6 +1987,8 @@
     }
 
     /* ===== Auth ===== */
+    var currentUser = null; // 当前登录用户
+
     function showLoginModal() {
         document.getElementById('loginModal').classList.add('show');
     }
@@ -1931,6 +2014,28 @@
         document.querySelector('#loginModal .form-btn.secondary').onclick = doRegister;
     }
 
+    // 显示全屏登录页
+    function showFullLoginPage() {
+        document.getElementById('fullLoginOverlay').style.display = 'flex';
+        // 隐藏主要内容
+        document.querySelector('.app-header').style.display = 'none';
+        document.querySelector('.location-bar').style.display = 'none';
+        document.getElementById('map-container').style.display = 'none';
+        document.querySelector('.search-section').style.display = 'none';
+        document.querySelector('.merchant-section').style.display = 'none';
+        document.getElementById('cartFloat').classList.add('hidden');
+    }
+
+    // 隐藏全屏登录页，显示主内容
+    function hideFullLoginPage() {
+        document.getElementById('fullLoginOverlay').style.display = 'none';
+        document.querySelector('.app-header').style.display = 'flex';
+        document.querySelector('.location-bar').style.display = 'flex';
+        document.getElementById('map-container').style.display = 'block';
+        document.querySelector('.search-section').style.display = 'block';
+        document.querySelector('.merchant-section').style.display = 'block';
+    }
+
     async function doLogin() {
         var phone = document.getElementById('loginPhone').value;
         var password = document.getElementById('loginPassword').value;
@@ -1948,9 +2053,13 @@
                 body: JSON.stringify({ phone: phone, password: password })
             });
             localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            currentUser = data.user;
             closeLoginModal();
             toast(t('login_success'), 'success');
             updateUserUI();
+            // 登录成功后隐藏登录页，显示主内容
+            hideFullLoginPage();
         } catch (e) {
             toast(e.message || (currentLang === 'zh' ? '登录失败' : 'Login failed'), 'error');
         } finally {
@@ -1980,9 +2089,13 @@
                 body: JSON.stringify({ phone: phone, password: password })
             });
             localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            currentUser = data.user;
             closeLoginModal();
             toast(t('register_success'), 'success');
             updateUserUI();
+            // 注册成功后隐藏登录页，显示主内容
+            hideFullLoginPage();
         } catch (e) {
             toast(e.message || (currentLang === 'zh' ? '注册失败' : 'Registration failed'), 'error');
         } finally {
@@ -1993,15 +2106,149 @@
     function updateUserUI() {
         var token = localStorage.getItem('token');
         var userBtn = document.getElementById('userBtn');
-        if (token) {
+        var merchantBtn = document.querySelector('.merchant-btn');
+        
+        if (token && currentUser) {
+            // 显示用户头像
             userBtn.textContent = '👤';
+            userBtn.onclick = logout;
+            
+            // 根据角色显示/隐藏商家后台按钮
+            if (currentUser.role === 'merchant' || currentUser.role === 'admin') {
+                if (merchantBtn) {
+                    merchantBtn.style.display = 'inline-block';
+                    merchantBtn.textContent = t('merchant_portal');
+                }
+            } else {
+                // 普通用户隐藏商家后台按钮
+                if (merchantBtn) {
+                    merchantBtn.style.display = 'none';
+                }
+            }
+        } else {
+            userBtn.textContent = '👤';
+            userBtn.onclick = showLoginModal;
+            // 未登录时显示"我是商家"按钮
+            if (merchantBtn) {
+                merchantBtn.style.display = 'inline-block';
+            }
+        }
+    }
+
+    async function checkAuthAndInit() {
+        var token = localStorage.getItem('token');
+        var savedUser = localStorage.getItem('user');
+        
+        if (!token) {
+            showFullLoginPage();
+            return;
+        }
+
+        // 优先使用本地保存的用户信息，同时在后台验证token
+        if (savedUser) {
+            try {
+                currentUser = JSON.parse(savedUser);
+                updateUserUI();
+                hideFullLoginPage();
+            } catch (e) {
+                currentUser = null;
+            }
+        }
+
+        // 后台验证token有效性
+        try {
+            var data = await apiCall('/auth/me');
+            if (data && data.id) {
+                currentUser = data;
+                localStorage.setItem('user', JSON.stringify(data));
+                updateUserUI();
+            } else {
+                // token无效，清除并显示登录页
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                currentUser = null;
+                showFullLoginPage();
+            }
+        } catch (e) {
+            // token验证失败，如果是之前有保存用户，先保持登录状态
+            if (!currentUser) {
+                showFullLoginPage();
+            }
         }
     }
 
     function logout() {
         localStorage.removeItem('token');
+        currentUser = null;
         updateUserUI();
         toast(currentLang === 'zh' ? '已退出登录' : 'Logged out', 'info');
+        // 退出后显示登录页
+        showFullLoginPage();
+    }
+
+    // 全屏登录页的登录函数
+    async function doFullLogin() {
+        var phone = document.getElementById('fullLoginPhone').value;
+        var password = document.getElementById('fullLoginPassword').value;
+
+        if (!phone || !password) {
+            toast(currentLang === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields', 'error');
+            return;
+        }
+
+        showLoading(currentLang === 'zh' ? '登录中…' : 'Logging in...');
+
+        try {
+            var data = await apiCall('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ phone: phone, password: password })
+            });
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            currentUser = data.user;
+            toast(t('login_success'), 'success');
+            updateUserUI();
+            hideFullLoginPage();
+        } catch (e) {
+            toast(e.message || (currentLang === 'zh' ? '登录失败' : 'Login failed'), 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // 全屏登录页的注册函数
+    async function doFullRegister() {
+        var phone = document.getElementById('fullLoginPhone').value;
+        var password = document.getElementById('fullLoginPassword').value;
+
+        if (!phone || !password) {
+            toast(currentLang === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields', 'error');
+            return;
+        }
+
+        if (password.length < 6) {
+            toast(currentLang === 'zh' ? '密码至少6位' : 'Password min 6 chars', 'error');
+            return;
+        }
+
+        showLoading(currentLang === 'zh' ? '注册中…' : 'Registering...');
+
+        try {
+            var data = await apiCall('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({ phone: phone, password: password })
+            });
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            currentUser = data.user;
+            toast(t('register_success'), 'success');
+            updateUserUI();
+            hideFullLoginPage();
+        } catch (e) {
+            toast(e.message || (currentLang === 'zh' ? '注册失败' : 'Registration failed'), 'error');
+        } finally {
+            hideLoading();
+        }
     }
 
     /* ===== QR Code / URL参数处理 ===== */
@@ -2149,12 +2396,20 @@
     /* ===== Init ===== */
     window.addEventListener('DOMContentLoaded', async function() {
         applyLang();
-        initMap();
-        await initUserLocation();
-        showUserMarker();
-        searchMerchants();
-        updateCartUI();
-        updateUserUI();
+        
+        // 先检查登录状态
+        await checkAuthAndInit();
+        
+        // 如果已登录，初始化地图和商户
+        var token = localStorage.getItem('token');
+        if (token && currentUser) {
+            initMap();
+            await initUserLocation();
+            showUserMarker();
+            searchMerchants();
+            updateCartUI();
+        }
+        
         // 检查是否从二维码扫入
         setTimeout(handleQREntry, 500);
         

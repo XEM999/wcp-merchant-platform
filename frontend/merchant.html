@@ -1536,7 +1536,12 @@
                 <span class="header-brand">NearBite</span>
             </div>
             <div class="header-right">
-                <button class="lang-btn" id="langBtn" onclick="toggleLang()">中文</button>
+                <select class="lang-select" id="langSelect" onchange="switchLang(this.value)" style="padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:white;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-2);font-family:inherit">
+                    <option value="zh">🇨🇳 中文</option>
+                    <option value="en">🇬🇧 EN</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                </select>
             </div>
         </header>
 
@@ -2401,8 +2406,11 @@
     }
 
     function applyLang() {
-        const langLabels = { zh: '中文', en: 'EN', ja: '日本語', ko: '한국어' };
-        document.getElementById('langBtn').textContent = langLabels[currentLang] || '中文';
+        // 更新语言选择器的选中状态
+        var langSelect = document.getElementById('langSelect');
+        if (langSelect) {
+            langSelect.value = currentLang;
+        }
         document.querySelectorAll('[data-i18n]').forEach(el => {
             el.textContent = t(el.dataset.i18n);
         });
@@ -2411,7 +2419,18 @@
         });
     }
 
+    function switchLang(lang) {
+        if (lang && lang !== currentLang) {
+            currentLang = lang;
+            localStorage.setItem('lang', currentLang);
+            applyLang();
+            renderStore();
+            renderMenu();
+        }
+    }
+
     function toggleLang() {
+        // 保留toggleLang作为备用，调用switchLang进行语言切换
         const langOrder = ['zh', 'en', 'ja', 'ko'];
         const idx = langOrder.indexOf(currentLang);
         currentLang = langOrder[(idx + 1) % langOrder.length];
