@@ -1911,3 +1911,399 @@ ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS station_ids JSONB DEFAULT NULL;
     console.log('检查menu_items.station_ids列时出错（可忽略）:', err);
   }
 }
+
+// ==================== 关注/粉丝系统 ====================
+
+/**
+ * 关注商家
+ * @param userId 用户ID
+ * @param merchantId 商家ID
+ * @returns 是否成功
+ */
+export async function followMerchant(userId: string, merchantId: string): Promise<boolean> {
+  try {
+    // 检查商家是否存在
+    const { data: merchant, error: merchantError } = await supabase
+      .from('merchants')
+      .select('id')
+      .eq('id', merchantId)
+      .single();
+
+    if (merchantError || !merchant) {
+      throw new Error('商家不存在');
+    }
+
+    // 插入关注记录（使用 upsert 避免重复关注）
+    const { error: followError } = await supabase
+      .from('follows')
+      .upsert(
+        { user_id: userId, merchant_id: merchantId },
+        { onConflict: 'user_id,merchant_id', ignoreDuplicates: true }
+      );
+
+    if (followError) {
+      console.error('关注商家错误:', followError);
+      return false;
+    }
+
+    // 更新商家的粉丝计数 +1
+    // 尝试使用 RPC，如果失败则使用普通 UPDATE
+    const { error: rpcError } = await supabase.rpc('increment_follower_count', { merchant_id: merchantId });
+    if (rpcError) {
+      // RPC 不存在，使用普通 UPDATE
+      const { data: m } = await supabase
+        .from('merchants')
+        .select('follower_count')
+        .eq('id', merchantId)
+        .single();
+      
+      await supabase
+        .from('merchants')
+        .update({ follower_count: (m?.follower_count || 0) + 1 })
+        .eq('id', merchantId);
+    }
+
+    return true;
+  } catch (e) {
+    console.error('关注商家错误:', e);
+    return false;
+  }
+}
+
+/**
+ * 取消关注商家
+ * @param userId 用户ID
+ * @param merchantId 商家ID
+ * @returns 是否成功
+ */
+export async function unfollowMerchant(userId: string, merchantId: string): Promise<boolean> {
+  try {
+    // 删除关注记录
+    const { error: unfollowError, data } = await supabase
+      .from('follows')
+      .delete()
+      .eq('user_id', userId)
+      .eq('merchant_id', merchantId)
+      .select();
+
+    if (unfollowError) {
+      console.error('取消关注错误:', unfollowError);
+      return false;
+    }
+
+    // 只有实际删除了记录才更新计数
+    if (data && data.length > 0) {
+      // 更新商家的粉丝计数 -1
+      const { error: rpcError } = await supabase.rpc('decrement_follower_count', { merchant_id: merchantId });
+      if (rpcError) {
+        // RPC 不存在，使用普通 UPDATE
+        const { data: m } = await supabase
+          .from('merchants')
+          .select('follower_count')
+          .eq('id', merchantId)
+          .single();
+        
+        const newCount = Math.max(0, (m?.follower_count || 0) - 1);
+        await supabase
+          .from('merchants')
+          .update({ follower_count: newCount })
+          .eq('id', merchantId);
+      }
+    }
+
+    return true;
+  } catch (e) {
+    console.error('取消关注错误:', e);
+    return false;
+  }
+}
+
+/**
+ * 获取用户关注的所有商家ID列表
+ * @param userId 用户ID
+ * @returns 商家ID数组
+ */
+export async function getFollowedMerchants(userId: string): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('follows')
+      .select('merchant_id')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('获取关注列表错误:', error);
+      return [];
+    }
+
+    return (data || []).map(f => f.merchant_id);
+  } catch (e) {
+    console.error('获取关注列表错误:', e);
+    return [];
+  }
+}
+
+/**
+ * 获取商家的所有粉丝
+ * @param merchantId 商家ID
+ * @returns 粉丝列表
+ */
+export async function getMerchantFollowers(merchantId: string): Promise<{userId: string, createdAt: Date}[]> {
+  try {
+    const { data, error } = await supabase
+      .from('follows')
+      .select('user_id, created_at')
+      .eq('merchant_id', merchantId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('获取粉丝列表错误:', error);
+      return [];
+    }
+
+    return (data || []).map(f => ({
+      userId: f.user_id,
+      createdAt: new Date(f.created_at)
+    }));
+  } catch (e) {
+    console.error('获取粉丝列表错误:', e);
+    return [];
+  }
+}
+
+/**
+ * 检查用户是否已关注某商家
+ * @param userId 用户ID
+ * @param merchantId 商家ID
+ * @returns 是否已关注
+ */
+export async function isFollowing(userId: string, merchantId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('merchant_id', merchantId)
+      .single();
+
+    if (error) {
+      return false;
+    }
+
+    return !!data;
+  } catch {
+    return false;
+  }
+}
+
+// ==================== 位置日程系统 ====================
+
+/** 商家日程配置 */
+export interface MerchantSchedule {
+  id: string;
+  merchantId: string;
+  dayOfWeek: number;  // 0-6 (0=周日)
+  lat: number;
+  lng: number;
+  address?: string;
+  openTime: string;   // "HH:MM"
+  closeTime: string;  // "HH:MM"
+  enabled: boolean;
+}
+
+/**
+ * 获取商家的所有日程
+ * @param merchantId 商家ID
+ * @returns 日程列表
+ */
+export async function getMerchantSchedules(merchantId: string): Promise<MerchantSchedule[]> {
+  try {
+    const { data, error } = await supabase
+      .from('merchant_schedules')
+      .select('*')
+      .eq('merchant_id', merchantId)
+      .order('day_of_week', { ascending: true });
+
+    if (error) {
+      console.error('获取日程列表错误:', error);
+      return [];
+    }
+
+    return (data || []).map(s => ({
+      id: s.id,
+      merchantId: s.merchant_id,
+      dayOfWeek: s.day_of_week,
+      lat: s.lat,
+      lng: s.lng,
+      address: s.address || undefined,
+      openTime: s.open_time,
+      closeTime: s.close_time,
+      enabled: s.enabled
+    }));
+  } catch (e) {
+    console.error('获取日程列表错误:', e);
+    return [];
+  }
+}
+
+/**
+ * 创建或更新某天的日程（按day_of_week upsert）
+ * @param merchantId 商家ID
+ * @param schedule 日程数据
+ * @returns 创建/更新后的日程
+ */
+export async function upsertMerchantSchedule(
+  merchantId: string, 
+  schedule: Omit<MerchantSchedule, 'id' | 'merchantId'>
+): Promise<MerchantSchedule | null> {
+  try {
+    const { data, error } = await supabase
+      .from('merchant_schedules')
+      .upsert({
+        merchant_id: merchantId,
+        day_of_week: schedule.dayOfWeek,
+        lat: schedule.lat,
+        lng: schedule.lng,
+        address: schedule.address || null,
+        open_time: schedule.openTime,
+        close_time: schedule.closeTime,
+        enabled: schedule.enabled,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'merchant_id,day_of_week'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('更新日程错误:', error);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      merchantId: data.merchant_id,
+      dayOfWeek: data.day_of_week,
+      lat: data.lat,
+      lng: data.lng,
+      address: data.address || undefined,
+      openTime: data.open_time,
+      closeTime: data.close_time,
+      enabled: data.enabled
+    };
+  } catch (e) {
+    console.error('更新日程错误:', e);
+    return null;
+  }
+}
+
+/**
+ * 删除某天的日程
+ * @param merchantId 商家ID
+ * @param dayOfWeek 星期几 (0-6)
+ * @returns 是否成功
+ */
+export async function deleteMerchantSchedule(merchantId: string, dayOfWeek: number): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('merchant_schedules')
+      .delete()
+      .eq('merchant_id', merchantId)
+      .eq('day_of_week', dayOfWeek);
+
+    if (error) {
+      console.error('删除日程错误:', error);
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    console.error('删除日程错误:', e);
+    return false;
+  }
+}
+
+/**
+ * 商家开工时更新GPS实际位置
+ * @param merchantId 商家ID
+ * @param lat 纬度
+ * @param lng 经度
+ * @returns 是否成功
+ */
+export async function updateActualLocation(merchantId: string, lat: number, lng: number): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('merchants')
+      .update({
+        actual_lat: lat,
+        actual_lng: lng,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', merchantId);
+
+    if (error) {
+      console.error('更新实际位置错误:', error);
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    console.error('更新实际位置错误:', e);
+    return false;
+  }
+}
+
+/**
+ * 确保 Phase 2C 新增字段存在
+ */
+export async function ensurePhase2cColumns(): Promise<void> {
+  // 检查 merchants.follower_count
+  try {
+    const { error: testError } = await supabase
+      .from('merchants')
+      .select('follower_count, actual_lat, actual_lng')
+      .limit(1);
+    
+    if (!testError) {
+      console.log('✅ Phase 2C 字段 (follower_count, actual_lat, actual_lng) 已存在');
+    } else {
+      console.log('⚠️ Phase 2C 字段可能不存在');
+      console.log('请在 Supabase SQL 编辑器中执行 setup-phase2c.sql');
+    }
+  } catch (err) {
+    console.log('检查 Phase 2C 字段时出错（可忽略）:', err);
+  }
+
+  // 检查 follows 表是否存在
+  try {
+    const { error: followsError } = await supabase
+      .from('follows')
+      .select('id')
+      .limit(1);
+    
+    if (!followsError) {
+      console.log('✅ follows 表已存在');
+    } else {
+      console.log('⚠️ follows 表可能不存在');
+      console.log('请在 Supabase SQL 编辑器中执行 setup-phase2c.sql');
+    }
+  } catch (err) {
+    console.log('检查 follows 表时出错（可忽略）:', err);
+  }
+
+  // 检查 merchant_schedules 表是否存在
+  try {
+    const { error: schedulesError } = await supabase
+      .from('merchant_schedules')
+      .select('id')
+      .limit(1);
+    
+    if (!schedulesError) {
+      console.log('✅ merchant_schedules 表已存在');
+    } else {
+      console.log('⚠️ merchant_schedules 表可能不存在');
+      console.log('请在 Supabase SQL 编辑器中执行 setup-phase2c.sql');
+    }
+  } catch (err) {
+    console.log('检查 merchant_schedules 表时出错（可忽略）:', err);
+  }
+}

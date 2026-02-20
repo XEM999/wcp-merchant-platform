@@ -63,6 +63,19 @@ import {
   getMerchantKitchenStations,
   updateMerchantKitchenStations,
   ensureKitchenStationsColumn,
+  // Phase 2C: 关注/粉丝系统
+  followMerchant,
+  unfollowMerchant,
+  getFollowedMerchants,
+  getMerchantFollowers,
+  isFollowing,
+  // Phase 2C: 位置日程系统
+  MerchantSchedule,
+  getMerchantSchedules,
+  upsertMerchantSchedule,
+  deleteMerchantSchedule,
+  updateActualLocation,
+  ensurePhase2cColumns,
 } from './database';
 import { register, login, authMiddleware, optionalAuthMiddleware, adminMiddleware, superAdminMiddleware } from './auth';
 
@@ -626,6 +639,284 @@ app.get('/api/merchants/:id/reviews', async (req: Request, res: Response) => {
     res.json(result);
   } catch (e: any) {
     return err(res, 404, e.message);
+  }
+});
+
+// ==================== 关注/粉丝系统接口 ====================
+
+/**
+ * POST /api/merchants/:id/follow
+ * 关注商家（需登录）
+ */
+app.post('/api/merchants/:id/follow', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const merchantId = req.params.id;
+
+  try {
+    // 检查商家是否存在
+    const merchant = await getMerchant(merchantId);
+    if (!merchant) {
+      return err(res, 404, '商家不存在');
+    }
+
+    const success = await followMerchant(userId, merchantId);
+    if (!success) {
+      return err(res, 500, '关注失败');
+    }
+
+    res.json({ message: '关注成功', merchantId });
+  } catch (e: any) {
+    console.error('关注商家错误:', e);
+    return err(res, 500, e.message || '关注失败');
+  }
+});
+
+/**
+ * DELETE /api/merchants/:id/follow
+ * 取消关注商家（需登录）
+ */
+app.delete('/api/merchants/:id/follow', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const merchantId = req.params.id;
+
+  try {
+    const success = await unfollowMerchant(userId, merchantId);
+    if (!success) {
+      return err(res, 500, '取消关注失败');
+    }
+
+    res.json({ message: '已取消关注', merchantId });
+  } catch (e: any) {
+    console.error('取消关注错误:', e);
+    return err(res, 500, '取消关注失败');
+  }
+});
+
+/**
+ * GET /api/merchants/:id/followers
+ * 获取商家粉丝列表（商家自己看）
+ */
+app.get('/api/merchants/:id/followers', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const merchantId = req.params.id;
+
+  try {
+    // 验证是否是商家本人
+    const merchant = await getMerchant(merchantId);
+    if (!merchant) {
+      return err(res, 404, '商家不存在');
+    }
+
+    if (merchant.userId !== userId) {
+      return err(res, 403, '无权查看粉丝列表');
+    }
+
+    const followers = await getMerchantFollowers(merchantId);
+    res.json({ count: followers.length, followers });
+  } catch (e: any) {
+    console.error('获取粉丝列表错误:', e);
+    return err(res, 500, '获取粉丝列表失败');
+  }
+});
+
+/**
+ * GET /api/user/following
+ * 获取我关注的商家列表（需登录）
+ */
+app.get('/api/user/following', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+
+  try {
+    const merchantIds = await getFollowedMerchants(userId);
+    
+    // 获取商家详细信息
+    const merchants = await Promise.all(
+      merchantIds.map(id => getMerchant(id))
+    );
+
+    res.json({ 
+      count: merchantIds.length, 
+      merchants: merchants.filter(m => m !== undefined) 
+    });
+  } catch (e: any) {
+    console.error('获取关注列表错误:', e);
+    return err(res, 500, '获取关注列表失败');
+  }
+});
+
+/**
+ * GET /api/merchants/:id/is-following
+ * 检查是否已关注某商家（需登录）
+ */
+app.get('/api/merchants/:id/is-following', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const merchantId = req.params.id;
+
+  try {
+    const following = await isFollowing(userId, merchantId);
+    res.json({ following, merchantId });
+  } catch (e: any) {
+    console.error('检查关注状态错误:', e);
+    return err(res, 500, '检查关注状态失败');
+  }
+});
+
+// ==================== 位置日程系统接口 ====================
+
+/**
+ * GET /api/merchants/:id/schedules
+ * 获取商家位置日程（公开）
+ */
+app.get('/api/merchants/:id/schedules', async (req: Request, res: Response) => {
+  const merchantId = req.params.id;
+
+  try {
+    const schedules = await getMerchantSchedules(merchantId);
+    res.json({ count: schedules.length, schedules });
+  } catch (e: any) {
+    console.error('获取日程列表错误:', e);
+    return err(res, 500, '获取日程列表失败');
+  }
+});
+
+/**
+ * PUT /api/merchant/schedules
+ * 设置/更新日程（商家自己的）
+ * 请求体: { dayOfWeek: 0-6, lat, lng, address?, openTime: "HH:MM", closeTime: "HH:MM", enabled: boolean }
+ */
+app.put('/api/merchant/schedules', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const userId = (req as any).userId;
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权操作');
+    }
+
+    const { dayOfWeek, lat, lng, address, openTime, closeTime, enabled } = req.body;
+
+    // 参数校验
+    if (typeof dayOfWeek !== 'number' || dayOfWeek < 0 || dayOfWeek > 6) {
+      return err(res, 400, 'dayOfWeek 必须是 0-6 之间的数字');
+    }
+    if (typeof lat !== 'number' || typeof lng !== 'number') {
+      return err(res, 400, 'lat/lng 必须是数字');
+    }
+    if (!openTime || !closeTime) {
+      return err(res, 400, 'openTime/closeTime 必填');
+    }
+
+    const schedule = await upsertMerchantSchedule(merchantId, {
+      dayOfWeek,
+      lat,
+      lng,
+      address,
+      openTime,
+      closeTime,
+      enabled: enabled !== false
+    });
+
+    if (!schedule) {
+      return err(res, 500, '更新日程失败');
+    }
+
+    res.json({ message: '日程已更新', schedule });
+  } catch (e: any) {
+    console.error('更新日程错误:', e);
+    return err(res, 500, '更新日程失败');
+  }
+});
+
+/**
+ * DELETE /api/merchant/schedules/:dayOfWeek
+ * 删除某天日程（商家自己的）
+ */
+app.delete('/api/merchant/schedules/:dayOfWeek', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const userId = (req as any).userId;
+  const dayOfWeek = parseInt(req.params.dayOfWeek);
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
+  // 参数校验
+  if (isNaN(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) {
+    return err(res, 400, 'dayOfWeek 必须是 0-6 之间的数字');
+  }
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权操作');
+    }
+
+    const success = await deleteMerchantSchedule(merchantId, dayOfWeek);
+    if (!success) {
+      return err(res, 500, '删除日程失败');
+    }
+
+    res.json({ message: '日程已删除', dayOfWeek });
+  } catch (e: any) {
+    console.error('删除日程错误:', e);
+    return err(res, 500, '删除日程失败');
+  }
+});
+
+/**
+ * POST /api/merchant/actual-location
+ * 开工时更新GPS实际位置（商家自己的）
+ * 请求体: { lat, lng }
+ */
+app.post('/api/merchant/actual-location', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const userId = (req as any).userId;
+  const { lat, lng } = req.body;
+
+  // 账号状态检查
+  if (user.accountStatus === 'banned') {
+    return err(res, 403, '账号已被封禁');
+  }
+  if (user.accountStatus === 'suspended') {
+    return err(res, 403, '账号已被停权，请联系管理员');
+  }
+
+  // 参数校验
+  if (typeof lat !== 'number' || typeof lng !== 'number') {
+    return err(res, 400, 'lat/lng 必须是数字');
+  }
+
+  try {
+    // 验证用户是否是商家
+    const merchantId = await getUserMerchantId(userId);
+    if (!merchantId) {
+      return err(res, 403, '您不是商家，无权操作');
+    }
+
+    const success = await updateActualLocation(merchantId, lat, lng);
+    if (!success) {
+      return err(res, 500, '更新位置失败');
+    }
+
+    res.json({ message: '位置已更新', lat, lng });
+  } catch (e: any) {
+    console.error('更新位置错误:', e);
+    return err(res, 500, '更新位置失败');
   }
 });
 
@@ -1609,6 +1900,9 @@ app.listen(PORT, async () => {
   // 确保 kitchen_stations 列存在
   await ensureKitchenStationsColumn();
   
+  // 确保 Phase 2C 字段存在
+  await ensurePhase2cColumns();
+  
   // 确保 menu-images storage bucket 存在
   const { data: buckets } = await supabase.storage.listBuckets();
   if (!buckets?.find(b => b.name === 'menu-images')) {
@@ -1629,6 +1923,19 @@ app.listen(PORT, async () => {
   console.log('  PUT  /api/merchants/:id/menu - 更新菜单');
   console.log('  POST /api/merchants/:id/reviews - 提交评价');
   console.log('  GET  /api/merchants/:id/reviews - 获取评价');
+  console.log('');
+  console.log('❤️ 关注/粉丝接口:');
+  console.log('  POST   /api/merchants/:id/follow - 关注商家');
+  console.log('  DELETE /api/merchants/:id/follow - 取消关注');
+  console.log('  GET    /api/merchants/:id/followers - 获取商家粉丝列表');
+  console.log('  GET    /api/user/following - 获取我关注的商家列表');
+  console.log('  GET    /api/merchants/:id/is-following - 检查是否已关注');
+  console.log('');
+  console.log('📅 位置日程接口:');
+  console.log('  GET    /api/merchants/:id/schedules - 获取商家位置日程');
+  console.log('  PUT    /api/merchant/schedules - 设置/更新日程');
+  console.log('  DELETE /api/merchant/schedules/:dayOfWeek - 删除某天日程');
+  console.log('  POST   /api/merchant/actual-location - 更新GPS实际位置');
   console.log('');
   console.log('🔐 认证接口:');
   console.log('  POST /api/auth/register - 注册');
