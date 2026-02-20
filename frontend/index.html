@@ -2109,28 +2109,19 @@
         var merchantBtn = document.querySelector('.merchant-btn');
         
         if (token && currentUser) {
-            // 显示用户头像
             userBtn.textContent = '👤';
             userBtn.onclick = logout;
-            
-            // 根据角色显示/隐藏商家后台按钮
-            if (currentUser.role === 'merchant' || currentUser.role === 'admin') {
-                if (merchantBtn) {
-                    merchantBtn.style.display = 'inline-block';
-                    merchantBtn.textContent = t('merchant_portal');
-                }
-            } else {
-                // 普通用户隐藏商家后台按钮
-                if (merchantBtn) {
-                    merchantBtn.style.display = 'none';
-                }
+            // 登录后显示"商家后台"按钮（merchant.html自己判断是否有店铺）
+            if (merchantBtn) {
+                merchantBtn.style.display = 'inline-block';
+                merchantBtn.textContent = t('merchant_portal') || '商家后台';
             }
         } else {
             userBtn.textContent = '👤';
             userBtn.onclick = showLoginModal;
-            // 未登录时显示"我是商家"按钮
+            // 未登录时隐藏商家后台按钮
             if (merchantBtn) {
-                merchantBtn.style.display = 'inline-block';
+                merchantBtn.style.display = 'none';
             }
         }
     }
