@@ -1991,11 +1991,11 @@
     // 根据用户角色跳转到对应页面
     function routeByRole(user) {
         if (user.role === 'admin') {
-            window.location.href = '/admin';
+            window.location.href = '/admin.html';
             return true;
         }
-        if (user.merchantId) {
-            window.location.href = '/merchant';
+        if (user.role === 'merchant' || user.merchantId) {
+            window.location.href = '/merchant.html';
             return true;
         }
         // 普通消费者，留在当前页
