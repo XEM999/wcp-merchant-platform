@@ -183,11 +183,11 @@ const globalLimiter = rateLimit({
 });
 app.use('/api/', globalLimiter);
 
-// 认证接口严格限制
+// 认证接口限制（测试期间放宽，项目完成后改回 max:10, windowMs:15*60*1000）
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15分钟
-  max: 10,                   // 每IP 10次
-  message: { error: '登录/注册尝试过于频繁，请15分钟后重试' },
+  windowMs: 60 * 1000,      // 1分钟
+  max: 10000,                // 测试期间基本不限制
+  message: { error: '登录/注册尝试过于频繁，请稍后重试' },
   standardHeaders: true,
   legacyHeaders: false,
 });
