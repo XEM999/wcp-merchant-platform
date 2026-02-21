@@ -1,2422 +1,1321 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NearBite — 发现美食</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍜</text></svg>">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #ff6b35;
-            --primary-light: #fff7ed;
-            --primary-dark: #ea580c;
-            --bg: #fafafa;
-            --bg-card: #ffffff;
-            --bg-input: #f3f4f6;
-            --text: #111827;
-            --text-2: #6b7280;
-            --text-3: #9ca3af;
-            --green: #22c55e;
-            --green-bg: #f0fdf4;
-            --red: #ef4444;
-            --blue: #3b82f6;
-            --border: #e5e7eb;
-            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-            --shadow-lg: 0 4px 12px rgba(0,0,0,.1);
-            --radius: 16px;
-            --radius-sm: 10px;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding-bottom: 100px;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* ===== Header ===== */
-        .app-header {
-            position: sticky;
-            top: 0;
-            z-index: 500;
-            background: rgba(255,255,255,.95);
-            backdrop-filter: blur(20px);
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .header-logo { font-size: 28px; }
-        .header-brand { font-size: 20px; font-weight: 800; color: var(--primary-dark); letter-spacing: -0.5px; }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .user-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .lang-btn {
-            padding: 6px 12px;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            background: white;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text-2);
-        }
-
-        .lang-select {
-            padding: 6px 10px;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            background: white;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text-2);
-            outline: none;
-            appearance: none;
-            -webkit-appearance: none;
-            padding-right: 24px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 8px center;
-            background-size: 10px;
-        }
-
-        .lang-select:hover {
-            border-color: var(--primary);
-            color: var(--primary-dark);
-        }
-
-        .lang-select:focus {
-            border-color: var(--primary);
-        }
-
-        /* ===== Location Bar ===== */
-        .location-bar {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 16px;
-            font-size: 13px;
-            color: var(--text-2);
-            background: white;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .dot.ok { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,.4); }
-        .dot.wait { background: #f59e0b; animation: pulse 1s infinite; }
-        .dot.fail { background: var(--red); }
-
-        @keyframes pulse { 50% { opacity: .4; } }
-
-        /* ===== Map ===== */
-        #map-container {
-            height: 55vh;
-            min-height: 300px;
-            position: relative;
-            border-bottom: 1px solid var(--border);
-        }
-
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-
-        .map-refresh {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            z-index: 1000;
-            width: 40px;
-            height: 40px;
-            background: white;
-            border: none;
-            border-radius: 50%;
-            box-shadow: var(--shadow-lg);
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ===== Search ===== */
-        .search-section {
-            padding: 12px 16px;
-            background: white;
-        }
-
-        .search-bar {
-            display: flex;
-            gap: 8px;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border: 1px solid transparent;
-            border-radius: var(--radius);
-            font-size: 14px;
-            font-family: inherit;
-        }
-
-        .search-input:focus {
-            border-color: var(--primary);
-            outline: none;
-            background: white;
-        }
-
-        /* ===== Merchant List ===== */
-        .merchant-section {
-            padding: 16px;
-            background: var(--bg);
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-count {
-            font-size: 13px;
-            color: var(--text-3);
-            font-weight: 500;
-        }
-
-        .radius-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-            padding: 10px 14px;
-            background: var(--bg-card);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-        }
-
-        .radius-label {
-            font-size: 13px;
-            color: var(--text-2);
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .radius-slider {
-            flex: 1;
-            height: 6px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: var(--bg-input);
-            border-radius: 3px;
-            outline: none;
-        }
-
-        .radius-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: var(--primary);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(255,107,53,.4);
-            transition: transform .15s;
-        }
-
-        .radius-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-        }
-
-        .radius-slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            background: var(--primary);
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 6px rgba(255,107,53,.4);
-        }
-
-        .radius-value {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--primary);
-            min-width: 36px;
-            text-align: right;
-        }
-
-        .merchant-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .merchant-card {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 16px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            transition: all .2s;
-        }
-
-        .merchant-card:active { transform: scale(.99); }
-
-        .mc-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-        }
-
-        .mc-info {
-            display: flex;
-            gap: 12px;
-            flex: 1;
-        }
-
-        .mc-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: var(--primary-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-
-        .mc-name {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .mc-meta {
-            font-size: 12px;
-            color: var(--text-2);
-        }
-
-        .mc-dist {
-            background: var(--primary-light);
-            color: var(--primary);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .mc-rating {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin: 8px 0;
-        }
-
-        .mc-stars { color: #f59e0b; font-size: 13px; }
-        .mc-rating-num { font-weight: 700; font-size: 14px; }
-        .mc-rating-cnt { color: var(--text-3); font-size: 12px; }
-
-        .mc-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .mc-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: transform .15s;
-        }
-
-        .mc-btn:active { transform: scale(.96); }
-
-        .mc-btn.primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .mc-btn.secondary {
-            background: var(--primary-light);
-            color: var(--primary-dark);
-        }
-
-        /* ===== Menu Expand ===== */
-        .menu-expand {
-            display: none;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
-        }
-
-        .menu-expand.show { display: block; animation: slideDown .25s ease; }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: none; }
-        }
-
-        .menu-category {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-2);
-            margin: 12px 0 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .menu-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .menu-item:last-child { border-bottom: none; }
-
-        .menu-item-info { flex: 1; }
-        .menu-item-name { font-size: 14px; font-weight: 500; }
-        .menu-item-price { color: var(--primary-dark); font-size: 14px; font-weight: 700; margin-top: 2px; }
-
-        .menu-item-add {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform .15s;
-        }
-
-        .menu-item-add:active { transform: scale(.9); }
-
-        /* ===== Cart Floating Button ===== */
-        .cart-float {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 900;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(255,107,53,.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform .2s;
-        }
-
-        .cart-float:active { transform: scale(.95); }
-
-        .cart-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: var(--red);
-            color: white;
-            font-size: 12px;
-            font-weight: 700;
-            min-width: 22px;
-            height: 22px;
-            border-radius: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 6px;
-        }
-
-        .cart-float.hidden { display: none; }
-
-        /* ===== Cart Panel ===== */
-        .cart-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.4);
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all .3s;
-        }
-
-        .cart-overlay.show { opacity: 1; visibility: visible; }
-
-        .cart-panel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-radius: 24px 24px 0 0;
-            max-height: 80vh;
-            transform: translateY(100%);
-            transition: transform .3s ease;
-            z-index: 1001;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .cart-overlay.show .cart-panel { transform: translateY(0); }
-
-        .cart-handle {
-            width: 40px;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            margin: 12px auto;
-        }
-
-        .cart-header {
-            padding: 0 20px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .cart-title { font-size: 18px; font-weight: 700; }
-
-        .cart-close {
-            background: var(--bg-input);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .cart-items {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 20px;
-        }
-
-        .cart-empty {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-3);
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .cart-item-info { flex: 1; }
-        .cart-item-name { font-size: 14px; font-weight: 500; }
-        .cart-item-price { color: var(--primary-dark); font-size: 13px; }
-
-        .cart-item-qty {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .qty-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--bg-input);
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .cart-item-total {
-            font-weight: 700;
-            min-width: 60px;
-            text-align: right;
-        }
-
-        .cart-footer {
-            padding: 16px 20px 24px;
-            border-top: 1px solid var(--border);
-            background: white;
-        }
-
-        .cart-total {
-            display: flex;
-            justify-content: space-between;
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        .cart-total-amount { color: var(--primary-dark); }
-
-        .order-options { margin-bottom: 12px; }
-
-        .option-label {
-            font-size: 13px;
-            color: var(--text-2);
-            margin-bottom: 6px;
-        }
-
-        .option-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .option-btn {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: white;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all .2s;
-            font-family: inherit;
-        }
-
-        .option-btn.active {
-            border-color: var(--primary);
-            background: var(--primary-light);
-            color: var(--primary-dark);
-        }
-
-        .cart-note {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            margin-bottom: 12px;
-        }
-
-        .cart-note:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .checkout-btn:active { transform: scale(.98); }
-
-        /* ===== Order Status ===== */
-        .order-panel {
-            position: fixed;
-            top: 60px;
-            left: 16px;
-            right: 16px;
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            padding: 20px;
-            z-index: 800;
-            display: none;
-        }
-
-        .order-panel.show { display: block; animation: slideDown .3s ease; }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .order-id {
-            font-size: 12px;
-            color: var(--text-2);
-        }
-
-        .order-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--text-2);
-        }
-
-        .order-status-title {
-            font-size: 20px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .status-progress {
-            display: flex;
-            justify-content: space-between;
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .status-progress::before {
-            content: '';
-            position: absolute;
-            top: 14px;
-            left: 20px;
-            right: 20px;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-        }
-
-        .status-progress-fill {
-            position: absolute;
-            top: 14px;
-            left: 20px;
-            height: 4px;
-            background: var(--green);
-            border-radius: 2px;
-            transition: width .5s ease;
-        }
-
-        .status-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 1;
-        }
-
-        .status-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--bg-input);
-            border: 3px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            margin-bottom: 6px;
-            transition: all .3s;
-        }
-
-        .status-step.done .status-icon {
-            background: var(--green);
-            border-color: var(--green);
-            color: white;
-        }
-
-        .status-step.active .status-icon {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-            animation: pulse 1s infinite;
-        }
-
-        .status-label {
-            font-size: 10px;
-            color: var(--text-3);
-            text-align: center;
-        }
-
-        .status-step.done .status-label,
-        .status-step.active .status-label {
-            color: var(--text);
-            font-weight: 600;
-        }
-
-        .order-action {
-            text-align: center;
-            margin-top: 16px;
-        }
-
-        .order-action button {
-            padding: 10px 20px;
-            background: var(--bg-input);
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        /* ===== Modal ===== */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.5);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all .3s;
-            padding: 20px;
-        }
-
-        .modal-overlay.show { opacity: 1; visibility: visible; }
-
-        .modal {
-            background: white;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 400px;
-            padding: 24px;
-            transform: scale(.9);
-            transition: transform .3s;
-        }
-
-        .modal-overlay.show .modal { transform: scale(1); }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .form-group { margin-bottom: 16px; }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-2);
-            margin-bottom: 6px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-        }
-
-        .form-input:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-
-        .form-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            margin-bottom: 10px;
-        }
-
-        .form-btn.primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .form-btn.secondary {
-            background: var(--bg-input);
-            color: var(--text);
-        }
-
-        .form-toggle {
-            text-align: center;
-            font-size: 13px;
-            color: var(--text-2);
-        }
-
-        .form-toggle button {
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        /* ===== Toast ===== */
-        .toast-container {
-            position: fixed;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-        }
-
-        .toast {
-            background: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: var(--shadow-lg);
-            animation: toastIn .3s ease;
-        }
-
-        .toast.success { border-left: 4px solid var(--green); }
-        .toast.error { border-left: 4px solid var(--red); }
-        .toast.info { border-left: 4px solid var(--blue); }
-
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-12px); }
-            to { opacity: 1; transform: none; }
-        }
-
-        /* ===== Loading ===== */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(255,255,255,.9);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .loading-overlay.active { display: flex; }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin .6s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loading-msg {
-            margin-top: 12px;
-            font-size: 13px;
-            color: var(--text-2);
-        }
-
-        /* ===== Leaflet overrides ===== */
-        .leaflet-popup-content-wrapper { border-radius: 12px !important; }
-        .leaflet-popup-content { margin: 12px 16px !important; font-family: 'Inter', sans-serif !important; }
-
-        .popup-rich .pr-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-        .popup-rich .pr-type { font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
-        .popup-rich .pr-stars { color: #f59e0b; font-size: 12px; }
-        .popup-rich .pr-dist { font-size: 12px; color: var(--primary); font-weight: 600; }
-        .popup-rich .pr-action {
-            margin-top: 8px;
-            padding: 6px 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        /* ===== Empty State ===== */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-3);
-        }
-
-        .empty-state .em-icon { font-size: 48px; margin-bottom: 12px; }
-
-        /* ===== Full-Screen Login Page ===== */
-        .full-login-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, var(--primary-light) 0%, white 100%);
-            padding: 20px;
-        }
-
-        .full-login-page {
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .full-login-logo {
-            font-size: 80px;
-            margin-bottom: 16px;
-            animation: float 2s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .full-login-title {
-            font-size: 32px;
-            font-weight: 800;
-            color: var(--primary-dark);
-            margin-bottom: 8px;
-            letter-spacing: -1px;
-        }
-
-        .full-login-subtitle {
-            font-size: 16px;
-            color: var(--text-2);
-            margin-bottom: 32px;
-        }
-
-        .full-login-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 24px;
-            box-shadow: var(--shadow-lg);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NearBite — 发现美食</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍜</text></svg>">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{--pri:#ff6b35;--pri-l:#ff8f66;--pri-d:#ea580c;--pri-bg:#fff7ed;--ai:#8b5cf6;--ai-l:#a78bfa;--ai-bg:#f5f3ff;--bg:#f7f7f8;--card:#fff;--g1:#f3f4f6;--g2:#e5e7eb;--g3:#d1d5db;--g4:#9ca3af;--g5:#6b7280;--g6:#4b5563;--g7:#374151;--g8:#1f2937;--green:#10b981;--red:#ef4444;--border:#e5e7eb;--sh:0 2px 12px rgba(0,0,0,.06);--sh-lg:0 4px 20px rgba(0,0,0,.12);--r:12px;--r2:16px;--r3:24px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--g8);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ========== LOGIN PAGE ========== */
+.login-overlay{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#fff 0%,#fff7f4 100%);padding:20px}
+.login-overlay.show{display:flex}
+.login-page{width:100%;max-width:400px;text-align:center}
+.login-icon{width:80px;height:80px;background:var(--pri);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2.4rem;margin:0 auto 16px;box-shadow:0 8px 24px rgba(255,107,53,.3)}
+.login-title{font-size:1.6rem;font-weight:700;color:var(--g8);margin-bottom:4px}
+.login-subtitle{font-size:.9rem;color:var(--g4);margin-bottom:32px}
+.login-card{background:var(--card);border-radius:var(--r2);padding:24px;box-shadow:var(--sh-lg);text-align:left}
+.f-group{margin-bottom:14px}
+.f-label{display:block;font-size:.8rem;font-weight:600;color:var(--g6);margin-bottom:6px}
+.f-row{display:flex;gap:8px;align-items:center}
+.f-prefix{width:72px;height:48px;border:2px solid var(--g2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:600;color:var(--g6);background:#fafafa;flex-shrink:0}
+.f-input{width:100%;height:48px;border:2px solid var(--g2);border-radius:var(--r);padding:0 14px;font-size:.95rem;background:#fff;color:var(--g8);outline:none;transition:border .2s;font-family:inherit}
+.f-input:focus{border-color:var(--pri)}
+.f-input.flex{flex:1}
+.btn{width:100%;height:50px;border:none;border-radius:var(--r);font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-pri{background:var(--pri);color:#fff;box-shadow:0 4px 16px rgba(255,107,53,.3)}
+.btn-pri:hover{background:var(--pri-d);transform:translateY(-1px)}
+.login-or{display:flex;align-items:center;margin:18px 0;color:var(--g4);font-size:.8rem}
+.login-or::before,.login-or::after{content:'';flex:1;height:1px;background:var(--g2)}
+.login-or span{padding:0 12px}
+.social-row{display:flex;gap:12px;justify-content:center;margin-bottom:16px}
+.social-btn{width:52px;height:52px;border:2px solid var(--g2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:#fff;cursor:pointer;transition:all .2s}
+.social-btn:hover{border-color:var(--pri);background:#fff8f5}
+.login-link{text-align:center;font-size:.85rem;color:var(--g5)}
+.login-link a{color:var(--pri);text-decoration:none;font-weight:600;cursor:pointer}
+.login-err{color:var(--red);font-size:.8rem;margin-bottom:10px;min-height:1.2em}
+
+/* ========== APP CONTAINER ========== */
+.app{display:none;flex-direction:column;min-height:100vh;padding-bottom:70px}
+.app.show{display:flex}
+
+/* Header */
+.app-hd{position:sticky;top:0;z-index:500;background:var(--card);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.hd-left{display:flex;align-items:center;gap:8px}
+.hd-logo{font-size:28px}
+.hd-brand{font-size:20px;font-weight:800;color:var(--pri-d);letter-spacing:-.5px}
+.hd-right{display:flex;align-items:center;gap:8px}
+.lang-sel{padding:6px 10px;border:1px solid var(--border);border-radius:20px;background:var(--card);font-size:12px;font-weight:600;cursor:pointer;color:var(--g5);outline:none;appearance:none;-webkit-appearance:none;padding-right:24px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:10px}
+
+/* HOME PAGE */
+.pg-home{flex:1;display:none;flex-direction:column;background:var(--bg)}
+.pg-home.show{display:flex}
+.home-hd{background:#fff;padding:14px 16px 10px;flex-shrink:0}
+.loc-row{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:.85rem;font-weight:600;color:var(--g8);cursor:pointer}
+.loc-row .arr{color:var(--g4);font-size:.7rem}
+.search-bar{position:relative}
+.search-bar input{width:100%;height:42px;background:var(--g1);border:none;border-radius:var(--r);padding:0 70px 0 38px;font-size:.85rem;color:var(--g8);outline:none;font-family:inherit}
+.search-bar .ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:1rem;color:var(--g4)}
+.search-ai-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:linear-gradient(135deg,var(--ai),var(--ai-l));color:#fff;font-size:.55rem;padding:3px 8px;border-radius:10px;font-weight:600}
+.tabs-row{display:flex;background:#fff;border-bottom:1px solid var(--g1);flex-shrink:0}
+.tab{flex:1;text-align:center;padding:10px 0;font-size:.85rem;font-weight:500;color:var(--g4);cursor:pointer;position:relative}
+.tab.on{color:var(--pri);font-weight:600}
+.tab.on::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:24px;height:3px;background:var(--pri);border-radius:2px}
+.home-cats{background:#fff;padding:12px 0;border-bottom:1px solid var(--g1);flex-shrink:0}
+.cats-scroll{display:flex;gap:6px;padding:0 14px;overflow-x:auto}
+.cats-scroll::-webkit-scrollbar{display:none}
+.cat{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 10px;cursor:pointer}
+.cat-ico{width:46px;height:46px;background:var(--g1);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;transition:all .2s}
+.cat.on .cat-ico{background:var(--pri);color:#fff}
+.cat span{font-size:.7rem;color:var(--g5);white-space:nowrap}
+.cat.on span{color:var(--pri);font-weight:600}
+.filter-row{display:flex;gap:8px;padding:10px 16px;background:#fff;flex-shrink:0;overflow-x:auto}
+.filter-row::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;height:32px;padding:0 14px;border-radius:16px;border:1px solid var(--g2);background:#fff;font-size:.8rem;color:var(--g6);display:flex;align-items:center;gap:4px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+.chip.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.chip:hover{border-color:var(--pri)}
+.home-body{flex:1;overflow-y:auto;padding:10px 14px 20px}
+
+/* AI Recommend */
+.ai-recommend{padding:12px 0;margin-bottom:8px}
+.ai-recommend-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 2px}
+.ai-recommend-hd .icon{background:linear-gradient(135deg,var(--ai),var(--ai-l));color:#fff;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.ai-recommend-hd .title{font-size:.95rem;font-weight:600;color:var(--g8)}
+.ai-recommend-hd .subtitle{font-size:.7rem;color:var(--g4);margin-left:auto}
+.ai-cards{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.ai-cards::-webkit-scrollbar{display:none}
+.ai-card{flex-shrink:0;width:150px;background:#fff;border-radius:var(--r);padding:10px;box-shadow:0 1px 6px rgba(0,0,0,.04);cursor:pointer;transition:transform .15s}
+.ai-card:hover{transform:translateY(-2px)}
+.ai-card-img{width:100%;height:72px;background:linear-gradient(135deg,#ffe4d6,#fff0e8);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:8px}
+.ai-card-name{font-size:.8rem;font-weight:600;color:var(--g8);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-card-desc{font-size:.65rem;color:var(--g4);margin-bottom:6px}
+.ai-card-tag{font-size:.55rem;padding:2px 5px;background:linear-gradient(135deg,var(--ai),var(--ai-l));color:#fff;border-radius:4px;display:inline-block}
+
+/* Mini Map & Full Map */
+.map-preview{height:140px;border-radius:var(--r2);margin-bottom:12px;position:relative;overflow:hidden}
+#mini-map{height:100%;width:100%;border-radius:var(--r2)}
+.full-map-wrap{display:none;position:fixed;top:0;left:0;right:0;bottom:70px;z-index:400}
+.full-map-wrap.show{display:block}
+#full-map{width:100%;height:100%}
+
+/* Promo Banner */
+.promo{height:110px;background:linear-gradient(135deg,var(--pri),var(--pri-l));border-radius:var(--r2);margin-bottom:12px;display:flex;align-items:center;padding:0 20px;color:#fff;position:relative;overflow:hidden}
+.promo h3{font-size:1.1rem;font-weight:700;margin-bottom:4px}
+.promo p{font-size:.8rem;opacity:.85}
+.promo .deco{position:absolute;right:-10px;top:-10px;width:100px;height:100px;background:rgba(255,255,255,.1);border-radius:50%}
+.promo .deco2{position:absolute;right:30px;bottom:-20px;width:60px;height:60px;background:rgba(255,255,255,.08);border-radius:50%}
+
+/* Vendor Card */
+.v-card{background:#fff;border-radius:var(--r2);margin-bottom:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.04);display:flex;gap:12px;padding:12px;cursor:pointer;transition:transform .15s}
+.v-card:active{transform:scale(.99)}
+.v-img{width:88px;height:88px;border-radius:var(--r);background:linear-gradient(135deg,#ffe4d6,#fff0e8);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:2rem}
+.v-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.v-name{font-size:.95rem;font-weight:600;color:var(--g8);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v-rate{font-size:.78rem;color:var(--g5);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.v-rate .star{color:#ffb800}
+.v-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}
+.v-tag{font-size:.65rem;padding:2px 7px;background:#fff5f2;color:var(--pri);border-radius:4px}
+.v-tag-ai{font-size:.65rem;padding:2px 7px;background:linear-gradient(135deg,var(--ai),var(--ai-l));color:#fff;border-radius:4px}
+.v-meta{display:flex;justify-content:space-between;font-size:.72rem;color:var(--g4)}
+.v-meta .open{color:var(--green)}
+
+/* Menu Expand inside card */
+.menu-expand{display:none;width:100%;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.menu-expand.show{display:block}
+.menu-category{font-size:12px;font-weight:600;color:var(--g5);margin:12px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.menu-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.menu-item:last-child{border-bottom:none}
+.menu-item-info{flex:1}
+.menu-item-name{font-size:14px;font-weight:500}
+.menu-item-price{color:var(--pri-d);font-size:14px;font-weight:700;margin-top:2px}
+.menu-item-add{width:36px;height:36px;border-radius:50%;background:var(--pri);color:#fff;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.menu-item-add:active{transform:scale(.9)}
+
+/* Empty State */
+.empty-state{text-align:center;padding:40px 20px;color:var(--g4)}
+.empty-state .em-icon{font-size:48px;margin-bottom:12px}
+
+/* ========== BOTTOM NAV ========== */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid var(--g1);padding:8px 0 28px;z-index:500}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.62rem;color:var(--g4);cursor:pointer;padding:4px 0;transition:color .15s}
+.bnav-item.on{color:var(--pri)}
+.bnav-item.ai-on{color:var(--ai)}
+.bnav-item .ico{font-size:1.3rem}
+
+/* ========== PLACEHOLDER PAGES ========== */
+.pg-placeholder{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center}
+.pg-placeholder.show{display:flex}
+.pg-placeholder .ph-ico{font-size:3.5rem;margin-bottom:16px}
+.pg-placeholder h3{font-size:1.1rem;color:var(--g8);margin-bottom:8px}
+.pg-placeholder p{font-size:.85rem;color:var(--g4);line-height:1.6}
+
+/* ========== CART FLOAT ========== */
+.cart-float{position:fixed;bottom:90px;right:16px;z-index:450;background:var(--pri);color:#fff;border:none;border-radius:28px;padding:12px 20px;font-size:.9rem;font-weight:500;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,53,.4);display:none;align-items:center;gap:8px;font-family:inherit}
+.cart-float.show{display:flex}
+.cart-badge{background:var(--red);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
+
+/* ========== CART PANEL ========== */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;opacity:0;visibility:hidden;transition:all .3s}
+.cart-overlay.show{opacity:1;visibility:visible}
+.cart-panel{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:var(--r3) var(--r3) 0 0;max-height:80vh;transform:translateY(100%);transition:transform .3s ease;z-index:1001;display:flex;flex-direction:column}
+.cart-overlay.show .cart-panel{transform:translateY(0)}
+.cart-handle{width:40px;height:4px;background:var(--g2);border-radius:2px;margin:12px auto}
+.cart-header{padding:0 20px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.cart-title{font-size:18px;font-weight:700}
+.cart-close{background:var(--g1);border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer}
+.cart-items{flex:1;overflow-y:auto;padding:12px 20px}
+.cart-empty{text-align:center;padding:40px;color:var(--g4)}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.cart-item-info{flex:1}
+.cart-item-name{font-size:14px;font-weight:500}
+.cart-item-price{color:var(--pri-d);font-size:13px}
+.cart-item-qty{display:flex;align-items:center;gap:12px}
+.qty-btn{width:28px;height:28px;border-radius:50%;background:var(--g1);border:none;font-size:16px;cursor:pointer}
+.cart-item-total{font-weight:700;min-width:60px;text-align:right}
+.cart-footer{padding:16px 20px 24px;border-top:1px solid var(--border);background:var(--card)}
+.cart-total{display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-bottom:12px}
+.cart-total-amount{color:var(--pri-d)}
+.cart-note{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px}
+.cart-note:focus{border-color:var(--pri);outline:none}
+.checkout-btn{width:100%;padding:16px;background:var(--pri);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ========== ORDER PANEL ========== */
+.order-panel{position:fixed;top:60px;left:16px;right:16px;background:var(--card);border-radius:var(--r2);box-shadow:var(--sh-lg);padding:20px;z-index:800;display:none}
+.order-panel.show{display:block;animation:slideDown .3s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.order-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.order-id{font-size:12px;color:var(--g5)}
+.order-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--g5)}
+.order-status-title{font-size:20px;font-weight:700;text-align:center;margin-bottom:20px}
+.status-progress{display:flex;justify-content:space-between;position:relative;margin-bottom:20px}
+.status-progress::before{content:'';position:absolute;top:14px;left:20px;right:20px;height:4px;background:var(--g2);border-radius:2px}
+.status-progress-fill{position:absolute;top:14px;left:20px;height:4px;background:var(--green);border-radius:2px;transition:width .5s ease}
+.status-step{display:flex;flex-direction:column;align-items:center;z-index:1}
+.status-icon{width:32px;height:32px;border-radius:50%;background:var(--g1);border:3px solid var(--g2);display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:6px;transition:all .3s}
+.status-step.done .status-icon{background:var(--green);border-color:var(--green);color:#fff}
+.status-step.active .status-icon{background:var(--pri);border-color:var(--pri);color:#fff;animation:pulse 1s infinite}
+.status-label{font-size:10px;color:var(--g4);text-align:center}
+.status-step.done .status-label,.status-step.active .status-label{color:var(--g8);font-weight:600}
+@keyframes pulse{50%{opacity:.4}}
+.order-action{text-align:center;margin-top:16px}
+.order-action button{padding:10px 20px;background:var(--g1);border:none;border-radius:8px;font-size:13px;cursor:pointer}
+
+/* ========== TOAST ========== */
+.toast-container{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--card);padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:var(--sh-lg);animation:toastIn .3s ease}
+.toast.success{border-left:4px solid var(--green)}
+.toast.error{border-left:4px solid var(--red)}
+.toast.info{border-left:4px solid #3b82f6}
+@keyframes toastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+
+/* ========== LOADING ========== */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:9999;align-items:center;justify-content:center;flex-direction:column}
+.loading-overlay.active{display:flex}
+.spinner{width:40px;height:40px;border:3px solid var(--g2);border-top-color:var(--pri);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{margin-top:12px;font-size:13px;color:var(--g5)}
+
+/* ========== LEAFLET OVERRIDES ========== */
+.leaflet-popup-content-wrapper{border-radius:12px!important}
+.leaflet-popup-content{margin:12px 16px!important;font-family:inherit!important}
+.popup-rich .pr-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.popup-rich .pr-type{font-size:12px;color:var(--g5);margin-bottom:4px}
+.popup-rich .pr-stars{color:#f59e0b;font-size:12px}
+.popup-rich .pr-dist{font-size:12px;color:var(--pri);font-weight:600}
+.popup-rich .pr-action{margin-top:8px;padding:6px 12px;background:var(--pri);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;width:100%}
+</style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="app-header">
-        <div class="header-left">
-            <span class="header-logo">🍜</span>
-            <span class="header-brand">NearBite</span>
-        </div>
-        <div class="header-right">
-            <button class="user-btn" id="userBtn" onclick="showLoginModal()">👤</button>
-            <select class="lang-select" id="langSelect" onchange="switchLang(this.value)">
-                <option value="zh">🇨🇳 中文</option>
-                <option value="en">🇬🇧 English</option>
-                <option value="ja">🇯🇵 日本語</option>
-                <option value="ko">🇰🇷 한국어</option>
-            </select>
-        </div>
-    </header>
 
-    <!-- Location Bar -->
-    <div class="location-bar">
-        <span class="dot wait" id="locDot"></span>
-        <span id="locText" data-i18n="locating">正在获取位置…</span>
+<!-- ==================== LOGIN OVERLAY ==================== -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-page">
+    <div class="login-icon">🍔</div>
+    <h1 class="login-title">NearBite</h1>
+    <p class="login-subtitle" data-i18n="loginSlogan">发现身边的美味餐车</p>
+    <div class="login-card">
+      <!-- Login Form (default) -->
+      <div id="loginForm">
+        <div class="f-group">
+          <label class="f-label" data-i18n="phone">手机号</label>
+          <div class="f-row">
+            <div class="f-prefix">+64</div>
+            <input class="f-input flex" id="loginPhone" type="tel" data-i18n-placeholder="phonePh" placeholder="请输入手机号">
+          </div>
+        </div>
+        <div class="f-group">
+          <label class="f-label" data-i18n="password">密码</label>
+          <input class="f-input" id="loginPass" type="password" data-i18n-placeholder="passwordPh" placeholder="请输入密码">
+        </div>
+        <div class="login-err" id="loginErr"></div>
+        <button class="btn btn-pri" onclick="doFullLogin()" data-i18n="loginBtn">登 录</button>
+        <div class="login-or"><span data-i18n="or">或</span></div>
+        <div class="social-row">
+          <div class="social-btn" title="Apple">🍎</div>
+          <div class="social-btn" title="Google">G</div>
+          <div class="social-btn" title="WeChat">💬</div>
+        </div>
+        <div class="login-link"><span data-i18n="noAccount">还没有账号？</span> <a onclick="toggleLoginRegister(true)" data-i18n="registerNow">立即注册</a></div>
+      </div>
+      <!-- Register Form (hidden by default) -->
+      <div id="registerForm" style="display:none">
+        <div class="f-group">
+          <label class="f-label" data-i18n="username">用户名</label>
+          <input class="f-input" id="regName" data-i18n-placeholder="usernamePh" placeholder="请输入用户名">
+        </div>
+        <div class="f-group">
+          <label class="f-label" data-i18n="phone">手机号</label>
+          <div class="f-row">
+            <div class="f-prefix">+64</div>
+            <input class="f-input flex" id="regPhone" type="tel" data-i18n-placeholder="phonePh" placeholder="请输入手机号">
+          </div>
+        </div>
+        <div class="f-group">
+          <label class="f-label" data-i18n="password">密码</label>
+          <input class="f-input" id="regPass" type="password" data-i18n-placeholder="passwordPh" placeholder="请输入密码">
+        </div>
+        <div class="login-err" id="regErr"></div>
+        <button class="btn btn-pri" onclick="doFullRegister()" data-i18n="registerBtn">注 册</button>
+        <div style="height:16px"></div>
+        <div class="login-link"><span data-i18n="hasAccount">已有账号？</span> <a onclick="toggleLoginRegister(false)" data-i18n="loginNow">立即登录</a></div>
+      </div>
     </div>
+  </div>
+</div>
 
-    <!-- Map -->
-    <div id="map-container">
-        <div id="map"></div>
-        <button class="map-refresh" onclick="refreshLocation()">🔄</button>
+<!-- ==================== MAIN APP ==================== -->
+<div class="app" id="appContainer">
+  <!-- Header -->
+  <header class="app-hd">
+    <div class="hd-left">
+      <span class="hd-logo">🍔</span>
+      <span class="hd-brand">NearBite</span>
     </div>
-
-    <!-- Search -->
-    <div class="search-section">
-        <div class="search-bar">
-            <input type="text" class="search-input" id="searchInput" data-i18n-placeholder="search_placeholder" placeholder="搜索商户或菜品...">
-        </div>
+    <div class="hd-right">
+      <select class="lang-sel" id="langSelect" onchange="switchLang(this.value)">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
     </div>
+  </header>
 
-    <!-- Merchant List -->
-    <div class="merchant-section">
-        <h3 class="section-title">
-            <span data-i18n="nearby_merchants">附近商户</span>
-            <span class="section-count" id="merchantCount"></span>
-        </h3>
-        <div class="radius-control">
-            <label class="radius-label"><span data-i18n="search_radius">搜索半径</span>:</label>
-            <input type="range" class="radius-slider" id="radiusSlider" min="1" max="50" value="5" step="1">
-            <span class="radius-value" id="radiusValue">5km</span>
-        </div>
-        <div class="merchant-list" id="merchantList"></div>
+  <!-- ===== HOME PAGE ===== -->
+  <div class="pg-home show" id="pgHome">
+    <div class="home-hd">
+      <div class="loc-row" id="locRow">📍 <span id="locText">Christchurch CBD</span> <span class="arr">▼</span></div>
+      <div class="search-bar">
+        <span class="ico">🔍</span>
+        <input id="searchInput" data-i18n-placeholder="searchPh" placeholder="我想吃辣的、$15以内..." oninput="onSearchInput(this.value)">
+        <span class="search-ai-badge">✨ AI</span>
+      </div>
     </div>
-
-    <!-- Cart Floating Button -->
-    <button class="cart-float hidden" id="cartFloat" onclick="showCartPanel()">
-        🛒
-        <span class="cart-badge" id="cartBadge">0</span>
-    </button>
-
-    <!-- Cart Panel -->
-    <div class="cart-overlay" id="cartOverlay" onclick="closeCartPanel(event)">
-        <div class="cart-panel" onclick="event.stopPropagation()">
-            <div class="cart-handle"></div>
-            <div class="cart-header">
-                <span class="cart-title" data-i18n="cart">购物车</span>
-                <button class="cart-close" onclick="closeCartPanel()">✕</button>
-            </div>
-            <div class="cart-items" id="cartItems">
-                <div class="cart-empty" data-i18n="cart_empty">购物车是空的</div>
-            </div>
-            <div class="cart-footer">
-                <div class="cart-total">
-                    <span data-i18n="total">合计</span>
-                    <span class="cart-total-amount" id="cartTotal">NZD $0</span>
-                </div>
-                <div class="order-options">
-                    <div class="option-label" data-i18n="pickup_method">取餐方式</div>
-                    <div class="option-row" id="pickupMethodsContainer">
-                        <!-- 动态加载 -->
-                    </div>
-                </div>
-                <!-- 桌号输入（动态显示） -->
-                <div class="order-options" id="tableInputRow" style="display:none">
-                    <div class="option-label" data-i18n="table_number">桌号</div>
-                    <input type="text" class="form-input" id="tableNumberInput" data-i18n-placeholder="table_placeholder" placeholder="请输入桌号" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
-                </div>
-                <input type="text" class="cart-note" id="cartNote" data-i18n-placeholder="order_note" placeholder="备注：桌号或特殊要求">
-                <button class="checkout-btn" onclick="submitOrder()" data-i18n="confirm_order">确认下单</button>
-            </div>
-        </div>
+    <div class="tabs-row" id="contentTabs">
+      <div class="tab on" data-tab="recommend" onclick="switchContentTab('recommend')" data-i18n="tabRecommend">推荐</div>
+      <div class="tab" data-tab="nearby" onclick="switchContentTab('nearby')" data-i18n="tabNearby">附近</div>
+      <div class="tab" data-tab="map" onclick="switchContentTab('map')" data-i18n="tabMap">地图</div>
+      <div class="tab" data-tab="rating" onclick="switchContentTab('rating')" data-i18n="tabRating">评分</div>
     </div>
-
-    <!-- Order Status Panel -->
-    <div class="order-panel" id="orderPanel">
-        <div class="order-header">
-            <span class="order-id" id="orderId">订单 #---</span>
-            <button class="order-close" onclick="closeOrderPanel()">✕</button>
-        </div>
-        <div class="order-status-title" id="orderStatusTitle" data-i18n="order_pending">等待商家接单...</div>
-        <div class="status-progress">
-            <div class="status-progress-fill" id="progressFill" style="width: 0%"></div>
-            <div class="status-step" data-status="pending">
-                <div class="status-icon">⏳</div>
-                <span class="status-label" data-i18n="status_pending">待接单</span>
-            </div>
-            <div class="status-step" data-status="accepted">
-                <div class="status-icon">✓</div>
-                <span class="status-label" data-i18n="status_accepted">已接单</span>
-            </div>
-            <div class="status-step" data-status="preparing">
-                <div class="status-icon">👨‍🍳</div>
-                <span class="status-label" data-i18n="status_preparing">制作中</span>
-            </div>
-            <div class="status-step" data-status="ready">
-                <div class="status-icon">🍽️</div>
-                <span class="status-label" data-i18n="status_ready">已完成</span>
-            </div>
-        </div>
-        <div class="order-action">
-            <button onclick="closeOrderPanel()" data-i18n="close">关闭</button>
-        </div>
+    <div class="home-cats" id="homeCats">
+      <div class="cats-scroll" id="catsScroll">
+        <div class="cat on" data-cat="all" onclick="selectCategory('all')"><div class="cat-ico">🔥</div><span data-i18n="catAll">全部</span></div>
+        <div class="cat" data-cat="burger" onclick="selectCategory('burger')"><div class="cat-ico">🍔</div><span data-i18n="catBurger">汉堡</span></div>
+        <div class="cat" data-cat="mexican" onclick="selectCategory('mexican')"><div class="cat-ico">🌮</div><span data-i18n="catMexican">墨西哥</span></div>
+        <div class="cat" data-cat="noodle" onclick="selectCategory('noodle')"><div class="cat-ico">🍜</div><span data-i18n="catNoodle">面食</span></div>
+        <div class="cat" data-cat="pizza" onclick="selectCategory('pizza')"><div class="cat-ico">🍕</div><span data-i18n="catPizza">披萨</span></div>
+        <div class="cat" data-cat="coffee" onclick="selectCategory('coffee')"><div class="cat-ico">☕</div><span data-i18n="catCoffee">咖啡</span></div>
+      </div>
     </div>
-
-    <!-- Full-Screen Login Page (shown before auth) -->
-    <div class="full-login-overlay" id="fullLoginOverlay" style="display:none">
-        <div class="full-login-page">
-            <div class="full-login-logo">🍜</div>
-            <h1 class="full-login-title">NearBite</h1>
-            <p class="full-login-subtitle" data-i18n="login_subtitle">发现身边的美食</p>
-            
-            <div class="full-login-card">
-                <div class="form-group">
-                    <label class="form-label" data-i18n="phone">手机号</label>
-                    <input type="tel" class="form-input" id="fullLoginPhone" data-i18n-placeholder="phone_placeholder" placeholder="+64 ...">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" data-i18n="password">密码</label>
-                    <input type="password" class="form-input" id="fullLoginPassword" data-i18n-placeholder="password_placeholder" placeholder="••••••">
-                </div>
-                <button class="form-btn primary" onclick="doFullLogin()" data-i18n="login_btn">登录</button>
-                <button class="form-btn secondary" onclick="doFullRegister()" data-i18n="register_btn">注册新账号</button>
-            </div>
+    <div class="filter-row" id="filterRow">
+      <button class="chip on" data-filter="hot" onclick="selectFilter('hot')">🔥 <span data-i18n="filterHot">热门</span></button>
+      <button class="chip" data-filter="near" onclick="selectFilter('near')">📍 <span data-i18n="filterNear">最近</span></button>
+      <button class="chip" data-filter="deal" onclick="selectFilter('deal')">💰 <span data-i18n="filterDeal">优惠</span></button>
+      <button class="chip" data-filter="top" onclick="selectFilter('top')">⭐ <span data-i18n="filterTop">好评</span></button>
+    </div>
+    <!-- Scrollable home body -->
+    <div class="home-body" id="homeBody">
+      <!-- AI Recommend -->
+      <div class="ai-recommend" id="aiRecommendSection">
+        <div class="ai-recommend-hd">
+          <div class="icon">✨</div>
+          <span class="title" data-i18n="aiRecommendTitle">AI 为你推荐</span>
+          <span class="subtitle" data-i18n="aiRecommendSub">基于你的口味偏好</span>
         </div>
+        <div class="ai-cards" id="aiCards"></div>
+      </div>
+      <!-- Mini Map Preview -->
+      <div class="map-preview" id="mapPreview" onclick="switchContentTab('map')">
+        <div id="mini-map"></div>
+      </div>
+      <!-- Promo Banner -->
+      <div class="promo" id="promoBanner">
+        <div><h3 data-i18n="promoTitle">新用户首单立减$5</h3><p data-i18n="promoCode">使用优惠码 NEARBITE5</p></div>
+        <div class="deco"></div><div class="deco2"></div>
+      </div>
+      <!-- Merchant List -->
+      <div id="merchantList"></div>
+      <div id="emptyState" class="empty-state" style="display:none">
+        <div class="em-icon">🔍</div>
+        <p data-i18n="noMerchants">暂无商家，请稍后再试</p>
+      </div>
     </div>
+  </div>
 
-    <!-- Login Modal (for add to cart when already logged in) -->
-    <div class="modal-overlay" id="loginModal" onclick="closeLoginModal(event)">
-        <div class="modal" onclick="event.stopPropagation()">
-            <h2 class="modal-title" id="loginTitle" data-i18n="login">登录</h2>
-            <div class="form-group">
-                <label class="form-label" data-i18n="phone">手机号</label>
-                <input type="tel" class="form-input" id="loginPhone" data-i18n-placeholder="phone_placeholder" placeholder="+64 ...">
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="password">密码</label>
-                <input type="password" class="form-input" id="loginPassword" data-i18n-placeholder="password_placeholder" placeholder="••••••">
-            </div>
-            <button class="form-btn primary" onclick="doLogin()" data-i18n="login_btn">登录</button>
-            <button class="form-btn secondary" onclick="doRegister()" data-i18n="register_btn">注册新账号</button>
-            <div class="form-toggle">
-                <span data-i18n="no_account">还没有账号？</span>
-                <button onclick="showRegister()" data-i18n="register_now">立即注册</button>
-            </div>
-        </div>
+  <!-- ===== FULL MAP VIEW ===== -->
+  <div class="full-map-wrap" id="fullMapWrap">
+    <div id="full-map"></div>
+  </div>
+
+  <!-- ===== DISCOVER PAGE (placeholder) ===== -->
+  <div class="pg-placeholder" id="pgDiscover">
+    <div class="ph-ico">🔍</div>
+    <h3 data-i18n="discoverTitle">发现</h3>
+    <p data-i18n="discoverDesc">探索更多美食分类和主题推荐<br>功能即将上线，敬请期待</p>
+  </div>
+
+  <!-- ===== AI ASSISTANT PAGE (placeholder) ===== -->
+  <div class="pg-placeholder" id="pgAI">
+    <div class="ph-ico">✨</div>
+    <h3 data-i18n="aiTitle">AI 美食助手</h3>
+    <p data-i18n="aiDesc">用自然语言发现美食、智能点餐<br>功能即将上线，敬请期待</p>
+  </div>
+
+  <!-- ===== ORDERS PAGE (placeholder) ===== -->
+  <div class="pg-placeholder" id="pgOrders">
+    <div class="ph-ico">📋</div>
+    <h3 data-i18n="ordersTitle">我的订单</h3>
+    <p data-i18n="ordersDesc">查看历史订单和当前订单状态<br>下单后订单会出现在这里</p>
+  </div>
+
+  <!-- ===== PROFILE PAGE (placeholder) ===== -->
+  <div class="pg-placeholder" id="pgProfile">
+    <div class="ph-ico">👤</div>
+    <h3 data-i18n="profileTitle">个人中心</h3>
+    <p data-i18n="profileDesc">管理账户、收藏、设置<br>功能即将上线，敬请期待</p>
+    <button style="margin-top:20px;padding:10px 24px;background:none;border:2px solid var(--pri);color:var(--pri);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer" onclick="doLogout()" data-i18n="logoutBtn">退出登录</button>
+  </div>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <nav class="bnav" id="bottomNav">
+    <div class="bnav-item on" data-bnav="home" onclick="switchBottomTab('home')"><span class="ico">🏠</span><span data-i18n="navHome">首页</span></div>
+    <div class="bnav-item" data-bnav="discover" onclick="switchBottomTab('discover')"><span class="ico">🔍</span><span data-i18n="navDiscover">发现</span></div>
+    <div class="bnav-item" data-bnav="ai" onclick="switchBottomTab('ai')"><span class="ico">✨</span><span data-i18n="navAI">AI助手</span></div>
+    <div class="bnav-item" data-bnav="orders" onclick="switchBottomTab('orders')"><span class="ico">📋</span><span data-i18n="navOrders">订单</span></div>
+    <div class="bnav-item" data-bnav="profile" onclick="switchBottomTab('profile')"><span class="ico">👤</span><span data-i18n="navProfile">我的</span></div>
+  </nav>
+</div>
+
+<!-- ==================== CART FLOAT ==================== -->
+<button class="cart-float" id="cartFloat" onclick="openCart()">
+  🛒 <span data-i18n="viewCart">查看购物车</span>
+  <div class="cart-badge" id="cartBadge">0</div>
+</button>
+
+<!-- ==================== CART OVERLAY ==================== -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()">
+  <div class="cart-panel" onclick="event.stopPropagation()">
+    <div class="cart-handle"></div>
+    <div class="cart-header">
+      <span class="cart-title" data-i18n="cart">购物车</span>
+      <button class="cart-close" onclick="closeCart()">✕</button>
     </div>
-
-    <!-- Loading -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div class="loading-msg" id="loadingMsg">Loading...</div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty" data-i18n="cartEmpty">购物车是空的</div>
     </div>
-
-    <!-- Toast -->
-    <div class="toast-container" id="toastBox"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-    /* ===== i18n ===== */
-    const LANG = {
-        zh: {
-            im_merchant: '我是商家',
-            merchant_portal: '商家后台',
-            login_subtitle: '发现身边的美食',
-            locating: '正在获取位置…',
-            located: '已定位',
-            location_fail: '定位失败，使用默认位置',
-            search_placeholder: '搜索商户或菜品...',
-            nearby_merchants: '附近商户',
-            merchant_count: '{n} 家',
-            view_menu: '查看菜单',
-            add_to_cart: '加入购物车',
-            cart: '购物车',
-            cart_empty: '购物车是空的',
-            total: '合计',
-            pickup_method: '取餐方式',
-            table_number: '桌号',
-            table_placeholder: '请输入桌号',
-            self_pickup: '前台自取',
-            delivery_table: '送餐到桌',
-            order_note: '备注：桌号或特殊要求',
-            confirm_order: '确认下单',
-            order_pending: '等待商家接单...',
-            order_accepted: '商家已接单',
-            order_preparing: '正在准备中',
-            order_ready: '请取餐',
-            order_delivered: '已送到 Table {n}',
-            status_pending: '待接单',
-            status_accepted: '已接单',
-            status_preparing: '制作中',
-            status_ready: '已完成',
-            close: '关闭',
-            login: '登录',
-            phone: '手机号',
-            password: '密码',
-            phone_placeholder: '+64 ...',
-            password_placeholder: '••••••',
-            login_btn: '登录',
-            register_btn: '注册新账号',
-            no_account: '还没有账号？',
-            register_now: '立即注册',
-            register: '注册',
-            login_success: '登录成功',
-            register_success: '注册成功',
-            order_success: '下单成功！',
-            added_to_cart: '已加入购物车',
-            cart_updated: '购物车已更新',
-            no_merchants_nearby: '附近没有在线商户',
-            empty_cart_warning: '购物车是空的',
-            select_merchant: '请先选择商户',
-            order_id: '订单 #',
-            back: '返回',
-            no_menu: '暂无菜单',
-            search_radius: '搜索半径'
-        },
-        en: {
-            im_merchant: 'Merchant',
-            merchant_portal: 'Merchant Portal',
-            login_subtitle: 'Discover local flavors',
-            locating: 'Getting location...',
-            located: '📍 Located',
-            location_fail: 'Location failed, using default',
-            search_placeholder: 'Search merchants or dishes...',
-            nearby_merchants: 'Nearby Merchants',
-            merchant_count: '{n} found',
-            view_menu: 'View Menu',
-            add_to_cart: 'Add to Cart',
-            cart: 'Cart',
-            cart_empty: 'Cart is empty',
-            total: 'Total',
-            pickup_method: 'Pickup Method',
-            table_number: 'Table #',
-            table_placeholder: 'Enter table number',
-            self_pickup: 'Self Pickup',
-            delivery_table: 'Delivery to Table',
-            order_note: 'Note: Table# or special requests',
-            confirm_order: 'Confirm Order',
-            order_pending: 'Waiting for merchant...',
-            order_accepted: 'Merchant accepted',
-            order_preparing: 'Preparing your order',
-            order_ready: 'Ready for pickup!',
-            order_delivered: 'Delivered to Table {n}',
-            status_pending: 'Pending',
-            status_accepted: 'Accepted',
-            status_preparing: 'Preparing',
-            status_ready: 'Ready',
-            close: 'Close',
-            login: 'Login',
-            phone: 'Phone',
-            password: 'Password',
-            phone_placeholder: '+64 ...',
-            password_placeholder: '••••••',
-            login_btn: 'Login',
-            register_btn: 'Create Account',
-            no_account: 'No account?',
-            register_now: 'Register now',
-            register: 'Register',
-            login_success: 'Login successful',
-            register_success: 'Registration successful',
-            order_success: 'Order placed!',
-            added_to_cart: 'Added to cart',
-            cart_updated: 'Cart updated',
-            no_merchants_nearby: 'No merchants nearby',
-            empty_cart_warning: 'Cart is empty',
-            select_merchant: 'Please select a merchant',
-            order_id: 'Order #',
-            back: 'Back',
-            no_menu: 'No menu available',
-            search_radius: 'Search Radius'
-        },
-        ja: {
-            im_merchant: '店舗向け',
-            merchant_portal: '店舗管理',
-            login_subtitle: '近くのグルメを発見',
-            locating: '位置情報を取得中…',
-            located: '📍 位置情報取得済み',
-            location_fail: '位置情報の取得に失敗しました',
-            search_placeholder: '店舗や料理を検索...',
-            nearby_merchants: '近くの店舗',
-            merchant_count: '{n} 件',
-            view_menu: 'メニューを見る',
-            add_to_cart: 'カートに追加',
-            cart: 'カート',
-            cart_empty: 'カートは空です',
-            total: '合計',
-            pickup_method: '受け取り方法',
-            table_number: 'テーブル番号',
-            table_placeholder: 'テーブル番号を入力',
-            self_pickup: '店頭受け取り',
-            delivery_table: 'テーブルへ配達',
-            order_note: '備考：テーブル番号や特別な要望',
-            confirm_order: '注文を確定',
-            order_pending: '店舗の対応をお待ちください...',
-            order_accepted: '店舗が注文を受け付けました',
-            order_preparing: '準備中です',
-            order_ready: '受け取り準備完了！',
-            order_delivered: 'テーブル {n} へ配達済み',
-            status_pending: '対応待ち',
-            status_accepted: '受付済み',
-            status_preparing: '準備中',
-            status_ready: '完了',
-            close: '閉じる',
-            login: 'ログイン',
-            phone: '電話番号',
-            password: 'パスワード',
-            phone_placeholder: '+64 ...',
-            password_placeholder: '••••••',
-            login_btn: 'ログイン',
-            register_btn: '新規登録',
-            no_account: 'アカウントをお持ちでないですか？',
-            register_now: '今すぐ登録',
-            register: '新規登録',
-            login_success: 'ログインに成功しました',
-            register_success: '登録に成功しました',
-            order_success: '注文が完了しました！',
-            added_to_cart: 'カートに追加しました',
-            cart_updated: 'カートを更新しました',
-            no_merchants_nearby: '近くに店舗がありません',
-            empty_cart_warning: 'カートは空です',
-            select_merchant: '店舗を選択してください',
-            order_id: '注文 #',
-            back: '戻る',
-            no_menu: 'メニューがありません',
-            search_radius: '検索範囲'
-        },
-        ko: {
-            im_merchant: '점주용',
-            merchant_portal: '가맹점 관리',
-            login_subtitle: '주변 맛집을 발견하세요',
-            locating: '위치 확인 중…',
-            located: '📍 위치 확인됨',
-            location_fail: '위치 확인 실패, 기본 위치 사용',
-            search_placeholder: '매장 또는 메뉴 검색...',
-            nearby_merchants: '주변 매장',
-            merchant_count: '{n}개',
-            view_menu: '메뉴 보기',
-            add_to_cart: '장바구니에 추가',
-            cart: '장바구니',
-            cart_empty: '장바구니가 비어있습니다',
-            total: '합계',
-            pickup_method: '수령 방법',
-            table_number: '테이블 번호',
-            table_placeholder: '테이블 번호 입력',
-            self_pickup: '카운터 수령',
-            delivery_table: '테이블 배달',
-            order_note: '메모: 테이블 번호 또는 특별 요청',
-            confirm_order: '주문 확정',
-            order_pending: '매장 수락 대기 중...',
-            order_accepted: '매장이 주문을 수락했습니다',
-            order_preparing: '준비 중입니다',
-            order_ready: '수령 가능합니다!',
-            order_delivered: '테이블 {n}로 배달 완료',
-            status_pending: '대기 중',
-            status_accepted: '수락됨',
-            status_preparing: '준비 중',
-            status_ready: '완료',
-            close: '닫기',
-            login: '로그인',
-            phone: '전화번호',
-            password: '비밀번호',
-            phone_placeholder: '+64 ...',
-            password_placeholder: '••••••',
-            login_btn: '로그인',
-            register_btn: '새 계정 만들기',
-            no_account: '계정이 없으신가요?',
-            register_now: '지금 등록',
-            register: '회원가입',
-            login_success: '로그인 성공',
-            register_success: '가입 성공',
-            order_success: '주문 완료!',
-            added_to_cart: '장바구니에 추가됨',
-            cart_updated: '장바구니 업데이트됨',
-            no_merchants_nearby: '주변에 매장이 없습니다',
-            empty_cart_warning: '장바구니가 비어있습니다',
-            select_merchant: '매장을 선택해주세요',
-            order_id: '주문 #',
-            back: '뒤로',
-            no_menu: '메뉴가 없습니다',
-            search_radius: '검색 반경'
-        }
-    };
-
-    let currentLang = localStorage.getItem('lang') || 'zh';
-
-    function t(key, vars) {
-        let s = (LANG[currentLang] && LANG[currentLang][key]) || (LANG.zh[key]) || key;
-        if (vars) Object.keys(vars).forEach(k => s = s.replace('{' + k + '}', vars[k]));
-        return s;
-    }
-
-    function applyLang() {
-        var langNames = { zh: '🇨🇳 中文', en: '🇬🇧 English', ja: '🇯🇵 日本語', ko: '🇰🇷 한국어' };
-        var selectEl = document.getElementById('langSelect');
-        if (selectEl) selectEl.value = currentLang;
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            el.textContent = t(el.dataset.i18n);
-        });
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-            el.placeholder = t(el.dataset.i18nPlaceholder);
-        });
-    }
-
-    function switchLang(lang) {
-        currentLang = lang;
-        localStorage.setItem('lang', currentLang);
-        applyLang();
-        if (merchants.length) renderMerchants();
-    }
-
-    /* ===== Config ===== */
-    const API_BASE = '/api';
-    const DEFAULT_CENTER = { lat: -43.532, lng: 172.636 };
-    const TYPE_ICON = { food_truck:'🚚', cafe:'☕', bakery:'🍞', other:'📦' };
-
-    function typeName(type) {
-        const key = 'type_' + type;
-        return t(key) || type;
-    }
-
-    /* ===== State ===== */
-    let map = null, markers = [], merchants = [], currentMerchantId = null;
-    let userLoc = null, userLocMarker = null;
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    let currentOrder = null;
-    let sseConnection = null;
-    let pickupMethod = 'self';
-    let searchRadius = 5;
-    let radiusDebounceTimer = null;
-
-    /* ===== Toast ===== */
-    function toast(msg, type) {
-        type = type || 'info';
-        const el = document.createElement('div');
-        el.className = 'toast ' + type;
-        el.textContent = msg;
-        document.getElementById('toastBox').appendChild(el);
-        setTimeout(function() { el.remove(); }, 3000);
-    }
-
-    function showLoading(msg) {
-        document.getElementById('loadingMsg').textContent = msg || '...';
-        document.getElementById('loadingOverlay').classList.add('active');
-    }
-
-    function hideLoading() {
-        document.getElementById('loadingOverlay').classList.remove('active');
-    }
-
-    /* ===== GPS ===== */
-    function getGPS() {
-        return new Promise(function(resolve) {
-            if (!navigator.geolocation) return resolve(null);
-            navigator.geolocation.getCurrentPosition(
-                function(p) { resolve({ lat: p.coords.latitude, lng: p.coords.longitude }); },
-                function() { resolve(null); },
-                { enableHighAccuracy: true, timeout: 8000 }
-            );
-        });
-    }
-
-    async function initUserLocation() {
-        var dot = document.getElementById('locDot');
-        var txt = document.getElementById('locText');
-        dot.className = 'dot wait';
-        txt.textContent = t('locating');
-
-        var loc = await getGPS();
-        if (loc) {
-            userLoc = loc;
-            dot.className = 'dot ok';
-            txt.textContent = t('located') + ' (' + loc.lat.toFixed(3) + ', ' + loc.lng.toFixed(3) + ')';
-            if (map) map.setView([loc.lat, loc.lng], 14);
-            showUserMarker();
-        } else {
-            userLoc = DEFAULT_CENTER;
-            dot.className = 'dot fail';
-            txt.textContent = t('location_fail');
-        }
-    }
-
-    function refreshLocation() {
-        initUserLocation().then(function() { searchMerchants(); });
-    }
-
-    function showUserMarker() {
-        if (!map || !userLoc) return;
-        if (userLocMarker) map.removeLayer(userLocMarker);
-        userLocMarker = L.circleMarker([userLoc.lat, userLoc.lng], {
-            radius: 8,
-            fillColor: '#ff6b35',
-            color: '#fff',
-            weight: 2,
-            fillOpacity: 1
-        }).addTo(map).bindPopup('📍 You');
-    }
-
-    /* ===== Map ===== */
-    function initMap() {
-        if (map) return;
-        var c = userLoc || DEFAULT_CENTER;
-        map = L.map('map').setView([c.lat, c.lng], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-    }
-
-    /* ===== API ===== */
-    async function apiCall(endpoint, options) {
-        options = options || {};
-        var token = localStorage.getItem('token');
-        var headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-
-        var r = await fetch(API_BASE + endpoint, { method: 'GET', headers: headers, ...options });
-        if (!r.ok) {
-            var err = {};
-            try { err = await r.json(); } catch(e) {}
-            throw new Error(err.error || err.message || 'Failed');
-        }
-        return r.json();
-    }
-
-    /* ===== Stars ===== */
-    function starsStr(r) {
-        var f = Math.round(r);
-        return '★'.repeat(f) + '☆'.repeat(5 - f);
-    }
-
-    /* ===== Mock Data ===== */
-    function getMockMerchants() {
-        return [
-            { id: 'mock-1', name: '川味小馆', nameEn: 'Sichuan Kitchen', type: 'food_truck', lat: -43.529, lng: 172.638, rating: 4.5, reviewCount: 28, distance: 0.5, status: 'online', phone: '+64 21 123 456', address: 'Cathedral Square',
-             menu: [{ name: '麻婆豆腐 Mapo Tofu', price: 18 }, { name: '宫保鸡丁 Kung Pao Chicken', price: 22 }, { name: '酸辣汤 Hot & Sour Soup', price: 10 }] },
-            { id: 'mock-2', name: '寿司太郎', nameEn: 'Sushi Taro', type: 'food_truck', lat: -43.535, lng: 172.634, rating: 4.8, reviewCount: 56, distance: 0.8, status: 'online', phone: '+64 21 234 567', address: 'Riccarton',
-             menu: [{ name: '三文鱼刺身 Salmon Sashimi', price: 28 }, { name: '鳗鱼寿司 Eel Sushi', price: 15 }] },
-            { id: 'mock-3', name: '咖啡小镇', nameEn: 'Coffee Town', type: 'cafe', lat: -43.533, lng: 172.635, rating: 4.6, reviewCount: 42, distance: 0.3, status: 'online', phone: '+64 21 345 678', address: 'New Regent Street',
-             menu: [{ name: '拿铁 Latte', price: 6 }, { name: '卡布奇诺 Cappuccino', price: 6.5 }, { name: '牛角包 Croissant', price: 5 }] },
-            { id: 'mock-4', name: '甜蜜时光', nameEn: 'Sweet Time', type: 'bakery', lat: -43.531, lng: 172.637, rating: 4.7, reviewCount: 33, distance: 0.4, status: 'online', phone: '+64 21 456 789', address: 'Colombo Street',
-             menu: [{ name: '法式可颂 Croissant', price: 5.5 }, { name: '巧克力蛋糕 Chocolate Cake', price: 12 }, { name: '肉桂卷 Cinnamon Roll', price: 7 }] }
-        ];
-    }
-
-    /* ===== Search ===== */
-    async function searchMerchants() {
-        showLoading(currentLang === 'zh' ? '搜索中…' : 'Searching…');
-        var loc = userLoc || DEFAULT_CENTER;
-        try {
-            var data = await apiCall('/merchants/nearby?lat=' + loc.lat + '&lng=' + loc.lng + '&radius=' + searchRadius);
-            merchants = data.merchants || [];
-            if (!merchants.length) throw new Error('empty');
-        } catch (e) {
-            merchants = getMockMerchants().filter(function(m) { return m.status === 'online'; });
-        }
-        try {
-            renderMerchants();
-            updateMapMarkers();
-        } catch(renderErr) {
-            console.error('Render error:', renderErr);
-        }
-        hideLoading();
-    }
-
-    /* ===== Render ===== */
-    function renderMerchants() {
-        var list = document.getElementById('merchantList');
-        document.getElementById('merchantCount').textContent = t('merchant_count', { n: merchants.length });
-
-        if (!merchants.length) {
-            list.innerHTML = '<div class="empty-state"><div class="em-icon">🔍</div><div>' + t('no_merchants_nearby') + '</div></div>';
-            return;
-        }
-
-        list.innerHTML = merchants.map(function(m) {
-            var icon = TYPE_ICON[m.type] || '📦';
-            // Fix: API返回menuItems而非menu，location是{lat,lng}对象
-            var menuItems = m.menuItems || [];
-            var menuHtml = menuItems.map(function(item) {
-                return '<div class="menu-item">' +
-                    '<div class="menu-item-info"><div class="menu-item-name">' + item.name + '</div><div class="menu-item-price">NZD $' + item.price + '</div></div>' +
-                    '<button class="menu-item-add" onclick="addToCart(\'' + m.id + '\', \'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ')">+</button></div>';
-            }).join('');
-            
-            // Fix: 商户ID是UUID字符串，不是数字
-            var menuId = 'menu-' + m.id.replace(/-/g, '_');
-
-            return '<div class="merchant-card">' +
-                '<div class="mc-header"><div class="mc-info"><div class="mc-icon">' + icon + '</div><div><div class="mc-name">' + m.name + '</div><div class="mc-meta">' + typeName(m.type) + (m.address ? ' · ' + m.address : '') + '</div></div></div>' +
-                '<span class="mc-dist">' + (m.distance ? m.distance.toFixed(1) : '?') + 'km</span></div>' +
-                '<div class="mc-rating"><span class="mc-stars">' + starsStr(m.rating) + '</span><span class="mc-rating-num">' + (m.rating || 0) + '</span><span class="mc-rating-cnt">(' + (m.reviewCount || 0) + ')</span></div>' +
-                '<div class="mc-actions"><button class="mc-btn secondary" onclick="toggleMenu(\'' + menuId + '\')">📋 ' + t('view_menu') + '</button></div>' +
-                '<div class="menu-expand" id="' + menuId + '">' + (menuHtml || '<div style="padding:12px;color:var(--text-3)">' + t('no_menu') + '</div>') + '</div></div>';
-        }).join('');
-    }
-
-    function toggleMenu(id) {
-        var el = document.getElementById(id);
-        if (el) el.classList.toggle('show');
-    }
-
-    function updateMapMarkers() {
-        markers.forEach(function(mk) { map.removeLayer(mk); });
-        markers = [];
-        merchants.forEach(function(m) {
-            var icon = TYPE_ICON[m.type] || '📦';
-            var divIcon = L.divIcon({
-                html: '<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));">' + icon + '</div>',
-                className: '',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
-            });
-            // Fix: location是{lat, lng}对象
-            var lat = m.location ? m.location.lat : (m.lat || 0);
-            var lng = m.location ? m.location.lng : (m.lng || 0);
-            if (!lat && !lng) return; // 跳过无效坐标
-            
-            var mk = L.marker([lat, lng], { icon: divIcon }).addTo(map);
-            var menuId = 'menu-' + m.id.replace(/-/g, '_');
-            mk.bindPopup('<div class="popup-rich"><div class="pr-name">' + icon + ' ' + m.name + '</div><div class="pr-type">' + typeName(m.type) + '</div><div class="pr-stars">' + starsStr(m.rating) + ' ' + (m.rating || 0) + '</div><div class="pr-dist">📍 ' + (m.distance ? m.distance.toFixed(1) : '?') + 'km</div><button class="pr-action" onclick="scrollToMerchant(\'' + menuId + '\')">' + t('view_menu') + '</button></div>');
-            markers.push(mk);
-        });
-        if (merchants.length) {
-            var group = L.featureGroup(markers);
-            if (userLocMarker) group.addLayer(userLocMarker);
-            map.fitBounds(group.getBounds().pad(0.15));
-        }
-        showUserMarker();
-    }
-
-    function scrollToMerchant(menuId) {
-        var el = document.getElementById(menuId);
-        if (el) {
-            el.classList.add('show');
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
-    /* ===== Cart ===== */
-    // Fix: merchantId是UUID字符串
-    function addToCart(merchantId, name, price) {
-        var token = localStorage.getItem('token');
-        if (!token) {
-            showLoginModal();
-            return;
-        }
-
-        if (currentMerchantId && currentMerchantId !== merchantId) {
-            if (!confirm(currentLang === 'zh' ? '清空当前购物车并添加新商户的菜品？' : 'Clear cart and add items from different merchant?')) {
-                return;
-            }
-            cart = [];
-        }
-        currentMerchantId = merchantId;
-
-        var existing = cart.find(function(item) { return item.name === name && item.price === price; });
-        if (existing) {
-            existing.qty++;
-        } else {
-            cart.push({ merchantId: merchantId, name: name, price: price, qty: 1 });
-        }
-
-        saveCart();
-        updateCartUI();
-        toast(t('added_to_cart'), 'success');
-    }
-
-    function updateCartQty(name, price, delta) {
-        var item = cart.find(function(i) { return i.name === name && i.price === price; });
-        if (!item) return;
-
-        item.qty += delta;
-        if (item.qty <= 0) {
-            cart = cart.filter(function(i) { return i !== item; });
-        }
-
-        saveCart();
-        updateCartUI();
-    }
-
-    function saveCart() {
-        localStorage.setItem('cart', JSON.stringify(cart));
-    }
-
-    function updateCartUI() {
-        var cartFloat = document.getElementById('cartFloat');
-        var cartBadge = document.getElementById('cartBadge');
-        var totalQty = cart.reduce(function(sum, item) { return sum + item.qty; }, 0);
-
-        if (totalQty > 0) {
-            cartFloat.classList.remove('hidden');
-            cartBadge.textContent = totalQty;
-        } else {
-            cartFloat.classList.add('hidden');
-        }
-
-        var cartItems = document.getElementById('cartItems');
-        var cartTotal = document.getElementById('cartTotal');
-
-        if (!cart.length) {
-            cartItems.innerHTML = '<div class="cart-empty">' + t('cart_empty') + '</div>';
-            cartTotal.textContent = 'NZD $0';
-            return;
-        }
-
-        var total = 0;
-        cartItems.innerHTML = cart.map(function(item) {
-            var itemTotal = item.price * item.qty;
-            total += itemTotal;
-            return '<div class="cart-item">' +
-                '<div class="cart-item-info"><div class="cart-item-name">' + item.name + '</div><div class="cart-item-price">NZD $' + item.price + ' × ' + item.qty + '</div></div>' +
-                '<div class="cart-item-qty"><button class="qty-btn" onclick="updateCartQty(\'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ', -1)">-</button><span>' + item.qty + '</span><button class="qty-btn" onclick="updateCartQty(\'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ', 1)">+</button></div>' +
-                '<div class="cart-item-total">NZD $' + itemTotal.toFixed(2) + '</div></div>';
-        }).join('');
-
-        cartTotal.textContent = 'NZD $' + total.toFixed(2);
-    }
-
-    function showCartPanel() {
-        document.getElementById('cartOverlay').classList.add('show');
-        
-        // 如果是从扫码进入的商户，需要获取该商户的取餐方式
-        if (currentMerchantId && merchantPickupMethods.length === 0) {
-            // 尝试获取取餐方式
-            fetch(API_BASE + '/merchants/' + currentMerchantId + '/pickup-methods')
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    merchantPickupMethods = (data.methods || []).filter(function(m) { return m.enabled; });
-                    renderPickupMethods();
-                })
-                .catch(function() {
-                    renderPickupMethods();
-                });
-        } else {
-            renderPickupMethods();
-        }
-    }
-
-    function closeCartPanel(event) {
-        if (event && event.target !== event.currentTarget) return;
-        document.getElementById('cartOverlay').classList.remove('show');
-    }
-
-    function selectPickup(btn) {
-        document.querySelectorAll('.option-btn').forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        pickupMethod = btn.dataset.method;
-        
-        // 检查是否需要桌号
-        var requireTable = btn.dataset.requireTable === 'true';
-        var tableInputRow = document.getElementById('tableInputRow');
-        if (tableInputRow) {
-            tableInputRow.style.display = requireTable ? 'flex' : 'none';
-            if (requireTable) {
-                // 检查sessionStorage是否有预填的桌号
-                var prefillTable = sessionStorage.getItem('qr_table_number');
-                if (prefillTable && !document.getElementById('cartNote').value) {
-                    document.getElementById('cartNote').value = currentLang === 'zh' ? '桌号：' + prefillTable : 'Table: ' + prefillTable;
-                    sessionStorage.removeItem('qr_table_number');
-                }
-            }
-        }
-    }
-
-    function renderPickupMethods() {
-        var container = document.querySelector('.option-row');
-        
-        // 如果已经有动态加载的方法，使用它们
-        var methods = merchantPickupMethods.length > 0 ? merchantPickupMethods : [
-            { id: 'self_pickup', label_zh: '前台自取', label_en: 'Self Pickup', requireTableNumber: false },
-            { id: 'table_delivery', label_zh: '送餐到桌', label_en: 'Table Delivery', requireTableNumber: true }
-        ];
-        
-        container.innerHTML = methods.map(function(m) {
-            var label = currentLang === 'zh' ? m.label_zh : m.label_en;
-            var isActive = pickupMethod === m.id ? 'active' : '';
-            return '<button class="option-btn ' + isActive + '" data-method="' + m.id + '" data-require-table="' + m.requireTableNumber + '" onclick="selectPickup(this)">' + label + '</button>';
-        }).join('');
-        
-        // 默认选中第一个启用的方式
-        if (!pickupMethod && methods.length > 0) {
-            pickupMethod = methods[0].id;
-        }
-    }
-
-    /* ===== Order ===== */
-    async function submitOrder() {
-        if (!cart.length) {
-            toast(t('empty_cart_warning'), 'error');
-            return;
-        }
-
-        var token = localStorage.getItem('token');
-        if (!token) {
-            showLoginModal();
-            return;
-        }
-
-        // 获取桌号（如果选择了需要桌号的取餐方式）
-        var tableNumber = '';
-        var tableInputRow = document.getElementById('tableInputRow');
-        if (tableInputRow && tableInputRow.style.display !== 'none') {
-            tableNumber = document.getElementById('tableNumberInput').value.trim();
-            if (!tableNumber) {
-                toast(currentLang === 'zh' ? '请输入桌号' : 'Please enter table number', 'error');
-                return;
-            }
-        }
-
-        var note = document.getElementById('cartNote').value;
-        var items = cart.map(function(item) {
-            return { name: item.name, qty: item.qty, price: item.price };
-        });
-
-        showLoading(currentLang === 'zh' ? '下单中…' : 'Placing order...');
-
-        try {
-            var data = await apiCall('/orders', {
-                method: 'POST',
-                body: JSON.stringify({
-                    merchantId: currentMerchantId,
-                    items: items,
-                    pickupMethod: pickupMethod,
-                    tableNumber: tableNumber || null,
-                    note: note
-                })
-            });
-
-            cart = [];
-            currentMerchantId = null;
-            saveCart();
-            updateCartUI();
-            closeCartPanel();
-
-            currentOrder = data.order;
-            showOrderPanel(data.order);
-
-            connectSSE(data.order.id);
-
-            toast(t('order_success'), 'success');
-        } catch (e) {
-            toast(e.message || (currentLang === 'zh' ? '下单失败' : 'Order failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    function showOrderPanel(order) {
-        var panel = document.getElementById('orderPanel');
-        document.getElementById('orderId').textContent = t('order_id') + order.id.substring(0, 8);
-        panel.classList.add('show');
-        updateOrderStatus(order.status || 'pending');
-    }
-
-    function closeOrderPanel() {
-        document.getElementById('orderPanel').classList.remove('show');
-    }
-
-    function updateOrderStatus(status) {
-        var statusTitle = document.getElementById('orderStatusTitle');
-        var progressFill = document.getElementById('progressFill');
-
-        var statusMap = {
-            pending: { title: t('order_pending'), progress: 0 },
-            accepted: { title: t('order_accepted'), progress: 33 },
-            preparing: { title: t('order_preparing'), progress: 66 },
-            ready: { title: t('order_ready'), progress: 100 }
-        };
-
-        var info = statusMap[status] || statusMap.pending;
-        statusTitle.textContent = info.title;
-        progressFill.style.width = info.progress + '%';
-
-        document.querySelectorAll('.status-step').forEach(function(step) {
-            var stepStatus = step.dataset.status;
-            step.classList.remove('done', 'active');
-            if (['pending', 'accepted', 'preparing', 'ready'].indexOf(stepStatus) < ['pending', 'accepted', 'preparing', 'ready'].indexOf(status)) {
-                step.classList.add('done');
-            } else if (stepStatus === status) {
-                step.classList.add('active');
-            }
-        });
-    }
-
-    /* ===== SSE ===== */
-    function connectSSE(orderId) {
-        if (sseConnection) {
-            sseConnection.close();
-        }
-
-        var token = localStorage.getItem('token');
-        if (!token) return;
-
-        sseConnection = new EventSource('/api/orders/' + orderId + '/stream');
-
-        sseConnection.onmessage = function(event) {
-            try {
-                var data = JSON.parse(event.data);
-                if (data.type === 'connected' || data.type === 'ping') return;
-
-                if (data.type === 'order_status_changed' || data.type === 'order_updated') {
-                    var order = data.data || data.order;
-                    if (order) {
-                        currentOrder = order;
-                        updateOrderStatus(order.status);
-                    }
-                }
-            } catch (e) {
-                console.error('SSE parse error:', e);
-            }
-        };
-
-        sseConnection.onerror = function() {
-            console.log('SSE connection error, retrying...');
-        };
-    }
-
-    /* ===== Auth ===== */
-    var currentUser = null; // 当前登录用户
-
-    // 根据用户角色跳转到对应页面
-    function routeByRole(user) {
-        if (user.role === 'admin') {
-            window.location.href = '/admin.html';
-            return true;
-        }
-        if (user.role === 'merchant' || user.merchantId) {
-            window.location.href = '/merchant.html';
-            return true;
-        }
-        // 普通消费者，留在当前页
-        return false;
-    }
-
-    function showLoginModal() {
-        document.getElementById('loginModal').classList.add('show');
-    }
-
-    function closeLoginModal(event) {
-        if (event && event.target !== event.currentTarget) return;
-        document.getElementById('loginModal').classList.remove('show');
-    }
-
-    function showRegister() {
-        document.getElementById('loginTitle').textContent = t('register');
-        document.querySelector('#loginModal .form-btn.primary').textContent = t('register');
-        document.querySelector('#loginModal .form-btn.secondary').textContent = t('login_btn');
-        document.querySelector('#loginModal .form-btn.primary').onclick = doRegister;
-        document.querySelector('#loginModal .form-btn.secondary').onclick = doLogin;
-    }
-
-    function showLogin() {
-        document.getElementById('loginTitle').textContent = t('login');
-        document.querySelector('#loginModal .form-btn.primary').textContent = t('login_btn');
-        document.querySelector('#loginModal .form-btn.secondary').textContent = t('register_btn');
-        document.querySelector('#loginModal .form-btn.primary').onclick = doLogin;
-        document.querySelector('#loginModal .form-btn.secondary').onclick = doRegister;
-    }
-
-    // 显示全屏登录页
-    function showFullLoginPage() {
-        document.getElementById('fullLoginOverlay').style.display = 'flex';
-        // 隐藏主要内容
-        document.querySelector('.app-header').style.display = 'none';
-        document.querySelector('.location-bar').style.display = 'none';
-        document.getElementById('map-container').style.display = 'none';
-        document.querySelector('.search-section').style.display = 'none';
-        document.querySelector('.merchant-section').style.display = 'none';
-        document.getElementById('cartFloat').classList.add('hidden');
-    }
-
-    // 隐藏全屏登录页，显示主内容
-    function hideFullLoginPage() {
-        document.getElementById('fullLoginOverlay').style.display = 'none';
-        document.querySelector('.app-header').style.display = 'flex';
-        document.querySelector('.location-bar').style.display = 'flex';
-        document.getElementById('map-container').style.display = 'block';
-        document.querySelector('.search-section').style.display = 'block';
-        document.querySelector('.merchant-section').style.display = 'block';
-    }
-
-    async function doLogin() {
-        var phone = document.getElementById('loginPhone').value;
-        var password = document.getElementById('loginPassword').value;
-
-        if (!phone || !password) {
-            toast(currentLang === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields', 'error');
-            return;
-        }
-
-        showLoading(currentLang === 'zh' ? '登录中…' : 'Logging in...');
-
-        try {
-            var data = await apiCall('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ phone: phone, password: password })
-            });
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            currentUser = data.user;
-            closeLoginModal();
-            toast(t('login_success'), 'success');
-            // 根据角色跳转
-            if (!routeByRole(data.user)) {
-                updateUserUI();
-                hideFullLoginPage();
-            }
-        } catch (e) {
-            toast(e.message || (currentLang === 'zh' ? '登录失败' : 'Login failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    async function doRegister() {
-        var phone = document.getElementById('loginPhone').value;
-        var password = document.getElementById('loginPassword').value;
-
-        if (!phone || !password) {
-            toast(currentLang === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields', 'error');
-            return;
-        }
-
-        if (password.length < 6) {
-            toast(currentLang === 'zh' ? '密码至少6位' : 'Password min 6 chars', 'error');
-            return;
-        }
-
-        showLoading(currentLang === 'zh' ? '注册中…' : 'Registering...');
-
-        try {
-            var data = await apiCall('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify({ phone: phone, password: password })
-            });
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            currentUser = data.user;
-            closeLoginModal();
-            toast(t('register_success'), 'success');
-            if (!routeByRole(data.user)) {
-                updateUserUI();
-                hideFullLoginPage();
-            }
-        } catch (e) {
-            toast(e.message || (currentLang === 'zh' ? '注册失败' : 'Registration failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    function updateUserUI() {
-        var token = localStorage.getItem('token');
-        var userBtn = document.getElementById('userBtn');
-        
-        if (token && currentUser) {
-            userBtn.textContent = '👤';
-            userBtn.onclick = logout;
-        } else {
-            userBtn.textContent = '👤';
-            userBtn.onclick = showLoginModal;
-        }
-    }
-
-    async function checkAuthAndInit() {
-        var token = localStorage.getItem('token');
-        var savedUser = localStorage.getItem('user');
-        
-        if (!token) {
-            showFullLoginPage();
-            return;
-        }
-
-        // 优先使用本地保存的用户信息，同时在后台验证token
-        if (savedUser) {
-            try {
-                currentUser = JSON.parse(savedUser);
-                // 用缓存的用户信息先做角色路由
-                if (routeByRole(currentUser)) return;
-                updateUserUI();
-                hideFullLoginPage();
-            } catch (e) {
-                currentUser = null;
-            }
-        }
-
-        // 后台验证token有效性
-        try {
-            var data = await apiCall('/auth/me');
-            if (data && data.id) {
-                currentUser = data;
-                localStorage.setItem('user', JSON.stringify(data));
-                // 验证后再次检查角色路由（可能merchantId刚关联）
-                if (routeByRole(data)) return;
-                updateUserUI();
-            } else {
-                // token无效，清除并显示登录页
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                currentUser = null;
-                showFullLoginPage();
-            }
-        } catch (e) {
-            // token验证失败，如果是之前有保存用户，先保持登录状态
-            if (!currentUser) {
-                showFullLoginPage();
-            }
-        }
-    }
-
-    function logout() {
-        localStorage.removeItem('token');
-        currentUser = null;
-        updateUserUI();
-        toast(currentLang === 'zh' ? '已退出登录' : 'Logged out', 'info');
-        // 退出后显示登录页
-        showFullLoginPage();
-    }
-
-    // 全屏登录页的登录函数
-    async function doFullLogin() {
-        var phone = document.getElementById('fullLoginPhone').value;
-        var password = document.getElementById('fullLoginPassword').value;
-
-        if (!phone || !password) {
-            toast(currentLang === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields', 'error');
-            return;
-        }
-
-        showLoading(currentLang === 'zh' ? '登录中…' : 'Logging in...');
-
-        try {
-            var data = await apiCall('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ phone: phone, password: password })
-            });
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            currentUser = data.user;
-            toast(t('login_success'), 'success');
-            if (!routeByRole(data.user)) {
-                updateUserUI();
-                hideFullLoginPage();
-            }
-        } catch (e) {
-            toast(e.message || (currentLang === 'zh' ? '登录失败' : 'Login failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    // 全屏登录页的注册函数
-    async function doFullRegister() {
-        var phone = document.getElementById('fullLoginPhone').value;
-        var password = document.getElementById('fullLoginPassword').value;
-
-        if (!phone || !password) {
-            toast(currentLang === 'zh' ? '请填写手机号和密码' : 'Please fill in all fields', 'error');
-            return;
-        }
-
-        if (password.length < 6) {
-            toast(currentLang === 'zh' ? '密码至少6位' : 'Password min 6 chars', 'error');
-            return;
-        }
-
-        showLoading(currentLang === 'zh' ? '注册中…' : 'Registering...');
-
-        try {
-            var data = await apiCall('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify({ phone: phone, password: password })
-            });
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            currentUser = data.user;
-            toast(t('register_success'), 'success');
-            if (!routeByRole(data.user)) {
-                updateUserUI();
-                hideFullLoginPage();
-            }
-        } catch (e) {
-            toast(e.message || (currentLang === 'zh' ? '注册失败' : 'Registration failed'), 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-
-    /* ===== QR Code / URL参数处理 ===== */
-    var currentMerchantData = null; // 当前扫码进入的商户数据
-    var merchantPickupMethods = []; // 当前商户支持的取餐方式
-
-    async function handleQREntry() {
-        var params = new URLSearchParams(window.location.search);
-        var merchantId = params.get('merchant');
-        var tableNum = params.get('table');
-        if (!merchantId) return;
-
-        // 扫码进入，自动加载该商户
-        showLoading(currentLang === 'zh' ? '加载商户...' : 'Loading merchant...');
-        
-        try {
-            // 获取商户详情
-            var resp = await fetch(API_BASE + '/merchants/' + merchantId);
-            if (!resp.ok) {
-                hideLoading();
-                return;
-            }
-            var merchant = await resp.json();
-            
-            // 保存商户数据
-            currentMerchantData = merchant;
-            
-            // 预填桌号
-            if (tableNum) {
-                sessionStorage.setItem('qr_table_number', tableNum);
-            }
-            
-            // 获取商户支持的取餐方式
-            try {
-                var methodsResp = await fetch(API_BASE + '/merchants/' + merchantId + '/pickup-methods');
-                if (methodsResp.ok) {
-                    var methodsData = await methodsResp.json();
-                    merchantPickupMethods = (methodsData.methods || []).filter(function(m) { return m.enabled; });
-                }
-            } catch(e) {
-                console.error('获取取餐方式失败:', e);
-                merchantPickupMethods = [
-                    { id: 'self_pickup', label_zh: '前台自取', label_en: 'Self Pickup', requireTableNumber: false },
-                    { id: 'table_delivery', label_zh: '送餐到桌', label_en: 'Table Delivery', requireTableNumber: true }
-                ];
-            }
-            
-            // 显示商户菜单视图
-            showMerchantMenuView(merchant);
-            
-            // 清除URL参数避免刷新重复触发
-            window.history.replaceState({}, '', window.location.pathname);
-            
-            hideLoading();
-        } catch(e) {
-            console.error('QR entry error:', e);
-            hideLoading();
-        }
-    }
-
-    function showMerchantMenuView(merchant) {
-        // 隐藏商户列表，显示商户菜单
-        document.getElementById('map-container').style.display = 'none';
-        document.getElementById('searchSection').style.display = 'none';
-        document.querySelector('.merchant-section').style.display = 'none';
-        
-        // 创建商户信息头
-        var headerHtml = '<div class="merchant-detail-header" style="background:white;padding:16px;border-bottom:1px solid var(--border)">' +
-            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
-                '<div style="width:48px;height:48px;background:var(--primary-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px">🏪</div>' +
-                '<div style="flex:1">' +
-                    '<div style="font-size:18px;font-weight:700">' + merchant.name + '</div>' +
-                    '<div style="font-size:13px;color:var(--text-2)">' + (merchant.address || '') + '</div>' +
-                '</div>' +
-                '<button onclick="backToMerchantList()" style="padding:8px 16px;background:var(--bg-input);border:none;border-radius:20px;font-size:13px;cursor:pointer">' + (currentLang==='zh'?'返回':'Back') + '</button>' +
-            '</div>' +
-            '<div style="display:flex;gap:16px;font-size:13px;color:var(--text-2)">' +
-                '<span>⭐ ' + (merchant.rating || 0) + '</span>' +
-                '<span>📝 ' + (merchant.reviewCount || 0) + ' ' + (currentLang==='zh'?'评价':'reviews') + '</span>' +
-            '</div>' +
-        '</div>';
-        
-        // 插入商户详情头
-        var merchantSection = document.querySelector('.merchant-section');
-        merchantSection.innerHTML = headerHtml;
-        
-        // 设置当前商户ID
-        currentMerchantId = merchant.id;
-        
-        // 渲染菜单
-        renderMerchantMenu(merchant);
-        
-        // 显示商户区块
-        merchantSection.style.display = 'block';
-    }
-
-    function renderMerchantMenu(merchant) {
-        var list = document.getElementById('merchantList');
-        
-        if (!merchant.menuItems || merchant.menuItems.length === 0) {
-            list.innerHTML = '<div class="empty-state"><div class="em-icon">📝</div><div>' + (currentLang==='zh'?'暂无菜单':'No menu available') + '</div></div>';
-            return;
-        }
-
-        // 按分类组织菜单
-        var categories = {};
-        merchant.menuItems.forEach(function(item) {
-            var cat = item.category || (currentLang==='zh'?'其他':'Other');
-            if (!categories[cat]) categories[cat] = [];
-            categories[cat].push(item);
-        });
-
-        var menuHtml = Object.entries(categories).map(function(_a) {
-            var cat = _a[0];
-            var items = _a[1];
-            return '<div class="menu-category">' + cat + '</div>' + 
-                items.map(function(item) {
-                    return '<div class="menu-item">' +
-                        '<div class="menu-item-info">' +
-                            '<div class="menu-item-name">' + item.name + '</div>' +
-                            '<div class="menu-item-price">NZD $' + item.price.toFixed(2) + '</div>' +
-                        '</div>' +
-                        '<button class="menu-item-add" onclick="addToCart(\'' + merchant.id + '\', \'' + item.name.replace(/'/g, "\\'") + '\', ' + item.price + ')">+</button>' +
-                    '</div>';
-                }).join('');
-        }).join('');
-
-        list.innerHTML = menuHtml;
-    }
-
-    function backToMerchantList() {
-        // 恢复商户列表视图
-        document.getElementById('map-container').style.display = 'block';
-        document.getElementById('searchSection').style.display = 'block';
-        
-        var merchantSection = document.querySelector('.merchant-section');
-        merchantSection.innerHTML = '<h3 class="section-title"><span data-i18n="nearby_merchants">附近商户</span><span class="section-count" id="merchantCount"></span></h3><div class="merchant-list" id="merchantList"></div>';
-        
-        currentMerchantData = null;
-        currentMerchantId = null;
-        
-        renderMerchants();
-    }
-
-    /* ===== Init ===== */
-    window.addEventListener('DOMContentLoaded', async function() {
-        applyLang();
-        
-        // 先检查登录状态
-        await checkAuthAndInit();
-        
-        // 如果已登录，初始化地图和商户
-        var token = localStorage.getItem('token');
-        if (token && currentUser) {
-            initMap();
-            await initUserLocation();
-            showUserMarker();
-            searchMerchants();
-            updateCartUI();
-        }
-        
-        // 检查是否从二维码扫入
-        setTimeout(handleQREntry, 500);
-        
-        // Radius slider event
-        var radiusSlider = document.getElementById('radiusSlider');
-        var radiusValue = document.getElementById('radiusValue');
-        if (radiusSlider) {
-            radiusSlider.addEventListener('input', function() {
-                searchRadius = parseInt(this.value, 10);
-                radiusValue.textContent = searchRadius + 'km';
-                clearTimeout(radiusDebounceTimer);
-                radiusDebounceTimer = setTimeout(function() {
-                    searchMerchants();
-                }, 500);
-            });
-        }
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-total">
+        <span data-i18n="total">合计</span>
+        <span class="cart-total-amount" id="cartTotal">$0</span>
+      </div>
+      <textarea class="cart-note" id="cartNote" rows="2" data-i18n-placeholder="cartNotePh" placeholder="备注（可选）"></textarea>
+      <button class="checkout-btn" onclick="submitOrder()" data-i18n="placeOrder">提交订单</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ORDER STATUS PANEL ==================== -->
+<div class="order-panel" id="orderPanel">
+  <div class="order-header">
+    <span class="order-id" id="orderIdText"></span>
+    <button class="order-close" onclick="closeOrderPanel()">✕</button>
+  </div>
+  <div class="order-status-title" id="orderStatusTitle"></div>
+  <div class="status-progress">
+    <div class="status-progress-fill" id="statusProgressFill" style="width:0"></div>
+    <div class="status-step" id="step-pending"><div class="status-icon">📝</div><div class="status-label" data-i18n="sPending">已下单</div></div>
+    <div class="status-step" id="step-confirmed"><div class="status-icon">✅</div><div class="status-label" data-i18n="sConfirmed">已接单</div></div>
+    <div class="status-step" id="step-preparing"><div class="status-icon">👨‍🍳</div><div class="status-label" data-i18n="sPreparing">制作中</div></div>
+    <div class="status-step" id="step-ready"><div class="status-icon">🎉</div><div class="status-label" data-i18n="sReady">可取餐</div></div>
+  </div>
+  <div class="order-action"><button onclick="closeOrderPanel()" data-i18n="close">关闭</button></div>
+</div>
+
+<!-- ==================== TOAST ==================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ==================== LOADING ==================== -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-msg" id="loadingMsg" data-i18n="loading">加载中...</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================
+   NearBite Consumer Frontend — Complete JS
+   ============================================================ */
+
+// ========== CONFIG ==========
+const BASE_URL = 'https://wcp-merchant-platform-production-dcdb.up.railway.app';
+const API_BASE = '/api';
+const DEFAULT_CENTER = { lat: -43.532, lng: 172.636 };
+const DEFAULT_RADIUS = 5000;
+
+// ========== STATE ==========
+let currentLang = localStorage.getItem('nb_lang') || 'zh';
+let allMerchants = [];
+let currentCategory = 'all';
+let currentFilter = 'hot';
+let currentContentTab = 'recommend';
+let currentBottomTab = 'home';
+let miniMap = null;
+let fullMap = null;
+let miniMapMarkers = [];
+let fullMapMarkers = [];
+let cart = JSON.parse(localStorage.getItem('nb_cart') || '[]');
+let currentMerchantId = localStorage.getItem('nb_cartMerchant') || null;
+let expandedCardId = null;
+let orderSSE = null;
+
+// ========== i18n ==========
+const LANG = {
+  zh: {
+    loginSlogan: '发现身边的美味餐车',
+    phone: '手机号', phonePh: '请输入手机号',
+    password: '密码', passwordPh: '请输入密码',
+    loginBtn: '登 录', or: '或',
+    noAccount: '还没有账号？', registerNow: '立即注册',
+    hasAccount: '已有账号？', loginNow: '立即登录',
+    username: '用户名', usernamePh: '请输入用户名',
+    registerBtn: '注 册',
+    searchPh: '我想吃辣的、$15以内...',
+    tabRecommend: '推荐', tabNearby: '附近', tabMap: '地图', tabRating: '评分',
+    catAll: '全部', catBurger: '汉堡', catMexican: '墨西哥', catNoodle: '面食', catPizza: '披萨', catCoffee: '咖啡',
+    filterHot: '热门', filterNear: '最近', filterDeal: '优惠', filterTop: '好评',
+    aiRecommendTitle: 'AI 为你推荐', aiRecommendSub: '基于你的口味偏好',
+    promoTitle: '新用户首单立减$5', promoCode: '使用优惠码 NEARBITE5',
+    noMerchants: '暂无商家，请稍后再试',
+    viewCart: '查看购物车', cart: '购物车', cartEmpty: '购物车是空的',
+    total: '合计', cartNotePh: '备注（可选）', placeOrder: '提交订单',
+    close: '关闭', loading: '加载中...',
+    sPending: '已下单', sConfirmed: '已接单', sPreparing: '制作中', sReady: '可取餐',
+    monthSales: '月销', km: 'km', pickup: '到店自取', open: '营业中', closed: '休息中',
+    menu: '菜单', addToCart: '+',
+    navHome: '首页', navDiscover: '发现', navAI: 'AI助手', navOrders: '订单', navProfile: '我的',
+    discoverTitle: '发现', discoverDesc: '探索更多美食分类和主题推荐\n功能即将上线，敬请期待',
+    aiTitle: 'AI 美食助手', aiDesc: '用自然语言发现美食、智能点餐\n功能即将上线，敬请期待',
+    ordersTitle: '我的订单', ordersDesc: '查看历史订单和当前订单状态\n下单后订单会出现在这里',
+    profileTitle: '个人中心', profileDesc: '管理账户、收藏、设置\n功能即将上线，敬请期待',
+    logoutBtn: '退出登录',
+    loginFail: '登录失败，请检查手机号和密码',
+    regFail: '注册失败，请重试',
+    orderSuccess: '下单成功！',
+    orderFail: '下单失败，请重试',
+    cartDiffMerchant: '购物车中有其他商家的商品，是否清空？',
+    aiTag: 'AI推荐', topReview: '好评最多', spicyPick: '辣味首选',
+    viewMap: '查看地图'
+  },
+  en: {
+    loginSlogan: 'Discover nearby food trucks',
+    phone: 'Phone', phonePh: 'Enter phone number',
+    password: 'Password', passwordPh: 'Enter password',
+    loginBtn: 'Log In', or: 'or',
+    noAccount: "Don't have an account?", registerNow: 'Sign Up',
+    hasAccount: 'Already have an account?', loginNow: 'Log In',
+    username: 'Username', usernamePh: 'Enter username',
+    registerBtn: 'Sign Up',
+    searchPh: 'I want spicy food under $15...',
+    tabRecommend: 'For You', tabNearby: 'Nearby', tabMap: 'Map', tabRating: 'Top Rated',
+    catAll: 'All', catBurger: 'Burger', catMexican: 'Mexican', catNoodle: 'Noodles', catPizza: 'Pizza', catCoffee: 'Coffee',
+    filterHot: 'Popular', filterNear: 'Nearest', filterDeal: 'Deals', filterTop: 'Top Rated',
+    aiRecommendTitle: 'AI Picks for You', aiRecommendSub: 'Based on your preferences',
+    promoTitle: '$5 off your first order', promoCode: 'Use code NEARBITE5',
+    noMerchants: 'No merchants found. Try again later.',
+    viewCart: 'View Cart', cart: 'Cart', cartEmpty: 'Your cart is empty',
+    total: 'Total', cartNotePh: 'Notes (optional)', placeOrder: 'Place Order',
+    close: 'Close', loading: 'Loading...',
+    sPending: 'Placed', sConfirmed: 'Confirmed', sPreparing: 'Preparing', sReady: 'Ready',
+    monthSales: 'monthly', km: 'km', pickup: 'Self Pickup', open: 'Open', closed: 'Closed',
+    menu: 'Menu', addToCart: '+',
+    navHome: 'Home', navDiscover: 'Explore', navAI: 'AI', navOrders: 'Orders', navProfile: 'Me',
+    discoverTitle: 'Explore', discoverDesc: 'Discover more food categories\nComing soon',
+    aiTitle: 'AI Food Assistant', aiDesc: 'Discover food with natural language\nComing soon',
+    ordersTitle: 'My Orders', ordersDesc: 'View order history and status\nOrders will appear here',
+    profileTitle: 'Profile', profileDesc: 'Manage account, favorites, settings\nComing soon',
+    logoutBtn: 'Log Out',
+    loginFail: 'Login failed. Check phone & password.',
+    regFail: 'Registration failed. Please try again.',
+    orderSuccess: 'Order placed!',
+    orderFail: 'Order failed. Try again.',
+    cartDiffMerchant: 'Cart has items from another merchant. Clear cart?',
+    aiTag: 'AI Pick', topReview: 'Most Liked', spicyPick: 'Spicy Pick',
+    viewMap: 'View Map'
+  }
+};
+
+function t(key) { return (LANG[currentLang] || LANG.zh)[key] || key; }
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    const val = t(k);
+    if (val) el.textContent = val;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const k = el.getAttribute('data-i18n-placeholder');
+    const val = t(k);
+    if (val) el.placeholder = val;
+  });
+}
+
+function switchLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('nb_lang', lang);
+  document.getElementById('langSelect').value = lang;
+  applyI18n();
+  renderMerchants();
+  renderAICards();
+}
+
+// ========== API ==========
+async function apiCall(path, options = {}) {
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const url = path.startsWith('http') ? path : `${BASE_URL}${path}`;
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw { status: res.status, ...err };
+  }
+  return res.json();
+}
+
+// ========== TOAST ==========
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const d = document.createElement('div');
+  d.className = `toast ${type}`;
+  d.textContent = msg;
+  c.appendChild(d);
+  setTimeout(() => d.remove(), 3000);
+}
+
+// ========== LOADING ==========
+function showLoading(show, msg) {
+  const el = document.getElementById('loadingOverlay');
+  if (show) { el.classList.add('active'); if (msg) document.getElementById('loadingMsg').textContent = msg; }
+  else el.classList.remove('active');
+}
+
+// ========== AUTH ==========
+function showFullLoginPage() {
+  document.getElementById('loginOverlay').classList.add('show');
+  document.getElementById('appContainer').classList.remove('show');
+}
+
+function hideLoginPage() {
+  document.getElementById('loginOverlay').classList.remove('show');
+  document.getElementById('appContainer').classList.add('show');
+}
+
+function toggleLoginRegister(showReg) {
+  document.getElementById('loginForm').style.display = showReg ? 'none' : '';
+  document.getElementById('registerForm').style.display = showReg ? '' : 'none';
+  document.getElementById('loginErr').textContent = '';
+  document.getElementById('regErr').textContent = '';
+}
+
+async function doFullLogin() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!phone || !pass) { document.getElementById('loginErr').textContent = t('loginFail'); return; }
+  showLoading(true);
+  try {
+    const data = await apiCall(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      body: JSON.stringify({ phone, password: pass })
     });
-    </script>
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user || data));
+    showLoading(false);
+    routeByRole(data.user || data);
+  } catch (e) {
+    showLoading(false);
+    document.getElementById('loginErr').textContent = t('loginFail');
+  }
+}
+
+async function doFullRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const pass = document.getElementById('regPass').value;
+  if (!name || !phone || !pass) { document.getElementById('regErr').textContent = t('regFail'); return; }
+  showLoading(true);
+  try {
+    const data = await apiCall(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      body: JSON.stringify({ name, phone, password: pass, role: 'consumer' })
+    });
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user || data));
+    showLoading(false);
+    routeByRole(data.user || data);
+  } catch (e) {
+    showLoading(false);
+    document.getElementById('regErr').textContent = t('regFail');
+  }
+}
+
+function routeByRole(user) {
+  if (!user) { showFullLoginPage(); return; }
+  const role = user.role || 'consumer';
+  if (role === 'merchant') { window.location.href = 'merchant.html'; return; }
+  if (role === 'admin') { window.location.href = 'admin.html'; return; }
+  hideLoginPage();
+  initConsumerPage();
+}
+
+async function checkAuthAndInit() {
+  const token = localStorage.getItem('token');
+  // Check QR entry
+  const params = new URLSearchParams(window.location.search);
+  const qrMerchant = params.get('merchant');
+  const qrTable = params.get('table');
+
+  if (!token) {
+    if (qrMerchant) {
+      // Allow browsing without login for QR entry
+      hideLoginPage();
+      initConsumerPage(qrMerchant, qrTable);
+    } else {
+      showFullLoginPage();
+    }
+    return;
+  }
+  showLoading(true);
+  try {
+    const data = await apiCall(`${API_BASE}/auth/me`);
+    const user = data.user || data;
+    localStorage.setItem('user', JSON.stringify(user));
+    showLoading(false);
+    routeByRole(user);
+  } catch (e) {
+    showLoading(false);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    if (qrMerchant) {
+      hideLoginPage();
+      initConsumerPage(qrMerchant, qrTable);
+    } else {
+      showFullLoginPage();
+    }
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('nb_cart');
+  localStorage.removeItem('nb_cartMerchant');
+  cart = [];
+  currentMerchantId = null;
+  showFullLoginPage();
+}
+
+// ========== CONSUMER PAGE INIT ==========
+async function initConsumerPage(qrMerchantId, qrTable) {
+  applyI18n();
+  updateCartUI();
+  await loadMerchants();
+  initMiniMap();
+  if (qrMerchantId) {
+    // Auto-expand QR merchant
+    setTimeout(() => {
+      const card = document.querySelector(`.v-card[data-id="${qrMerchantId}"]`);
+      if (card) { card.click(); card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }, 500);
+  }
+}
+
+// ========== LOAD MERCHANTS ==========
+async function loadMerchants() {
+  try {
+    const data = await apiCall(`${API_BASE}/merchants/nearby?lat=${DEFAULT_CENTER.lat}&lng=${DEFAULT_CENTER.lng}&radius=${DEFAULT_RADIUS}`);
+    allMerchants = Array.isArray(data) ? data : (data.merchants || []);
+  } catch (e) {
+    console.warn('API failed, using mock data', e);
+    allMerchants = getMockMerchants();
+  }
+  if (!allMerchants.length) allMerchants = getMockMerchants();
+  renderMerchants();
+  renderAICards();
+}
+
+function getMockMerchants() {
+  return [
+    { _id:'m1', name:'墨西哥 Taco 餐车', name_en:'Mexican Taco Truck', type:'mexican', emoji:'🌮', rating:4.8, monthlySales:520, distance:1.2, isOpen:true, location:{coordinates:[172.636,-43.530]}, menu:[{name:'经典牛肉Taco',name_en:'Classic Beef Taco',price:12,category:'招牌'},{name:'鸡肉卷饼',name_en:'Chicken Burrito',price:14,category:'招牌'},{name:'玉米片',name_en:'Nachos',price:8,category:'小食'}] },
+    { _id:'m2', name:'Burger Brothers 餐车', name_en:'Burger Brothers Truck', type:'burger', emoji:'🍔', rating:4.6, monthlySales:380, distance:0.8, isOpen:true, location:{coordinates:[172.638,-43.533]}, menu:[{name:'经典安格斯牛堡',name_en:'Classic Angus Burger',price:16,category:'汉堡'},{name:'芝士培根堡',name_en:'Cheese Bacon Burger',price:18,category:'汉堡'},{name:'薯条',name_en:'Fries',price:5,category:'小食'}] },
+    { _id:'m3', name:'重庆小面', name_en:'Chongqing Noodles', type:'noodle', emoji:'🍜', rating:4.7, monthlySales:290, distance:2.1, isOpen:true, location:{coordinates:[172.634,-43.531]}, menu:[{name:'重庆小面',name_en:'Chongqing Noodles',price:13,category:'面食'},{name:'担担面',name_en:'Dan Dan Noodles',price:14,category:'面食'},{name:'冰粉',name_en:'Ice Jelly',price:5,category:'饮品'}] },
+    { _id:'m4', name:'Pizza Wheels', name_en:'Pizza Wheels', type:'pizza', emoji:'🍕', rating:4.5, monthlySales:210, distance:1.5, isOpen:false, location:{coordinates:[172.640,-43.534]}, menu:[{name:'玛格丽特披萨',name_en:'Margherita Pizza',price:15,category:'披萨'},{name:'夏威夷披萨',name_en:'Hawaiian Pizza',price:17,category:'披萨'}] },
+    { _id:'m5', name:'Kiwi Coffee Cart', name_en:'Kiwi Coffee Cart', type:'coffee', emoji:'☕', rating:4.9, monthlySales:600, distance:0.3, isOpen:true, location:{coordinates:[172.637,-43.532]}, menu:[{name:'Flat White',name_en:'Flat White',price:5,category:'咖啡'},{name:'Long Black',name_en:'Long Black',price:4.5,category:'咖啡'},{name:'抹茶拿铁',name_en:'Matcha Latte',price:6,category:'咖啡'}] }
+  ];
+}
+
+// ========== RENDER MERCHANTS ==========
+function getFilteredMerchants() {
+  let list = [...allMerchants];
+  // Category filter
+  if (currentCategory !== 'all') {
+    list = list.filter(m => (m.type || '').toLowerCase() === currentCategory);
+  }
+  // Sort by filter
+  if (currentFilter === 'near') list.sort((a, b) => (a.distance || 99) - (b.distance || 99));
+  else if (currentFilter === 'top') list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  else if (currentFilter === 'hot') list.sort((a, b) => (b.monthlySales || 0) - (a.monthlySales || 0));
+  return list;
+}
+
+function renderMerchants() {
+  const list = getFilteredMerchants();
+  const container = document.getElementById('merchantList');
+  const empty = document.getElementById('emptyState');
+
+  if (!list.length) {
+    container.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  container.innerHTML = list.map(m => {
+    const name = currentLang === 'en' && m.name_en ? m.name_en : m.name;
+    const emoji = m.emoji || '🍽️';
+    const rating = m.rating ? m.rating.toFixed(1) : '—';
+    const dist = m.distance ? m.distance.toFixed(1) : '?';
+    const sales = m.monthlySales || 0;
+    const isOpen = m.isOpen !== false;
+    const tags = [];
+    if (sales > 300) tags.push(`<span class="v-tag">🔥 ${t('filterHot')}</span>`);
+    if (m.rating >= 4.7) tags.push(`<span class="v-tag-ai">✨ ${t('aiTag')}</span>`);
+
+    return `
+      <div class="v-card" data-id="${m._id}" onclick="toggleMerchantMenu('${m._id}')">
+        <div class="v-img">${emoji}</div>
+        <div class="v-info">
+          <div class="v-name">${name}</div>
+          <div class="v-rate"><span class="star">⭐</span> ${rating} · ${t('monthSales')} ${sales}+</div>
+          <div class="v-tags">${tags.join('')}</div>
+          <div class="v-meta">
+            <span>${dist} ${t('km')} · ${t('pickup')}</span>
+            <span class="${isOpen ? 'open' : ''}">${isOpen ? '● ' + t('open') : '● ' + t('closed')}</span>
+          </div>
+          <div class="menu-expand" id="menu-${m._id}"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ========== RENDER AI CARDS ==========
+function renderAICards() {
+  const top = [...allMerchants].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 4);
+  const aiLabels = [t('aiTag'), t('topReview'), t('spicyPick'), '🆕 New'];
+  const container = document.getElementById('aiCards');
+  container.innerHTML = top.map((m, i) => {
+    const name = currentLang === 'en' && m.name_en ? m.name_en : m.name;
+    const emoji = m.emoji || '🍽️';
+    return `
+      <div class="ai-card" onclick="toggleMerchantMenu('${m._id}');scrollToCard('${m._id}')">
+        <div class="ai-card-img">${emoji}</div>
+        <div class="ai-card-name">${name}</div>
+        <div class="ai-card-desc">⭐${(m.rating||0).toFixed(1)} · ${(m.distance||0).toFixed(1)}km</div>
+        <span class="ai-card-tag">${aiLabels[i] || t('aiTag')}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function scrollToCard(id) {
+  setTimeout(() => {
+    const card = document.querySelector(`.v-card[data-id="${id}"]`);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+// ========== MENU EXPAND ==========
+async function toggleMerchantMenu(merchantId) {
+  const menuEl = document.getElementById(`menu-${merchantId}`);
+  if (!menuEl) return;
+
+  if (expandedCardId === merchantId) {
+    menuEl.classList.remove('show');
+    menuEl.innerHTML = '';
+    expandedCardId = null;
+    return;
+  }
+
+  // Close previous
+  if (expandedCardId) {
+    const prev = document.getElementById(`menu-${expandedCardId}`);
+    if (prev) { prev.classList.remove('show'); prev.innerHTML = ''; }
+  }
+  expandedCardId = merchantId;
+
+  const merchant = allMerchants.find(m => m._id === merchantId);
+  if (!merchant) return;
+
+  let menuItems = merchant.menu || [];
+  if (!menuItems.length) {
+    try {
+      const data = await apiCall(`${API_BASE}/merchants/${merchantId}`);
+      menuItems = (data.merchant || data).menu || [];
+      merchant.menu = menuItems;
+    } catch (e) { /* use empty */ }
+  }
+
+  if (!menuItems.length) {
+    menuEl.innerHTML = `<p style="color:var(--g4);font-size:13px;text-align:center;padding:12px">${t('noMerchants')}</p>`;
+    menuEl.classList.add('show');
+    return;
+  }
+
+  // Group by category
+  const groups = {};
+  menuItems.forEach(item => {
+    const cat = item.category || 'Menu';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(item);
+  });
+
+  let html = '';
+  for (const [cat, items] of Object.entries(groups)) {
+    html += `<div class="menu-category">${cat}</div>`;
+    items.forEach(item => {
+      const itemName = currentLang === 'en' && item.name_en ? item.name_en : item.name;
+      html += `
+        <div class="menu-item">
+          <div class="menu-item-info">
+            <div class="menu-item-name">${itemName}</div>
+            <div class="menu-item-price">$${(item.price || 0).toFixed(2)}</div>
+          </div>
+          <button class="menu-item-add" onclick="event.stopPropagation();addToCart('${merchantId}','${(item.name||'').replace(/'/g,"\\'")}',${item.price||0})">+</button>
+        </div>
+      `;
+    });
+  }
+  menuEl.innerHTML = html;
+  menuEl.classList.add('show');
+}
+
+// ========== SEARCH ==========
+function onSearchInput(val) {
+  const q = val.trim().toLowerCase();
+  if (!q) { renderMerchants(); return; }
+  const container = document.getElementById('merchantList');
+  const filtered = allMerchants.filter(m => {
+    const name = (m.name || '').toLowerCase();
+    const nameEn = (m.name_en || '').toLowerCase();
+    const type = (m.type || '').toLowerCase();
+    return name.includes(q) || nameEn.includes(q) || type.includes(q);
+  });
+  // Temporarily override and render
+  const origAll = allMerchants;
+  allMerchants = filtered;
+  renderMerchants();
+  allMerchants = origAll;
+}
+
+// ========== TABS & FILTERS ==========
+function switchContentTab(tab) {
+  currentContentTab = tab;
+  document.querySelectorAll('#contentTabs .tab').forEach(el => {
+    el.classList.toggle('on', el.dataset.tab === tab);
+  });
+
+  const homeBody = document.getElementById('homeBody');
+  const homeCats = document.getElementById('homeCats');
+  const filterRow = document.getElementById('filterRow');
+  const fullMapWrap = document.getElementById('fullMapWrap');
+
+  if (tab === 'map') {
+    homeBody.style.display = 'none';
+    homeCats.style.display = 'none';
+    filterRow.style.display = 'none';
+    fullMapWrap.classList.add('show');
+    initFullMap();
+  } else {
+    homeBody.style.display = '';
+    homeCats.style.display = '';
+    filterRow.style.display = '';
+    fullMapWrap.classList.remove('show');
+
+    if (tab === 'nearby') {
+      currentFilter = 'near';
+      updateFilterUI();
+    } else if (tab === 'rating') {
+      currentFilter = 'top';
+      updateFilterUI();
+    } else {
+      currentFilter = 'hot';
+      updateFilterUI();
+    }
+    renderMerchants();
+  }
+}
+
+function selectCategory(cat) {
+  currentCategory = cat;
+  document.querySelectorAll('#catsScroll .cat').forEach(el => {
+    el.classList.toggle('on', el.dataset.cat === cat);
+  });
+  renderMerchants();
+}
+
+function selectFilter(filter) {
+  currentFilter = filter;
+  updateFilterUI();
+  renderMerchants();
+}
+
+function updateFilterUI() {
+  document.querySelectorAll('#filterRow .chip').forEach(el => {
+    el.classList.toggle('on', el.dataset.filter === currentFilter);
+  });
+}
+
+// ========== BOTTOM NAV ==========
+function switchBottomTab(tab) {
+  currentBottomTab = tab;
+
+  // Update nav items
+  document.querySelectorAll('#bottomNav .bnav-item').forEach(el => {
+    el.classList.remove('on', 'ai-on');
+    if (el.dataset.bnav === tab) {
+      el.classList.add(tab === 'ai' ? 'ai-on' : 'on');
+    }
+  });
+
+  // Hide all pages
+  document.getElementById('pgHome').classList.remove('show');
+  document.getElementById('pgDiscover').classList.remove('show');
+  document.getElementById('pgAI').classList.remove('show');
+  document.getElementById('pgOrders').classList.remove('show');
+  document.getElementById('pgProfile').classList.remove('show');
+  document.getElementById('fullMapWrap').classList.remove('show');
+
+  // Show selected page
+  const pageMap = { home: 'pgHome', discover: 'pgDiscover', ai: 'pgAI', orders: 'pgOrders', profile: 'pgProfile' };
+  const pg = document.getElementById(pageMap[tab]);
+  if (pg) pg.classList.add('show');
+
+  // If going back to home, ensure map is closed
+  if (tab === 'home' && currentContentTab === 'map') {
+    document.getElementById('fullMapWrap').classList.add('show');
+  }
+}
+
+// ========== MAPS ==========
+function initMiniMap() {
+  if (miniMap) return;
+  const el = document.getElementById('mini-map');
+  if (!el) return;
+  miniMap = L.map(el, {
+    center: [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng],
+    zoom: 14,
+    zoomControl: false,
+    attributionControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    touchZoom: false
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(miniMap);
+  addMapMarkers(miniMap, miniMapMarkers);
+  setTimeout(() => miniMap.invalidateSize(), 300);
+}
+
+function initFullMap() {
+  if (fullMap) { fullMap.invalidateSize(); addMapMarkers(fullMap, fullMapMarkers); return; }
+  const el = document.getElementById('full-map');
+  if (!el) return;
+  fullMap = L.map(el, {
+    center: [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng],
+    zoom: 14,
+    zoomControl: true,
+    attributionControl: false
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(fullMap);
+
+  // User location marker
+  L.circleMarker([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], {
+    radius: 8, fillColor: '#ff6b35', fillOpacity: 1, color: '#fff', weight: 3
+  }).addTo(fullMap).bindPopup('<b>📍 You are here</b>');
+
+  addMapMarkers(fullMap, fullMapMarkers);
+  setTimeout(() => fullMap.invalidateSize(), 300);
+}
+
+function addMapMarkers(map, markersArray) {
+  // Clear existing
+  markersArray.forEach(m => map.removeLayer(m));
+  markersArray.length = 0;
+
+  allMerchants.forEach(m => {
+    if (!m.location || !m.location.coordinates) return;
+    const [lng, lat] = m.location.coordinates;
+    const name = currentLang === 'en' && m.name_en ? m.name_en : m.name;
+    const emoji = m.emoji || '🍽️';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="background:#ff6b35;color:#fff;padding:4px 8px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:0 2px 8px rgba(255,107,53,.3)">${emoji} ${name.slice(0,6)}</div>`,
+      iconSize: [0, 0],
+      iconAnchor: [0, 0]
+    });
+    const marker = L.marker([lat, lng], { icon }).addTo(map);
+    marker.bindPopup(`
+      <div class="popup-rich">
+        <div class="pr-name">${emoji} ${name}</div>
+        <div class="pr-type">${m.type || ''}</div>
+        <div class="pr-stars">⭐ ${(m.rating||0).toFixed(1)}</div>
+        <div class="pr-dist">${(m.distance||0).toFixed(1)} km</div>
+      </div>
+    `);
+    markersArray.push(marker);
+  });
+}
+
+// ========== CART ==========
+function addToCart(merchantId, itemName, price) {
+  if (currentMerchantId && currentMerchantId !== merchantId && cart.length > 0) {
+    if (!confirm(t('cartDiffMerchant'))) return;
+    cart = [];
+  }
+  currentMerchantId = merchantId;
+  localStorage.setItem('nb_cartMerchant', merchantId);
+
+  const existing = cart.find(c => c.name === itemName && c.merchantId === merchantId);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ merchantId, name: itemName, price, qty: 1 });
+  }
+  saveCart();
+  updateCartUI();
+  showToast(`${itemName} +1`, 'success');
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  if (!cart.length) { currentMerchantId = null; localStorage.removeItem('nb_cartMerchant'); }
+  saveCart();
+  updateCartUI();
+  renderCartPanel();
+}
+
+function changeQty(index, delta) {
+  cart[index].qty += delta;
+  if (cart[index].qty <= 0) { removeFromCart(index); return; }
+  saveCart();
+  updateCartUI();
+  renderCartPanel();
+}
+
+function saveCart() {
+  localStorage.setItem('nb_cart', JSON.stringify(cart));
+}
+
+function updateCartUI() {
+  const total = cart.reduce((s, c) => s + c.qty, 0);
+  const floatEl = document.getElementById('cartFloat');
+  const badge = document.getElementById('cartBadge');
+  if (total > 0) {
+    floatEl.classList.add('show');
+    badge.textContent = total;
+  } else {
+    floatEl.classList.remove('show');
+  }
+}
+
+function openCart() {
+  renderCartPanel();
+  document.getElementById('cartOverlay').classList.add('show');
+}
+
+function closeCart() {
+  document.getElementById('cartOverlay').classList.remove('show');
+}
+
+function renderCartPanel() {
+  const container = document.getElementById('cartItems');
+  const footer = document.getElementById('cartFooter');
+
+  if (!cart.length) {
+    container.innerHTML = `<div class="cart-empty">${t('cartEmpty')}</div>`;
+    footer.style.display = 'none';
+    return;
+  }
+
+  footer.style.display = '';
+  let total = 0;
+  container.innerHTML = cart.map((item, i) => {
+    const itemTotal = item.price * item.qty;
+    total += itemTotal;
+    return `
+      <div class="cart-item">
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+        </div>
+        <div class="cart-item-qty">
+          <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
+          <span>${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+        </div>
+        <div class="cart-item-total">$${itemTotal.toFixed(2)}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
+}
+
+// ========== ORDERS ==========
+async function submitOrder() {
+  if (!cart.length) return;
+  const token = localStorage.getItem('token');
+  if (!token) { showToast(t('loginFail'), 'error'); return; }
+
+  const note = document.getElementById('cartNote').value.trim();
+  const items = cart.map(c => ({ name: c.name, quantity: c.qty, price: c.price }));
+  const totalAmount = cart.reduce((s, c) => s + c.price * c.qty, 0);
+
+  showLoading(true);
+  try {
+    // Get pickup methods
+    let pickupMethod = 'counter';
+    try {
+      const methods = await apiCall(`${API_BASE}/merchants/${currentMerchantId}/pickup-methods`);
+      if (methods && methods.length) pickupMethod = methods[0].type || 'counter';
+    } catch (e) { /* use default */ }
+
+    const order = await apiCall(`${API_BASE}/orders`, {
+      method: 'POST',
+      body: JSON.stringify({
+        merchantId: currentMerchantId,
+        items,
+        totalAmount,
+        pickupMethod,
+        note,
+        tableNumber: null
+      })
+    });
+
+    showLoading(false);
+    closeCart();
+    cart = [];
+    currentMerchantId = null;
+    saveCart();
+    updateCartUI();
+    showToast(t('orderSuccess'), 'success');
+
+    if (order._id || order.id) {
+      showOrderPanel(order);
+      startOrderSSE(order._id || order.id);
+    }
+  } catch (e) {
+    showLoading(false);
+    showToast(t('orderFail'), 'error');
+  }
+}
+
+function showOrderPanel(order) {
+  const panel = document.getElementById('orderPanel');
+  document.getElementById('orderIdText').textContent = `#${(order._id || order.id || '').slice(-8)}`;
+  updateOrderStatus(order.status || 'pending');
+  panel.classList.add('show');
+}
+
+function closeOrderPanel() {
+  document.getElementById('orderPanel').classList.remove('show');
+  if (orderSSE) { orderSSE.close(); orderSSE = null; }
+}
+
+function updateOrderStatus(status) {
+  const steps = ['pending', 'confirmed', 'preparing', 'ready'];
+  const idx = steps.indexOf(status);
+  const titles = {
+    pending: '⏳ ' + t('sPending'),
+    confirmed: '✅ ' + t('sConfirmed'),
+    preparing: '👨‍🍳 ' + t('sPreparing'),
+    ready: '🎉 ' + t('sReady')
+  };
+  document.getElementById('orderStatusTitle').textContent = titles[status] || status;
+
+  steps.forEach((s, i) => {
+    const el = document.getElementById(`step-${s}`);
+    el.classList.remove('done', 'active');
+    if (i < idx) el.classList.add('done');
+    else if (i === idx) el.classList.add('active');
+  });
+
+  const fill = document.getElementById('statusProgressFill');
+  const pct = idx >= 0 ? (idx / (steps.length - 1)) * 100 : 0;
+  fill.style.width = `calc(${pct}% - 40px)`;
+}
+
+function startOrderSSE(orderId) {
+  if (orderSSE) orderSSE.close();
+  const token = localStorage.getItem('token');
+  try {
+    orderSSE = new EventSource(`${BASE_URL}${API_BASE}/orders/${orderId}/stream?token=${token}`);
+    orderSSE.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.status) updateOrderStatus(data.status);
+      } catch (err) { /* ignore parse errors */ }
+    };
+    orderSSE.onerror = () => { /* silent */ };
+  } catch (e) { /* SSE not supported */ }
+}
+
+// ========== GEOLOCATION ==========
+function tryGeolocate() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      DEFAULT_CENTER.lat = pos.coords.latitude;
+      DEFAULT_CENTER.lng = pos.coords.longitude;
+      document.getElementById('locText').textContent = `${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)}`;
+      if (miniMap) miniMap.setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], 14);
+      loadMerchants();
+    },
+    () => { /* use default */ },
+    { timeout: 5000 }
+  );
+}
+
+// ========== INIT ==========
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore language
+  document.getElementById('langSelect').value = currentLang;
+  applyI18n();
+  checkAuthAndInit();
+  tryGeolocate();
+});
+</script>
 </body>
 </html>
