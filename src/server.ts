@@ -1477,6 +1477,11 @@ app.patch('/api/admin/users/:id/ban', authMiddleware, adminMiddleware, async (re
   const userId = req.params.id;
   const { reason } = req.body;
 
+  // 防止管理员封禁自己
+  if (userId === adminId) {
+    return err(res, 403, '不能封禁自己的账号');
+  }
+
   if (!reason || typeof reason !== 'string') {
     return err(res, 400, '封禁原因必填');
   }
@@ -1598,6 +1603,11 @@ app.patch('/api/admin/users/:id/suspend', authMiddleware, adminMiddleware, async
   const adminId = (req as any).userId;
   const userId = req.params.id;
   const { reason } = req.body;
+
+  // 防止管理员停权自己
+  if (userId === adminId) {
+    return err(res, 403, '不能停权自己的账号');
+  }
 
   if (!reason || typeof reason !== 'string') {
     return err(res, 400, '停权原因必填');

@@ -1535,13 +1535,14 @@
                 <span class="header-logo">🏪</span>
                 <span class="header-brand">NearBite</span>
             </div>
-            <div class="header-right">
+            <div class="header-right" style="display:flex;align-items:center;gap:8px;">
                 <select class="lang-select" id="langSelect" onchange="switchLang(this.value)" style="padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:white;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-2);font-family:inherit">
                     <option value="zh">🇨🇳 中文</option>
                     <option value="en">🇬🇧 EN</option>
                     <option value="ja">🇯🇵 日本語</option>
                     <option value="ko">🇰🇷 한국어</option>
                 </select>
+                <button id="logoutBtn" style="padding:6px 14px;border:1px solid #e74c3c;border-radius:20px;background:white;color:#e74c3c;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" data-i18n="logout">退出</button>
             </div>
         </header>
 
@@ -4293,6 +4294,9 @@
         applyLang();
         updateSoundUI();
         initConfirmModeUI();
+        
+        // 退出登录按钮
+        document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
         
         // Optimistic auth: if token exists, show app immediately
         const savedToken = localStorage.getItem('token');
