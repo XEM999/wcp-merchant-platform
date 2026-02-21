@@ -10,6 +10,36 @@ if (!JWT_SECRET) {
 const SECRET: string = JWT_SECRET;
 const TOKEN_EXPIRY = '7d';
 
+// ==================== 手机号格式化 ====================
+
+/**
+ * 统一手机号格式为 +64xxxxxxxxx
+ * - 0210000001 → +64210000001
+ * - 64210000001 → +64210000001
+ * - +64210000001 → +64210000001
+ */
+function normalizePhone(phone: string): string {
+  const trimmed = phone.trim();
+  
+  // 已经是 +64 开头，保持不变
+  if (trimmed.startsWith('+64')) {
+    return trimmed;
+  }
+  
+  // 以 0 开头（新西兰本地格式），去掉前导0，加 +64
+  if (trimmed.startsWith('0')) {
+    return '+64' + trimmed.slice(1);
+  }
+  
+  // 以 64 开头但没有 +，加上 +
+  if (trimmed.startsWith('64')) {
+    return '+' + trimmed;
+  }
+  
+  // 其他情况，假设是新西兰号码，加 +64
+  return '+64' + trimmed;
+}
+
 // ==================== 类型定义 ====================
 
 export interface TokenPayload {
@@ -25,7 +55,8 @@ export interface AuthRequest {
 // ==================== 注册 ====================
 
 export async function register(phone: string, password: string): Promise<{ token: string; user: Omit<User, 'passwordHash'> }> {
-  const user = await createUser(phone, password);
+  const normalizedPhone = normalizePhone(phone);
+  const user = await createUser(normalizedPhone, password);
   const token = generateToken(user);
   const { passwordHash, ...userWithoutPassword } = user;
   return { token, user: userWithoutPassword };
@@ -34,7 +65,8 @@ export async function register(phone: string, password: string): Promise<{ token
 // ==================== 登录 ====================
 
 export async function login(phone: string, password: string): Promise<{ token: string; user: Omit<User, 'passwordHash'> }> {
-  const user = await getUserByPhone(phone);
+  const normalizedPhone = normalizePhone(phone);
+  const user = await getUserByPhone(normalizedPhone);
   if (!user) {
     throw new Error('手机号或密码错误');
   }
