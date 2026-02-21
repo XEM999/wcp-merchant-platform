@@ -335,8 +335,8 @@ ph_searchUser:'Search phone...',ph_searchMerchant:'Search merchant name...'
 };
 
 var lang=localStorage.getItem('nb_lang')||'zh';
-var token=localStorage.getItem('nb_token');
-var user=JSON.parse(localStorage.getItem('nb_user')||'null');
+var token=localStorage.getItem('token');
+var user=JSON.parse(localStorage.getItem('user')||'null');
 var banCtx=null;
 var suspendCtx=null;
 var planCtx=null;
@@ -446,8 +446,8 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
   api('/api/auth/login',{method:'POST',body:JSON.stringify({phone:ph,password:pw})})
     .then(function(d){
       token=d.token;user=d.user;
-      localStorage.setItem('nb_token',token);
-      localStorage.setItem('nb_user',JSON.stringify(user));
+      localStorage.setItem('token',token);
+      localStorage.setItem('user',JSON.stringify(user));
       enterApp();
     })
     .catch(function(){showToast(t('loginFail'),false)});
@@ -455,7 +455,7 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
 
 window.doLogout=function(){
   token=null;user=null;
-  localStorage.removeItem('nb_token');localStorage.removeItem('nb_user');
+  localStorage.removeItem('token');localStorage.removeItem('user');
   document.getElementById('loginPage').style.display='flex';
   document.getElementById('app').classList.remove('on');
 };
