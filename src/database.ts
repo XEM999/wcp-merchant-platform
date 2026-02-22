@@ -250,6 +250,7 @@ function mapMerchantFromDb(data: any, menuItems: MenuItem[] = []): Merchant {
     pickupMethods: data.pickup_methods || DEFAULT_PICKUP_METHODS,
     // 厨房工位配置
     kitchenStations: data.kitchen_stations || [],
+    followerCount: data.follower_count || 0,
   };
 }
 

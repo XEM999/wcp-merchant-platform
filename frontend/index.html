@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -2213,20 +2213,16 @@ async function loadFollowStatus(merchantId) {
     return;
   }
   try {
-    // Get follower count
-    const data = await apiCall(`${API_BASE}/merchants/${merchantId}/followers`);
-    const cnt = data.count || 0;
-    const cntEl = document.getElementById(`follow-count-${merchantId}`);
-    if (cntEl) cntEl.textContent = cnt;
-
-    // Check if following
     const isFol = await apiCall(`${API_BASE}/merchants/${merchantId}/is-following`);
     const btn = document.getElementById(`follow-btn-${merchantId}`);
     if (btn) {
-      btn.textContent = isFol.following ? '✓ 已关注' : '+ 关注';
+      btn.textContent = isFol.following ? '\u2713 \u5df2\u5173\u6ce8' : '+ \u5173\u6ce8';
       btn.classList.toggle('followed', !!isFol.following);
     }
-  } catch (e) { /* silent */ }
+    const m = (allMerchants || []).find(x => x.id === merchantId || x._id === merchantId);
+    const cntEl = document.getElementById(`follow-count-${merchantId}`);
+    if (cntEl && m) cntEl.textContent = m.followerCount || m.follower_count || 0;
+  } catch (e) { }
 }
 
 async function toggleFollow(merchantId) {
