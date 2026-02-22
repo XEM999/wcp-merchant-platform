@@ -1634,7 +1634,7 @@ async function initConsumerPage(qrMerchantId, qrTable) {
 async function loadMerchants() {
   try {
     const data = await apiCall(`${API_BASE}/merchants/nearby?lat=${DEFAULT_CENTER.lat}&lng=${DEFAULT_CENTER.lng}&radius=${DEFAULT_RADIUS}`);
-    allMerchants = Array.isArray(data) ? data : (data.merchants || []);
+    allMerchants = (Array.isArray(data) ? data : (data.merchants || [])).map(m => ({ ...m, _id: m._id || m.id }));
   } catch (e) {
     console.warn('API failed, using mock data', e);
     allMerchants = getMockMerchants();
