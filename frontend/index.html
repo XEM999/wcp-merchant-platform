@@ -2680,6 +2680,10 @@ function tryGeolocate() {
 
 // ========== PHASE 2C: FOLLOW & SCHEDULE ==========
 
+// 缓存关注的商家列表
+let cachedFollowedList = [];
+let followedListLoading = false;
+
 async function loadFollowStatus(merchantId) {
   const token = localStorage.getItem('token');
   const btn = document.getElementById(`follow-btn-${merchantId}`);
@@ -2721,8 +2725,25 @@ async function toggleFollow(merchantId) {
       const current = parseInt(cntEl.textContent) || 0;
       cntEl.textContent = isFollowed ? Math.max(0, current - 1) : current + 1;
     }
-    // Refresh profile list if on profile page
-    if (currentBottomTab === 'profile') loadFollowedList();
+    // 立即更新本地缓存（乐观更新）
+    if (isFollowed) {
+      // 取消关注：从缓存中移除
+      cachedFollowedList = cachedFollowedList.filter(m => (m._id || m.id) !== merchantId);
+    } else {
+      // 关注：添加到缓存（从 allMerchants 获取商家信息）
+      const merchant = allMerchants.find(m => m._id === merchantId || m.id === merchantId);
+      if (merchant) {
+        cachedFollowedList = [...cachedFollowedList, merchant];
+      }
+    }
+    // 如果在 profile 页面，立即更新列表显示
+    if (currentBottomTab === 'profile') {
+      const container = document.getElementById('followedList');
+      const countEl = document.getElementById('followCount');
+      if (container && cachedFollowedList.length >= 0) {
+        renderFollowedList(cachedFollowedList, container, countEl);
+      }
+    }
     // Refresh home following bar
     loadMyFollowingBar();
   } catch (e) {
@@ -2796,48 +2817,79 @@ async function loadFollowedList() {
     if (countEl) countEl.textContent = '0';
     return; 
   }
-  container.innerHTML = '<div class="followed-empty"><span class="empty-icon">⏳</span><div class="empty-title">加载中…</div></div>';
+  
+  // 如果正在加载，不重复请求
+  if (followedListLoading) return;
+  followedListLoading = true;
+  
+  // 先显示缓存数据（如果有）
+  if (cachedFollowedList.length > 0) {
+    renderFollowedList(cachedFollowedList, container, countEl);
+  } else {
+    // 显示加载骨架屏
+    container.innerHTML = `
+      <div class="followed-loading" style="padding:20px;text-align:center;color:var(--g4);">
+        <div style="display:flex;gap:12px;flex-direction:column;">
+          <div style="height:80px;background:var(--g1);border-radius:14px;animation:pulse 1.5s infinite;"></div>
+          <div style="height:80px;background:var(--g1);border-radius:14px;animation:pulse 1.5s infinite;"></div>
+          <div style="height:80px;background:var(--g1);border-radius:14px;animation:pulse 1.5s infinite;"></div>
+        </div>
+        <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}</style>
+      </div>
+    `;
+  }
+  
   try {
     const data = await apiCall(`${API_BASE}/user/following`);
     const merchants = Array.isArray(data) ? data : (data.merchants || []);
-    if (countEl) countEl.textContent = merchants.length || '0';
-    if (!merchants.length) {
-      container.innerHTML = `
-        <div class="followed-empty">
-          <span class="empty-icon">🔍</span>
-          <div class="empty-title">还没有关注的商家</div>
-          <div class="empty-desc">去首页发现更多美食餐车</div>
-          <button class="empty-action" onclick="switchBottomTab('home')">发现商家</button>
-        </div>
-      `;
-      return;
+    // 更新缓存
+    cachedFollowedList = merchants;
+    renderFollowedList(merchants, container, countEl);
+  } catch (e) {
+    if (cachedFollowedList.length === 0) {
+      container.innerHTML = '<div class="followed-empty"><span class="empty-icon">⚠️</span><div class="empty-title">加载失败</div><div class="empty-desc">请稍后重试</div></div>';
     }
-    container.innerHTML = merchants.map(m => {
-      const name = currentLang === 'en' && m.name_en ? m.name_en : m.name;
-      const emoji = m.emoji || '🍽️';
-      const isOpen = m.isOpen !== false;
-      const dist = m.distance ? m.distance.toFixed(1) : '?';
-      const type = m.type || '';
-      return `
-        <div class="followed-card">
-          <div class="followed-left" onclick="switchBottomTab('home');setTimeout(()=>toggleMerchantMenu('${m._id || m.id}'),300)">
-            <div class="followed-emoji">${emoji}</div>
-            <div class="followed-info">
-              <div class="followed-name">${name}</div>
-              <div class="followed-meta">
-                <span class="status-dot ${isOpen ? '' : 'closed'}"></span>
-                <span class="status-text ${isOpen ? '' : 'closed'}">${isOpen ? '营业中' : '休息中'}</span>
-                <span class="distance">📍 ${dist} km</span>
-              </div>
+  } finally {
+    followedListLoading = false;
+  }
+}
+
+function renderFollowedList(merchants, container, countEl) {
+  if (countEl) countEl.textContent = merchants.length || '0';
+  if (!merchants.length) {
+    container.innerHTML = `
+      <div class="followed-empty">
+        <span class="empty-icon">🔍</span>
+        <div class="empty-title">还没有关注的商家</div>
+        <div class="empty-desc">去首页发现更多美食餐车</div>
+        <button class="empty-action" onclick="switchBottomTab('home')">发现商家</button>
+      </div>
+    `;
+    return;
+  }
+  container.innerHTML = merchants.map(m => {
+    const name = currentLang === 'en' && m.name_en ? m.name_en : m.name;
+    const emoji = m.emoji || '🍽️';
+    const isOpen = m.isOpen !== false;
+    const dist = m.distance ? m.distance.toFixed(1) : '?';
+    const type = m.type || '';
+    return `
+      <div class="followed-card">
+        <div class="followed-left" onclick="switchBottomTab('home');setTimeout(()=>toggleMerchantMenu('${m._id || m.id}'),300)">
+          <div class="followed-emoji">${emoji}</div>
+          <div class="followed-info">
+            <div class="followed-name">${name}</div>
+            <div class="followed-meta">
+              <span class="status-dot ${isOpen ? '' : 'closed'}"></span>
+              <span class="status-text ${isOpen ? '' : 'closed'}">${isOpen ? '营业中' : '休息中'}</span>
+              <span class="distance">📍 ${dist} km</span>
             </div>
           </div>
-          <button class="followed-view-btn" onclick="switchBottomTab('home');setTimeout(()=>toggleMerchantMenu('${m._id || m.id}'),300)">去看看</button>
         </div>
-      `;
-    }).join('');
-  } catch (e) {
-    container.innerHTML = '<div class="followed-empty"><span class="empty-icon">⚠️</span><div class="empty-title">加载失败</div><div class="empty-desc">请稍后重试</div></div>';
-  }
+        <button class="followed-view-btn" onclick="switchBottomTab('home');setTimeout(()=>toggleMerchantMenu('${m._id || m.id}'),300)">去看看</button>
+      </div>
+    `;
+  }).join('');
 }
 
 // Load "My Following" bar on home page

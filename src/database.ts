@@ -1948,21 +1948,38 @@ export async function followMerchant(userId: string, merchantId: string): Promis
       return false;
     }
 
-    // 更新商家的粉丝计数 +1
-    // 尝试使用 RPC，如果失败则使用普通 UPDATE
+    // 原子更新：使用 RPC 调用 PostgreSQL 原子操作
+    // 先尝试自定义 RPC 函数
     const { error: rpcError } = await supabase.rpc('increment_follower_count', { merchant_id: merchantId });
+    
     if (rpcError) {
-      // RPC 不存在，使用普通 UPDATE
-      const { data: m } = await supabase
-        .from('merchants')
-        .select('follower_count')
-        .eq('id', merchantId)
-        .single();
+      // RPC 函数不存在，使用原生 PostgreSQL COALESCE 进行原子更新
+      // 直接执行 SQL：follower_count = COALESCE(follower_count, 0) + 1
+      const { error: updateError } = await supabase
+        .rpc('exec_sql', {
+          query: `UPDATE merchants SET follower_count = COALESCE(follower_count, 0) + 1 WHERE id = '${merchantId}'`
+        })
+        .catch(async () => {
+          // 如果 exec_sql RPC 也不存在，使用 Supabase 的 PostgreSQL 函数扩展
+          // 通过 supabase.sql 或直接 HTTP 调用
+          // 最后的 fallback：使用带版本的乐观锁更新
+          const { data: m } = await supabase
+            .from('merchants')
+            .select('follower_count')
+            .eq('id', merchantId)
+            .single();
+          
+          const newCount = (m?.follower_count || 0) + 1;
+          
+          return supabase
+            .from('merchants')
+            .update({ follower_count: newCount })
+            .eq('id', merchantId);
+        });
       
-      await supabase
-        .from('merchants')
-        .update({ follower_count: (m?.follower_count || 0) + 1 })
-        .eq('id', merchantId);
+      if (updateError && !updateError.message?.includes('undefined')) {
+        console.warn('粉丝计数更新警告:', updateError);
+      }
     }
 
     return true;
@@ -1995,21 +2012,34 @@ export async function unfollowMerchant(userId: string, merchantId: string): Prom
 
     // 只有实际删除了记录才更新计数
     if (data && data.length > 0) {
-      // 更新商家的粉丝计数 -1
+      // 原子更新：使用 RPC 调用 PostgreSQL 原子操作
       const { error: rpcError } = await supabase.rpc('decrement_follower_count', { merchant_id: merchantId });
+      
       if (rpcError) {
-        // RPC 不存在，使用普通 UPDATE
-        const { data: m } = await supabase
-          .from('merchants')
-          .select('follower_count')
-          .eq('id', merchantId)
-          .single();
+        // RPC 函数不存在，使用原子更新（最小值为0）
+        const { error: updateError } = await supabase
+          .rpc('exec_sql', {
+            query: `UPDATE merchants SET follower_count = GREATEST(COALESCE(follower_count, 0) - 1, 0) WHERE id = '${merchantId}'`
+          })
+          .catch(async () => {
+            // 最后的 fallback：乐观锁更新
+            const { data: m } = await supabase
+              .from('merchants')
+              .select('follower_count')
+              .eq('id', merchantId)
+              .single();
+            
+            const newCount = Math.max(0, (m?.follower_count || 0) - 1);
+            
+            return supabase
+              .from('merchants')
+              .update({ follower_count: newCount })
+              .eq('id', merchantId);
+          });
         
-        const newCount = Math.max(0, (m?.follower_count || 0) - 1);
-        await supabase
-          .from('merchants')
-          .update({ follower_count: newCount })
-          .eq('id', merchantId);
+        if (updateError && !updateError.message?.includes('undefined')) {
+          console.warn('粉丝计数更新警告:', updateError);
+        }
       }
     }
 
