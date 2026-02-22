@@ -1088,7 +1088,8 @@ body {
 .schedule-note { font-size:11px; color:var(--g4); margin-top:2px; font-style:italic; }
 .schedule-empty { text-align:center; padding:20px; color:var(--g4); font-size:13px; }
 /* ========== PROFILE PAGE ========== */
-#pgProfile { padding:0 16px 80px; text-align:left; }
+#pgProfile { display:none; padding:0 16px 80px; text-align:left; }
+#pgProfile.show { display:block; }
 .profile-hero { text-align:center; padding:28px 0 16px; }
 .profile-hero .ph-ico { font-size:3rem; margin-bottom:8px; }
 .profile-hero h3 { font-size:1.1rem; font-weight:600; color:var(--g8); }
@@ -1906,6 +1907,7 @@ function switchBottomTab(tab) {
   document.getElementById('pgAI').classList.remove('show');
   document.getElementById('pgOrders').classList.remove('show');
   document.getElementById('pgProfile').classList.remove('show');
+  document.getElementById('pgProfile').classList.remove('show');
   document.getElementById('fullMapWrap').classList.remove('show');
 
   // Show selected page
@@ -2232,15 +2234,26 @@ async function toggleFollow(merchantId) {
   if (!token) { showToast('请先登录', 'error'); return; }
   const btn = document.getElementById(`follow-btn-${merchantId}`);
   const isFollowed = btn && btn.classList.contains('followed');
+  // Optimistic update immediately
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = isFollowed ? '取消中…' : '关注中…';
+  }
   try {
     const method = isFollowed ? 'DELETE' : 'POST';
-    await fetch(`${API_BASE}/merchants/${merchantId}/follow`, {
-      method,
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-    });
-    showToast(isFollowed ? '已取消关注' : '关注成功 ❤️', 'success');
+    await apiCall(`${API_BASE}/merchants/${merchantId}/follow`, { method });
+    showToast(isFollowed ? '已取消关注' : '关注成功 ✓', 'success');
     await loadFollowStatus(merchantId);
-  } catch (e) { showToast('操作失败', 'error'); }
+    if (currentBottomTab === 'profile') loadFollowedList();
+  } catch (e) {
+    if (btn) {
+      btn.textContent = isFollowed ? '✓ 已关注' : '+ 关注';
+      btn.classList.toggle('followed', isFollowed);
+    }
+    showToast('操作失败，请重试', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 function switchExpandTab(merchantId, tab) {

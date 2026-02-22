@@ -456,8 +456,7 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
 window.doLogout=function(){
   token=null;user=null;
   localStorage.removeItem('token');localStorage.removeItem('user');
-  document.getElementById('loginPage').style.display='flex';
-  document.getElementById('app').classList.remove('on');
+  window.location.href = '/';
 };
 
 function enterApp(){

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -3016,6 +3016,7 @@
         // 重置 createStoreSection 为隐藏状态
         document.getElementById('createStoreSection').style.display = 'none';
         toast(t('logout_success'), 'info');
+        window.location.href = '/';
         // 统一退出到首页
         window.location.href = 'index.html';
     }
