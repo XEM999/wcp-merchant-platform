@@ -1072,6 +1072,36 @@ body {
     cursor: pointer;
     width: 100%;
 }
+/* ========== PHASE 2C: FOLLOW + SCHEDULE + PROFILE ========== */
+.follow-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0 6px; border-bottom:1px solid var(--g2); margin-bottom:8px; }
+.follow-info { font-size:12px; color:var(--g5); }
+.follow-info span { font-weight:600; color:var(--g7); }
+.btn-follow { padding:5px 14px; border-radius:20px; border:1.5px solid var(--pri); background:#fff; color:var(--pri); font-size:12px; font-weight:600; cursor:pointer; transition:.2s; }
+.btn-follow.followed { background:var(--g2); border-color:var(--g2); color:var(--g5); }
+.expand-tabs { display:flex; gap:6px; margin-bottom:8px; }
+.expand-tab { padding:4px 12px; border-radius:8px; border:1px solid var(--g2); background:#fff; font-size:12px; font-weight:500; cursor:pointer; color:var(--g6); }
+.expand-tab.on { background:var(--pri-bg); border-color:var(--pri); color:var(--pri); font-weight:600; }
+.schedule-card { background:var(--g1); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+.schedule-date { font-size:13px; font-weight:600; color:var(--g7); }
+.schedule-time { font-size:12px; color:var(--g5); margin-top:2px; }
+.schedule-addr { font-size:12px; color:var(--pri); margin-top:3px; }
+.schedule-note { font-size:11px; color:var(--g4); margin-top:2px; font-style:italic; }
+.schedule-empty { text-align:center; padding:20px; color:var(--g4); font-size:13px; }
+/* ========== PROFILE PAGE ========== */
+#pgProfile { padding:0 16px 80px; text-align:left; }
+.profile-hero { text-align:center; padding:28px 0 16px; }
+.profile-hero .ph-ico { font-size:3rem; margin-bottom:8px; }
+.profile-hero h3 { font-size:1.1rem; font-weight:600; color:var(--g8); }
+.profile-section-title { font-size:14px; font-weight:700; color:var(--g7); margin:16px 0 8px; padding-left:4px; }
+.followed-card { display:flex; align-items:center; gap:12px; background:var(--card); border-radius:12px; padding:12px; margin-bottom:8px; box-shadow:var(--sh); cursor:pointer; active:opacity:.7; }
+.followed-emoji { font-size:1.8rem; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:var(--g1); border-radius:10px; flex-shrink:0; }
+.followed-info { flex:1; min-width:0; }
+.followed-name { font-size:14px; font-weight:600; color:var(--g8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.followed-meta { font-size:12px; color:var(--g5); margin-top:2px; }
+.followed-status.open { color:var(--green); font-weight:500; }
+.followed-status.closed { color:var(--g4); }
+.followed-empty { text-align:center; padding:40px 20px; color:var(--g4); font-size:14px; }
+.profile-logout-btn { width:100%; padding:12px; margin-top:8px; background:none; border:1.5px solid var(--g2); color:var(--g5); border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; font-family:inherit; }
 </style>
 </head>
 <body>
@@ -1235,12 +1265,15 @@ body {
     <p data-i18n="ordersDesc">查看历史订单和当前订单状态<br>下单后订单会出现在这里</p>
   </div>
 
-  <!-- ===== PROFILE PAGE (placeholder) ===== -->
-  <div class="pg-placeholder" id="pgProfile">
-    <div class="ph-ico">👤</div>
-    <h3 data-i18n="profileTitle">个人中心</h3>
-    <p data-i18n="profileDesc">管理账户、收藏、设置<br>功能即将上线，敬请期待</p>
-    <button style="margin-top:20px;padding:10px 24px;background:none;border:2px solid var(--pri);color:var(--pri);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="doLogout()" data-i18n="logoutBtn">退出登录</button>
+  <!-- ===== PROFILE PAGE ===== -->
+  <div id="pgProfile">
+    <div class="profile-hero">
+      <div class="ph-ico">👤</div>
+      <h3 id="profileUserName">个人中心</h3>
+    </div>
+    <div class="profile-section-title">❤️ 我的关注</div>
+    <div id="followedList"><div class="followed-empty">还没有关注的商家</div></div>
+    <button class="profile-logout-btn" onclick="doLogout()">退出登录</button>
   </div>
 
   <!-- ===== BOTTOM NAV ===== -->
@@ -1732,38 +1765,51 @@ async function toggleMerchantMenu(merchantId) {
     } catch (e) { /* use empty */ }
   }
 
+  // Build menu HTML
+  let menuHTML = '';
   if (!menuItems.length) {
-    menuEl.innerHTML = `<p style="color:var(--g4);font-size:13px;text-align:center;padding:12px">${t('noMerchants')}</p>`;
-    menuEl.classList.add('show');
-    return;
-  }
-
-  // Group by category
-  const groups = {};
-  menuItems.forEach(item => {
-    const cat = item.category || 'Menu';
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(item);
-  });
-
-  let html = '';
-  for (const [cat, items] of Object.entries(groups)) {
-    html += `<div class="menu-category">${cat}</div>`;
-    items.forEach(item => {
-      const itemName = currentLang === 'en' && item.name_en ? item.name_en : item.name;
-      html += `
-        <div class="menu-item">
-          <div class="menu-item-info">
-            <div class="menu-item-name">${itemName}</div>
-            <div class="menu-item-price">$${(item.price || 0).toFixed(2)}</div>
-          </div>
-          <button class="menu-item-add" onclick="event.stopPropagation();addToCart('${merchantId}','${(item.name||'').replace(/'/g,"\\'")}',${item.price||0})">+</button>
-        </div>
-      `;
+    menuHTML = `<p style="color:var(--g4);font-size:13px;text-align:center;padding:12px">${t('noMerchants')}</p>`;
+  } else {
+    const groups = {};
+    menuItems.forEach(item => {
+      const cat = item.category || 'Menu';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
     });
+    for (const [cat, items] of Object.entries(groups)) {
+      menuHTML += `<div class="menu-category">${cat}</div>`;
+      items.forEach(item => {
+        const itemName = currentLang === 'en' && item.name_en ? item.name_en : item.name;
+        menuHTML += `
+          <div class="menu-item">
+            <div class="menu-item-info">
+              <div class="menu-item-name">${itemName}</div>
+              <div class="menu-item-price">$${(item.price || 0).toFixed(2)}</div>
+            </div>
+            <button class="menu-item-add" onclick="event.stopPropagation();addToCart('${merchantId}','${(item.name||'').replace(/'/g,"\\'")}',${item.price||0})">+</button>
+          </div>
+        `;
+      });
+    }
   }
-  menuEl.innerHTML = html;
+
+  // Render: follow row + tabs + content
+  menuEl.innerHTML = `
+    <div class="follow-row">
+      <div class="follow-info" id="follow-info-${merchantId}"><span id="follow-count-${merchantId}">…</span> 人关注</div>
+      <button class="btn-follow" id="follow-btn-${merchantId}" onclick="event.stopPropagation();toggleFollow('${merchantId}')">关注</button>
+    </div>
+    <div class="expand-tabs">
+      <button class="expand-tab on" id="tab-menu-${merchantId}" onclick="event.stopPropagation();switchExpandTab('${merchantId}','menu')">🍽️ 菜单</button>
+      <button class="expand-tab" id="tab-sched-${merchantId}" onclick="event.stopPropagation();switchExpandTab('${merchantId}','sched')">📅 日程</button>
+    </div>
+    <div id="expand-menu-${merchantId}">${menuHTML}</div>
+    <div id="expand-sched-${merchantId}" style="display:none"><div class="schedule-empty">加载中…</div></div>
+  `;
   menuEl.classList.add('show');
+
+  // Async: load follow status
+  loadFollowStatus(merchantId);
 }
 
 // ========== SEARCH ==========
@@ -1871,6 +1917,8 @@ function switchBottomTab(tab) {
   if (tab === 'home' && currentContentTab === 'map') {
     document.getElementById('fullMapWrap').classList.add('show');
   }
+  // Load profile data
+  if (tab === 'profile') loadFollowedList();
 }
 
 // ========== MAPS ==========
@@ -2151,6 +2199,134 @@ function tryGeolocate() {
     () => { /* use default */ },
     { timeout: 5000 }
   );
+}
+
+// ========== PHASE 2C: FOLLOW & SCHEDULE ==========
+
+async function loadFollowStatus(merchantId) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    const btn = document.getElementById(`follow-btn-${merchantId}`);
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  try {
+    // Get follower count
+    const data = await apiCall(`${API_BASE}/merchants/${merchantId}/followers`);
+    const cnt = data.count || 0;
+    const cntEl = document.getElementById(`follow-count-${merchantId}`);
+    if (cntEl) cntEl.textContent = cnt;
+
+    // Check if following
+    const isFol = await apiCall(`${API_BASE}/merchants/${merchantId}/is-following`);
+    const btn = document.getElementById(`follow-btn-${merchantId}`);
+    if (btn) {
+      btn.textContent = isFol.following ? '✓ 已关注' : '+ 关注';
+      btn.classList.toggle('followed', !!isFol.following);
+    }
+  } catch (e) { /* silent */ }
+}
+
+async function toggleFollow(merchantId) {
+  const token = localStorage.getItem('token');
+  if (!token) { showToast('请先登录', 'error'); return; }
+  const btn = document.getElementById(`follow-btn-${merchantId}`);
+  const isFollowed = btn && btn.classList.contains('followed');
+  try {
+    const method = isFollowed ? 'DELETE' : 'POST';
+    await fetch(`${API_BASE}/merchants/${merchantId}/follow`, {
+      method,
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+    });
+    showToast(isFollowed ? '已取消关注' : '关注成功 ❤️', 'success');
+    await loadFollowStatus(merchantId);
+  } catch (e) { showToast('操作失败', 'error'); }
+}
+
+function switchExpandTab(merchantId, tab) {
+  const menuDiv = document.getElementById(`expand-menu-${merchantId}`);
+  const schedDiv = document.getElementById(`expand-sched-${merchantId}`);
+  const menuTab = document.getElementById(`tab-menu-${merchantId}`);
+  const schedTab = document.getElementById(`tab-sched-${merchantId}`);
+  if (!menuDiv || !schedDiv) return;
+  if (tab === 'menu') {
+    menuDiv.style.display = '';
+    schedDiv.style.display = 'none';
+    menuTab && menuTab.classList.add('on');
+    schedTab && schedTab.classList.remove('on');
+  } else {
+    menuDiv.style.display = 'none';
+    schedDiv.style.display = '';
+    menuTab && menuTab.classList.remove('on');
+    schedTab && schedTab.classList.add('on');
+    loadSchedules(merchantId);
+  }
+}
+
+async function loadSchedules(merchantId) {
+  const schedDiv = document.getElementById(`expand-sched-${merchantId}`);
+  if (!schedDiv || schedDiv.dataset.loaded) return;
+  schedDiv.dataset.loaded = '1';
+  try {
+    const data = await apiCall(`${API_BASE}/merchants/${merchantId}/schedules`);
+    const schedules = Array.isArray(data) ? data : (data.schedules || []);
+    // Only show future schedules (today + next 7 days)
+    const today = new Date(); today.setHours(0,0,0,0);
+    const upcoming = schedules.filter(s => new Date(s.date) >= today).slice(0, 7);
+    if (!upcoming.length) {
+      schedDiv.innerHTML = '<div class="schedule-empty">📅 暂无出摊计划</div>';
+      return;
+    }
+    schedDiv.innerHTML = upcoming.map(s => {
+      const d = new Date(s.date);
+      const dateStr = `${d.getMonth()+1}月${d.getDate()}日`;
+      const timeStr = s.start_time && s.end_time ? `${s.start_time} – ${s.end_time}` : (s.start_time || '');
+      return `
+        <div class="schedule-card">
+          <div class="schedule-date">📅 ${dateStr}</div>
+          ${timeStr ? `<div class="schedule-time">⏰ ${timeStr}</div>` : ''}
+          ${s.address ? `<div class="schedule-addr">📍 ${s.address}</div>` : ''}
+          ${s.note ? `<div class="schedule-note">${s.note}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    const schedDiv2 = document.getElementById(`expand-sched-${merchantId}`);
+    if (schedDiv2) schedDiv2.innerHTML = '<div class="schedule-empty">加载失败</div>';
+  }
+}
+
+async function loadFollowedList() {
+  const token = localStorage.getItem('token');
+  const container = document.getElementById('followedList');
+  if (!container) return;
+  if (!token) { container.innerHTML = '<div class="followed-empty">登录后查看关注</div>'; return; }
+  container.innerHTML = '<div class="followed-empty">加载中…</div>';
+  try {
+    const data = await apiCall(`${API_BASE}/user/following`);
+    const merchants = Array.isArray(data) ? data : (data.merchants || []);
+    if (!merchants.length) {
+      container.innerHTML = '<div class="followed-empty">还没有关注的商家</div>';
+      return;
+    }
+    container.innerHTML = merchants.map(m => {
+      const name = currentLang === 'en' && m.name_en ? m.name_en : m.name;
+      const emoji = m.emoji || '🍽️';
+      const isOpen = m.isOpen !== false;
+      return `
+        <div class="followed-card" onclick="switchBottomTab('home');setTimeout(()=>toggleMerchantMenu('${m._id}'),300)">
+          <div class="followed-emoji">${emoji}</div>
+          <div class="followed-info">
+            <div class="followed-name">${name}</div>
+            <div class="followed-meta">${m.type || ''}</div>
+          </div>
+          <div class="followed-status ${isOpen ? 'open' : 'closed'}">${isOpen ? '● 营业中' : '● 休息'}</div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="followed-empty">加载失败，请重试</div>';
+  }
 }
 
 // ========== INIT ==========
