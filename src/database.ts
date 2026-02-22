@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+﻿import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 
@@ -66,6 +66,7 @@ export interface Merchant {
   pickupMethods: PickupMethodConfig[];
   // 厨房工位配置
   kitchenStations: KitchenStation[];
+  followerCount?: number;
 }
 
 export interface User {
