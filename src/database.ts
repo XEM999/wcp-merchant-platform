@@ -1953,32 +1953,22 @@ export async function followMerchant(userId: string, merchantId: string): Promis
     const { error: rpcError } = await supabase.rpc('increment_follower_count', { merchant_id: merchantId });
     
     if (rpcError) {
-      // RPC 函数不存在，使用原生 PostgreSQL COALESCE 进行原子更新
-      // 直接执行 SQL：follower_count = COALESCE(follower_count, 0) + 1
-      const { error: updateError } = await supabase
-        .rpc('exec_sql', {
-          query: `UPDATE merchants SET follower_count = COALESCE(follower_count, 0) + 1 WHERE id = '${merchantId}'`
-        })
-        .catch(async () => {
-          // 如果 exec_sql RPC 也不存在，使用 Supabase 的 PostgreSQL 函数扩展
-          // 通过 supabase.sql 或直接 HTTP 调用
-          // 最后的 fallback：使用带版本的乐观锁更新
-          const { data: m } = await supabase
-            .from('merchants')
-            .select('follower_count')
-            .eq('id', merchantId)
-            .single();
-          
-          const newCount = (m?.follower_count || 0) + 1;
-          
-          return supabase
-            .from('merchants')
-            .update({ follower_count: newCount })
-            .eq('id', merchantId);
-        });
-      
-      if (updateError && !updateError.message?.includes('undefined')) {
-        console.warn('粉丝计数更新警告:', updateError);
+      // RPC 函数不存在，使用乐观锁更新作为 fallback
+      try {
+        const { data: m } = await supabase
+          .from('merchants')
+          .select('follower_count')
+          .eq('id', merchantId)
+          .single();
+        
+        const newCount = (m?.follower_count || 0) + 1;
+        
+        await supabase
+          .from('merchants')
+          .update({ follower_count: newCount })
+          .eq('id', merchantId);
+      } catch (fallbackError) {
+        console.warn('粉丝计数更新警告:', fallbackError);
       }
     }
 
@@ -2016,29 +2006,22 @@ export async function unfollowMerchant(userId: string, merchantId: string): Prom
       const { error: rpcError } = await supabase.rpc('decrement_follower_count', { merchant_id: merchantId });
       
       if (rpcError) {
-        // RPC 函数不存在，使用原子更新（最小值为0）
-        const { error: updateError } = await supabase
-          .rpc('exec_sql', {
-            query: `UPDATE merchants SET follower_count = GREATEST(COALESCE(follower_count, 0) - 1, 0) WHERE id = '${merchantId}'`
-          })
-          .catch(async () => {
-            // 最后的 fallback：乐观锁更新
-            const { data: m } = await supabase
-              .from('merchants')
-              .select('follower_count')
-              .eq('id', merchantId)
-              .single();
-            
-            const newCount = Math.max(0, (m?.follower_count || 0) - 1);
-            
-            return supabase
-              .from('merchants')
-              .update({ follower_count: newCount })
-              .eq('id', merchantId);
-          });
-        
-        if (updateError && !updateError.message?.includes('undefined')) {
-          console.warn('粉丝计数更新警告:', updateError);
+        // RPC 函数不存在，使用乐观锁更新作为 fallback
+        try {
+          const { data: m } = await supabase
+            .from('merchants')
+            .select('follower_count')
+            .eq('id', merchantId)
+            .single();
+          
+          const newCount = Math.max(0, (m?.follower_count || 0) - 1);
+          
+          await supabase
+            .from('merchants')
+            .update({ follower_count: newCount })
+            .eq('id', merchantId);
+        } catch (fallbackError) {
+          console.warn('粉丝计数更新警告:', fallbackError);
         }
       }
     }
@@ -2337,5 +2320,428 @@ export async function ensurePhase2cColumns(): Promise<void> {
     }
   } catch (err) {
     console.log('检查 merchant_schedules 表时出错（可忽略）:', err);
+  }
+}
+
+// ==================== Phase 3A: 好友系统 ====================
+
+/** 好友请求 */
+export interface FriendRequest {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: Date;
+  updatedAt: Date;
+  fromUser?: User;
+  toUser?: User;
+}
+
+/** 好友关系 */
+export interface Friendship {
+  id: string;
+  userAId: string;
+  userBId: string;
+  createdAt: Date;
+  friend?: User;
+}
+
+/**
+ * 发送好友请求
+ * @param fromUserId 发送者ID
+ * @param toUserId 接收者ID
+ * @returns 是否成功
+ */
+export async function sendFriendRequest(fromUserId: string, toUserId: string): Promise<{ success: boolean; message: string; requestId?: string }> {
+  try {
+    // 不能加自己为好友
+    if (fromUserId === toUserId) {
+      return { success: false, message: '不能加自己为好友' };
+    }
+
+    // 检查目标用户是否存在
+    const { data: targetUser, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', toUserId)
+      .single();
+
+    if (userError || !targetUser) {
+      return { success: false, message: '用户不存在' };
+    }
+
+    // 检查是否已经是好友
+    const isFriend = await areFriends(fromUserId, toUserId);
+    if (isFriend) {
+      return { success: false, message: '你们已经是好友了' };
+    }
+
+    // 检查是否已有待处理的请求（自己发的或对方发的）
+    const { data: existingRequest } = await supabase
+      .from('friend_requests')
+      .select('*')
+      .or(`and(from_user_id.eq.${fromUserId},to_user_id.eq.${toUserId}),and(from_user_id.eq.${toUserId},to_user_id.eq.${fromUserId})`)
+      .single();
+
+    if (existingRequest) {
+      if (existingRequest.status === 'pending') {
+        if (existingRequest.from_user_id === fromUserId) {
+          return { success: false, message: '你已经发送过好友请求了，请等待对方回应' };
+        } else {
+          return { success: false, message: '对方已向你发送好友请求，请先处理' };
+        }
+      }
+      if (existingRequest.status === 'accepted') {
+        return { success: false, message: '你们已经是好友了' };
+      }
+      // rejected 状态可以重新发送
+    }
+
+    // 创建好友请求
+    const { data, error } = await supabase
+      .from('friend_requests')
+      .upsert({
+        from_user_id: fromUserId,
+        to_user_id: toUserId,
+        status: 'pending',
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'from_user_id,to_user_id'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('发送好友请求错误:', error);
+      return { success: false, message: '发送失败，请稍后重试' };
+    }
+
+    return { success: true, message: '好友请求已发送', requestId: data.id };
+  } catch (e) {
+    console.error('发送好友请求错误:', e);
+    return { success: false, message: '发送失败，请稍后重试' };
+  }
+}
+
+/**
+ * 接受好友请求
+ * @param requestId 请求ID
+ * @param userId 当前用户ID（必须是请求的接收者）
+ * @returns 是否成功
+ */
+export async function acceptFriendRequest(requestId: string, userId: string): Promise<boolean> {
+  try {
+    // 获取请求
+    const { data: request, error: fetchError } = await supabase
+      .from('friend_requests')
+      .select('*')
+      .eq('id', requestId)
+      .single();
+
+    if (fetchError || !request) {
+      return false;
+    }
+
+    // 验证权限：只有接收者可以接受
+    if (request.to_user_id !== userId) {
+      return false;
+    }
+
+    // 验证状态
+    if (request.status !== 'pending') {
+      return false;
+    }
+
+    // 更新请求状态（trigger 会自动创建 friendship）
+    const { error: updateError } = await supabase
+      .from('friend_requests')
+      .update({
+        status: 'accepted',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', requestId);
+
+    if (updateError) {
+      console.error('接受好友请求错误:', updateError);
+      return false;
+    }
+
+    // 手动创建 friendship（以防 trigger 未生效）
+    const { error: friendshipError } = await supabase
+      .from('friendships')
+      .upsert({
+        user_a_id: request.from_user_id < request.to_user_id ? request.from_user_id : request.to_user_id,
+        user_b_id: request.from_user_id < request.to_user_id ? request.to_user_id : request.from_user_id,
+      }, {
+        onConflict: 'user_a_id,user_b_id'
+      });
+
+    if (friendshipError) {
+      console.warn('创建好友关系时出错（可能已存在）:', friendshipError);
+    }
+
+    return true;
+  } catch (e) {
+    console.error('接受好友请求错误:', e);
+    return false;
+  }
+}
+
+/**
+ * 拒绝好友请求
+ * @param requestId 请求ID
+ * @param userId 当前用户ID（必须是请求的接收者）
+ * @returns 是否成功
+ */
+export async function rejectFriendRequest(requestId: string, userId: string): Promise<boolean> {
+  try {
+    // 验证权限并更新
+    const { error } = await supabase
+      .from('friend_requests')
+      .update({
+        status: 'rejected',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', requestId)
+      .eq('to_user_id', userId); // 只有接收者可以拒绝
+
+    if (error) {
+      console.error('拒绝好友请求错误:', error);
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    console.error('拒绝好友请求错误:', e);
+    return false;
+  }
+}
+
+/**
+ * 获取我的好友列表
+ * @param userId 用户ID
+ * @returns 好友列表
+ */
+export async function getFriends(userId: string): Promise<User[]> {
+  try {
+    // 查询 friendships 表，找出所有包含该用户的好友关系
+    const { data: friendships, error } = await supabase
+      .from('friendships')
+      .select('*')
+      .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`);
+
+    if (error || !friendships) {
+      console.error('获取好友列表错误:', error);
+      return [];
+    }
+
+    // 提取好友ID
+    const friendIds = friendships.map((f: any) =>
+      f.user_a_id === userId ? f.user_b_id : f.user_a_id
+    );
+
+    if (friendIds.length === 0) {
+      return [];
+    }
+
+    // 获取好友详细信息
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, phone, role, created_at, account_status')
+      .in('id', friendIds);
+
+    if (usersError || !users) {
+      console.error('获取好友信息错误:', usersError);
+      return [];
+    }
+
+    return users.map((u: any) => ({
+      id: u.id,
+      phone: u.phone,
+      passwordHash: '', // 不返回密码哈希
+      role: u.role,
+      createdAt: new Date(u.created_at),
+      accountStatus: u.account_status || 'active',
+    }));
+  } catch (e) {
+    console.error('获取好友列表错误:', e);
+    return [];
+  }
+}
+
+/**
+ * 获取待处理的好友请求（收到的）
+ * @param userId 用户ID
+ * @returns 好友请求列表
+ */
+export async function getPendingRequests(userId: string): Promise<FriendRequest[]> {
+  try {
+    const { data: requests, error } = await supabase
+      .from('friend_requests')
+      .select('*')
+      .eq('to_user_id', userId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error || !requests) {
+      console.error('获取好友请求错误:', error);
+      return [];
+    }
+
+    // 获取发送者信息
+    const fromUserIds = requests.map((r: any) => r.from_user_id);
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, phone, role, created_at')
+      .in('id', fromUserIds);
+
+    const userMap: Record<string, User> = {};
+    (users || []).forEach((u: any) => {
+      userMap[u.id] = {
+        id: u.id,
+        phone: u.phone,
+        passwordHash: '',
+        role: u.role,
+        createdAt: new Date(u.created_at),
+        accountStatus: 'active',
+      };
+    });
+
+    return requests.map((r: any) => ({
+      id: r.id,
+      fromUserId: r.from_user_id,
+      toUserId: r.to_user_id,
+      status: r.status,
+      createdAt: new Date(r.created_at),
+      updatedAt: new Date(r.updated_at),
+      fromUser: userMap[r.from_user_id],
+    }));
+  } catch (e) {
+    console.error('获取好友请求错误:', e);
+    return [];
+  }
+}
+
+/**
+ * 检查是否是好友
+ * @param userAId 用户A ID
+ * @param userBId 用户B ID
+ * @returns 是否是好友
+ */
+export async function areFriends(userAId: string, userBId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('friendships')
+      .select('id')
+      .or(`and(user_a_id.eq.${userAId},user_b_id.eq.${userBId}),and(user_a_id.eq.${userBId},user_b_id.eq.${userAId})`)
+      .single();
+
+    return !!data;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 删除好友
+ * @param userId 当前用户ID
+ * @param friendId 好友ID
+ * @returns 是否成功
+ */
+export async function deleteFriend(userId: string, friendId: string): Promise<boolean> {
+  try {
+    // 删除 friendship
+    const { error: friendshipError } = await supabase
+      .from('friendships')
+      .delete()
+      .or(`and(user_a_id.eq.${userId},user_b_id.eq.${friendId}),and(user_a_id.eq.${friendId},user_b_id.eq.${userId})`);
+
+    if (friendshipError) {
+      console.error('删除好友关系错误:', friendshipError);
+      return false;
+    }
+
+    // 同时删除相关的好友请求（如果有）
+    await supabase
+      .from('friend_requests')
+      .delete()
+      .or(`and(from_user_id.eq.${userId},to_user_id.eq.${friendId}),and(from_user_id.eq.${friendId},to_user_id.eq.${userId})`);
+
+    return true;
+  } catch (e) {
+    console.error('删除好友错误:', e);
+    return false;
+  }
+}
+
+/**
+ * 搜索用户（用于添加好友）
+ * @param query 搜索关键词（手机号）
+ * @param excludeUserId 排除的用户ID
+ * @returns 用户列表
+ */
+export async function searchUsers(query: string, excludeUserId: string): Promise<User[]> {
+  try {
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('id, phone, role, created_at, account_status')
+      .ilike('phone', `%${query}%`)
+      .neq('id', excludeUserId)
+      .limit(10);
+
+    if (error || !users) {
+      return [];
+    }
+
+    return users.map((u: any) => ({
+      id: u.id,
+      phone: u.phone,
+      passwordHash: '',
+      role: u.role,
+      createdAt: new Date(u.created_at),
+      accountStatus: u.account_status || 'active',
+    }));
+  } catch (e) {
+    console.error('搜索用户错误:', e);
+    return [];
+  }
+}
+
+/**
+ * 确保 Phase 3A 好友系统表存在
+ */
+export async function ensurePhase3aTables(): Promise<void> {
+  // 检查 friend_requests 表
+  try {
+    const { error: frError } = await supabase
+      .from('friend_requests')
+      .select('id')
+      .limit(1);
+    
+    if (!frError) {
+      console.log('✅ friend_requests 表已存在');
+    } else {
+      console.log('⚠️ friend_requests 表不存在');
+      console.log('请在 Supabase SQL 编辑器中执行 migrations/setup-phase3a.sql');
+    }
+  } catch (err) {
+    console.log('检查 friend_requests 表时出错（可忽略）:', err);
+  }
+
+  // 检查 friendships 表
+  try {
+    const { error: fsError } = await supabase
+      .from('friendships')
+      .select('id')
+      .limit(1);
+    
+    if (!fsError) {
+      console.log('✅ friendships 表已存在');
+    } else {
+      console.log('⚠️ friendships 表不存在');
+      console.log('请在 Supabase SQL 编辑器中执行 migrations/setup-phase3a.sql');
+    }
+  } catch (err) {
+    console.log('检查 friendships 表时出错（可忽略）:', err);
   }
 }

@@ -76,6 +76,18 @@ import {
   deleteMerchantSchedule,
   updateActualLocation,
   ensurePhase2cColumns,
+  // Phase 3A: 好友系统
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  getFriends,
+  getPendingRequests,
+  areFriends,
+  deleteFriend,
+  searchUsers,
+  FriendRequest,
+  Friendship,
+  ensurePhase3aTables,
 } from './database';
 import { register, login, authMiddleware, optionalAuthMiddleware, adminMiddleware, superAdminMiddleware } from './auth';
 import { monitoringMiddleware, errorReportingMiddleware, healthHandler, metricsHandler } from './monitoring';
@@ -784,6 +796,191 @@ app.get('/api/merchants/:id/is-following', authMiddleware, async (req: Request, 
     return err(res, 500, '检查关注状态失败');
   }
 });
+
+// ==================== Phase 3A: 好友系统接口 ====================
+
+/**
+ * POST /api/friends/request/:userId
+ * 发送好友请求（需登录）
+ */
+app.post('/api/friends/request/:userId', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const toUserId = req.params.userId;
+
+  try {
+    const result = await sendFriendRequest(userId, toUserId);
+    if (!result.success) {
+      return err(res, 400, result.message);
+    }
+    res.json({ message: result.message, requestId: result.requestId });
+  } catch (e: any) {
+    console.error('发送好友请求错误:', e);
+    return err(res, 500, '发送失败');
+  }
+});
+
+/**
+ * POST /api/friends/accept/:requestId
+ * 接受好友请求（需登录）
+ */
+app.post('/api/friends/accept/:requestId', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const requestId = req.params.requestId;
+
+  try {
+    const success = await acceptFriendRequest(requestId, userId);
+    if (!success) {
+      return err(res, 400, '接受失败，请求不存在或无权操作');
+    }
+    res.json({ message: '已添加为好友', requestId });
+  } catch (e: any) {
+    console.error('接受好友请求错误:', e);
+    return err(res, 500, '接受失败');
+  }
+});
+
+/**
+ * POST /api/friends/reject/:requestId
+ * 拒绝好友请求（需登录）
+ */
+app.post('/api/friends/reject/:requestId', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const requestId = req.params.requestId;
+
+  try {
+    const success = await rejectFriendRequest(requestId, userId);
+    if (!success) {
+      return err(res, 400, '拒绝失败，请求不存在或无权操作');
+    }
+    res.json({ message: '已拒绝好友请求', requestId });
+  } catch (e: any) {
+    console.error('拒绝好友请求错误:', e);
+    return err(res, 500, '拒绝失败');
+  }
+});
+
+/**
+ * DELETE /api/friends/:userId
+ * 删除好友（需登录）
+ */
+app.delete('/api/friends/:userId', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const friendId = req.params.userId;
+
+  try {
+    const success = await deleteFriend(userId, friendId);
+    if (!success) {
+      return err(res, 400, '删除失败');
+    }
+    res.json({ message: '已删除好友', friendId });
+  } catch (e: any) {
+    console.error('删除好友错误:', e);
+    return err(res, 500, '删除失败');
+  }
+});
+
+/**
+ * GET /api/friends
+ * 我的好友列表（需登录）
+ */
+app.get('/api/friends', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+
+  try {
+    const friends = await getFriends(userId);
+    // 脱敏手机号
+    const friendsWithMaskedPhone = friends.map(f => ({
+      ...f,
+      phone: maskPhone(f.phone),
+      phoneLast4: f.phone.slice(-4),
+    }));
+    res.json({ count: friends.length, friends: friendsWithMaskedPhone });
+  } catch (e: any) {
+    console.error('获取好友列表错误:', e);
+    return err(res, 500, '获取好友列表失败');
+  }
+});
+
+/**
+ * GET /api/friends/requests/pending
+ * 待处理的好友请求（需登录）
+ */
+app.get('/api/friends/requests/pending', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+
+  try {
+    const requests = await getPendingRequests(userId);
+    // 脱敏发送者手机号
+    const requestsWithMaskedPhone = requests.map(r => ({
+      ...r,
+      fromUser: r.fromUser ? {
+        ...r.fromUser,
+        phone: maskPhone(r.fromUser.phone),
+        phoneLast4: r.fromUser.phone.slice(-4),
+      } : undefined,
+    }));
+    res.json({ count: requests.length, requests: requestsWithMaskedPhone });
+  } catch (e: any) {
+    console.error('获取好友请求错误:', e);
+    return err(res, 500, '获取好友请求失败');
+  }
+});
+
+/**
+ * GET /api/friends/check/:userId
+ * 检查是否是好友（需登录）
+ */
+app.get('/api/friends/check/:userId', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const targetUserId = req.params.userId;
+
+  try {
+    const isFriend = await areFriends(userId, targetUserId);
+    res.json({ isFriend, userId, targetUserId });
+  } catch (e: any) {
+    console.error('检查好友关系错误:', e);
+    return err(res, 500, '检查失败');
+  }
+});
+
+/**
+ * GET /api/friends/search
+ * 搜索用户（用于添加好友，需登录）
+ */
+app.get('/api/friends/search', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const query = req.query.q as string;
+
+  if (!query || query.length < 3) {
+    return err(res, 400, '搜索关键词至少3个字符');
+  }
+
+  try {
+    const users = await searchUsers(query, userId);
+    // 脱敏手机号，并检查好友状态
+    const usersWithStatus = await Promise.all(
+      users.map(async (u) => {
+        const isFriend = await areFriends(userId, u.id);
+        return {
+          ...u,
+          phone: maskPhone(u.phone),
+          phoneLast4: u.phone.slice(-4),
+          isFriend,
+        };
+      })
+    );
+    res.json({ count: usersWithStatus.length, users: usersWithStatus });
+  } catch (e: any) {
+    console.error('搜索用户错误:', e);
+    return err(res, 500, '搜索失败');
+  }
+});
+
+/** 手机号脱敏 */
+function maskPhone(phone: string): string {
+  if (!phone || phone.length < 7) return phone;
+  return phone.slice(0, 3) + '****' + phone.slice(-4);
+}
 
 // ==================== 位置日程系统接口 ====================
 
@@ -1940,6 +2137,9 @@ app.listen(PORT, async () => {
   // 确保 Phase 2C 字段存在
   await ensurePhase2cColumns();
   
+  // 确保 Phase 3A 好友系统表存在
+  await ensurePhase3aTables();
+  
   // 确保 menu-images storage bucket 存在
   const { data: buckets } = await supabase.storage.listBuckets();
   if (!buckets?.find(b => b.name === 'menu-images')) {
@@ -1967,6 +2167,16 @@ app.listen(PORT, async () => {
   console.log('  GET    /api/merchants/:id/followers - 获取商家粉丝列表');
   console.log('  GET    /api/user/following - 获取我关注的商家列表');
   console.log('  GET    /api/merchants/:id/is-following - 检查是否已关注');
+  console.log('');
+  console.log('👥 好友系统接口:');
+  console.log('  POST   /api/friends/request/:userId - 发送好友请求');
+  console.log('  POST   /api/friends/accept/:requestId - 接受好友请求');
+  console.log('  POST   /api/friends/reject/:requestId - 拒绝好友请求');
+  console.log('  DELETE /api/friends/:userId - 删除好友');
+  console.log('  GET    /api/friends - 我的好友列表');
+  console.log('  GET    /api/friends/requests/pending - 待处理好友请求');
+  console.log('  GET    /api/friends/check/:userId - 检查是否是好友');
+  console.log('  GET    /api/friends/search - 搜索用户');
   console.log('');
   console.log('📅 位置日程接口:');
   console.log('  GET    /api/merchants/:id/schedules - 获取商家位置日程');

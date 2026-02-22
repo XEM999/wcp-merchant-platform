@@ -1534,6 +1534,239 @@ body {
 .my-following-chip .chip-status.closed {
   background: var(--g3);
 }
+
+/* ========== PHASE 3A: FRIEND SYSTEM ========== */
+.friend-add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.friend-search-input {
+  flex: 1;
+  height: 40px;
+  border: 2px solid var(--g2);
+  border-radius: var(--r);
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border .2s;
+  font-family: inherit;
+}
+.friend-search-input:focus {
+  border-color: var(--pri);
+}
+.friend-search-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--r);
+  background: var(--pri);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform .15s;
+}
+.friend-search-btn:active {
+  transform: scale(.95);
+}
+
+.friend-search-results {
+  margin-bottom: 14px;
+}
+.friend-search-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.friend-search-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.friend-search-emoji {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--ai-bg), #fff);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+.friend-search-phone {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--g8);
+}
+.friend-search-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn-add-friend {
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: none;
+  background: var(--pri);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+}
+.btn-add-friend:hover {
+  background: var(--pri-d);
+}
+.btn-add-friend:disabled {
+  background: var(--g2);
+  color: var(--g4);
+  cursor: not-allowed;
+}
+.btn-add-friend.is-friend {
+  background: var(--green);
+}
+
+/* 好友请求卡片 */
+.friend-request-card {
+  background: linear-gradient(135deg, #fff7ed, #fff);
+  border: 1px solid var(--pri-bg);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.friend-request-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.friend-request-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.friend-request-emoji {
+  width: 44px;
+  height: 44px;
+  background: var(--card);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+.friend-request-phone {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--g8);
+}
+.friend-request-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn-accept-friend {
+  padding: 8px 18px;
+  border-radius: 16px;
+  border: none;
+  background: var(--pri);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-reject-friend {
+  padding: 8px 18px;
+  border-radius: 16px;
+  border: 2px solid var(--g2);
+  background: #fff;
+  color: var(--g6);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* 好友卡片 */
+.friend-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.friend-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+.friend-emoji {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--ai-bg), #fff);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.friend-phone {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--g8);
+}
+.friend-since {
+  font-size: 12px;
+  color: var(--g4);
+  margin-top: 2px;
+}
+.btn-delete-friend {
+  padding: 8px 14px;
+  border-radius: 16px;
+  border: 2px solid var(--red);
+  background: #fff;
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.btn-delete-friend:hover {
+  background: #fef2f2;
+}
+
+.friend-empty {
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.friend-empty .empty-icon {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+  display: block;
+}
+.friend-empty .empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--g7);
+  margin-bottom: 6px;
+}
+.friend-empty .empty-desc {
+  font-size: 13px;
+  color: var(--g4);
+}
 </style>
 </head>
 <body>
@@ -1717,6 +1950,27 @@ body {
           <div class="empty-title">还没有关注的商家</div>
           <div class="empty-desc">去首页发现更多美食餐车</div>
           <button class="empty-action" onclick="switchBottomTab('home')">发现商家</button>
+        </div>
+      </div>
+    </div>
+    <!-- Phase 3A: 好友系统 -->
+    <div class="profile-section" id="friendsSection">
+      <div class="profile-section-title">👥 我的好友 <span class="count" id="friendCount">0</span></div>
+      <!-- 添加好友 -->
+      <div class="friend-add-row">
+        <input type="text" id="friendSearchInput" class="friend-search-input" placeholder="输入手机号搜索用户...">
+        <button class="friend-search-btn" onclick="searchUsersForFriend()">🔍</button>
+      </div>
+      <!-- 搜索结果 -->
+      <div id="friendSearchResults" class="friend-search-results"></div>
+      <!-- 待处理好友请求 -->
+      <div id="pendingFriendRequests"></div>
+      <!-- 好友列表 -->
+      <div id="friendsList">
+        <div class="followed-empty">
+          <span class="empty-icon">👥</span>
+          <div class="empty-title">还没有好友</div>
+          <div class="empty-desc">搜索手机号添加好友</div>
         </div>
       </div>
     </div>
@@ -2393,6 +2647,7 @@ function switchBottomTab(tab) {
     document.getElementById('profileUserName').textContent = user.name || '个人中心';
     document.getElementById('profileUserPhone').textContent = phone;
     loadFollowedList();
+    loadFriendsList();
   }
   // Refresh following bar when switching to home
   if (tab === 'home') loadMyFollowingBar();
@@ -2918,6 +3173,204 @@ async function loadMyFollowingBar() {
     }).join('');
   } catch (e) {
     bar.classList.remove('show');
+  }
+}
+
+// ========== PHASE 3A: FRIEND SYSTEM ==========
+
+// 缓存好友列表
+let cachedFriendsList = [];
+let cachedPendingRequests = [];
+
+// 加载好友列表
+async function loadFriendsList() {
+  const token = localStorage.getItem('token');
+  const container = document.getElementById('friendsList');
+  const countEl = document.getElementById('friendCount');
+  if (!container) return;
+  if (!token) {
+    container.innerHTML = '<div class="friend-empty"><span class="empty-icon">🔒</span><div class="empty-title">登录后查看好友</div><div class="empty-desc">登录后可添加和管理好友</div></div>';
+    if (countEl) countEl.textContent = '0';
+    return;
+  }
+
+  try {
+    // 并行加载好友列表和待处理请求
+    const [friendsData, pendingData] = await Promise.all([
+      apiCall(`${API_BASE}/friends`),
+      apiCall(`${API_BASE}/friends/requests/pending`)
+    ]);
+
+    cachedFriendsList = Array.isArray(friendsData) ? friendsData : (friendsData.friends || []);
+    cachedPendingRequests = Array.isArray(pendingData) ? pendingData : (pendingData.requests || []);
+
+    // 更新计数
+    if (countEl) countEl.textContent = cachedFriendsList.length;
+
+    // 渲染待处理请求
+    renderPendingRequests();
+
+    // 渲染好友列表
+    renderFriendsList();
+  } catch (e) {
+    console.error('加载好友列表错误:', e);
+    container.innerHTML = '<div class="friend-empty"><span class="empty-icon">⚠️</span><div class="empty-title">加载失败</div><div class="empty-desc">请稍后重试</div></div>';
+  }
+}
+
+// 渲染待处理好友请求
+function renderPendingRequests() {
+  const container = document.getElementById('pendingFriendRequests');
+  if (!container) return;
+
+  if (!cachedPendingRequests.length) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="profile-section-title" style="font-size:14px;margin-bottom:10px;">📨 好友请求 <span class="count">${cachedPendingRequests.length}</span></div>
+    ${cachedPendingRequests.map(r => `
+      <div class="friend-request-card" id="request-${r.id}">
+        <div class="friend-request-header">
+          <div class="friend-request-info">
+            <div class="friend-request-emoji">👤</div>
+            <div class="friend-request-phone">+64 ****${r.fromUser?.phoneLast4 || '****'}</div>
+          </div>
+          <div class="friend-request-actions">
+            <button class="btn-accept-friend" onclick="acceptFriend('${r.id}')">接受</button>
+            <button class="btn-reject-friend" onclick="rejectFriend('${r.id}')">拒绝</button>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+// 渲染好友列表
+function renderFriendsList() {
+  const container = document.getElementById('friendsList');
+  if (!container) return;
+
+  if (!cachedFriendsList.length) {
+    container.innerHTML = `
+      <div class="friend-empty">
+        <span class="empty-icon">👥</span>
+        <div class="empty-title">还没有好友</div>
+        <div class="empty-desc">搜索手机号添加好友</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = cachedFriendsList.map(f => `
+    <div class="friend-card" id="friend-${f.id}">
+      <div class="friend-info">
+        <div class="friend-emoji">👤</div>
+        <div>
+          <div class="friend-phone">+64 ****${f.phoneLast4 || '****'}</div>
+          <div class="friend-since">好友</div>
+        </div>
+      </div>
+      <button class="btn-delete-friend" onclick="deleteFriend('${f.id}')">删除</button>
+    </div>
+  `).join('');
+}
+
+// 搜索用户
+async function searchUsersForFriend() {
+  const input = document.getElementById('friendSearchInput');
+  const resultsContainer = document.getElementById('friendSearchResults');
+  const query = (input?.value || '').trim();
+
+  if (!query || query.length < 3) {
+    showToast('请输入至少3位手机号', 'error');
+    return;
+  }
+
+  try {
+    const data = await apiCall(`${API_BASE}/friends/search?q=${encodeURIComponent(query)}`);
+    const users = Array.isArray(data) ? data : (data.users || []);
+
+    if (!users.length) {
+      resultsContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g4);font-size:14px;">未找到用户</div>';
+      return;
+    }
+
+    resultsContainer.innerHTML = users.map(u => `
+      <div class="friend-search-card">
+        <div class="friend-search-info">
+          <div class="friend-search-emoji">👤</div>
+          <div class="friend-search-phone">+64 ****${u.phoneLast4 || '****'}</div>
+        </div>
+        <div class="friend-search-actions">
+          ${u.isFriend 
+            ? '<button class="btn-add-friend is-friend" disabled>已好友</button>'
+            : `<button class="btn-add-friend" onclick="sendFriendReq('${u.id}')">+ 添加</button>`
+          }
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('搜索用户错误:', e);
+    showToast('搜索失败，请重试', 'error');
+  }
+}
+
+// 发送好友请求
+async function sendFriendReq(toUserId) {
+  try {
+    const result = await apiCall(`${API_BASE}/friends/request/${toUserId}`, { method: 'POST' });
+    showToast(result.message || '请求已发送', 'success');
+    // 刷新搜索结果
+    searchUsersForFriend();
+  } catch (e) {
+    const msg = e.error || e.message || '发送失败';
+    showToast(msg, 'error');
+  }
+}
+
+// 接受好友请求
+async function acceptFriend(requestId) {
+  try {
+    await apiCall(`${API_BASE}/friends/accept/${requestId}`, { method: 'POST' });
+    showToast('已添加为好友', 'success');
+    // 从待处理列表移除
+    cachedPendingRequests = cachedPendingRequests.filter(r => r.id !== requestId);
+    // 重新加载好友列表
+    await loadFriendsList();
+  } catch (e) {
+    showToast('接受失败，请重试', 'error');
+  }
+}
+
+// 拒绝好友请求
+async function rejectFriend(requestId) {
+  try {
+    await apiCall(`${API_BASE}/friends/reject/${requestId}`, { method: 'POST' });
+    showToast('已拒绝', 'info');
+    // 从待处理列表移除
+    cachedPendingRequests = cachedPendingRequests.filter(r => r.id !== requestId);
+    renderPendingRequests();
+  } catch (e) {
+    showToast('操作失败，请重试', 'error');
+  }
+}
+
+// 删除好友
+async function deleteFriend(friendId) {
+  if (!confirm('确定要删除这个好友吗？')) return;
+
+  try {
+    await apiCall(`${API_BASE}/friends/${friendId}`, { method: 'DELETE' });
+    showToast('已删除好友', 'info');
+    // 从列表移除
+    cachedFriendsList = cachedFriendsList.filter(f => f.id !== friendId);
+    const countEl = document.getElementById('friendCount');
+    if (countEl) countEl.textContent = cachedFriendsList.length;
+    renderFriendsList();
+  } catch (e) {
+    showToast('删除失败，请重试', 'error');
   }
 }
 
