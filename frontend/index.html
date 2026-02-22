@@ -2267,26 +2267,23 @@ async function loadSchedules(merchantId) {
   const schedDiv = document.getElementById(`expand-sched-${merchantId}`);
   if (!schedDiv || schedDiv.dataset.loaded) return;
   schedDiv.dataset.loaded = '1';
+  const DAY_NAMES = ['周日','周一','周二','周三','周四','周五','周六'];
   try {
     const data = await apiCall(`${API_BASE}/merchants/${merchantId}/schedules`);
     const schedules = Array.isArray(data) ? data : (data.schedules || []);
-    // Only show future schedules (today + next 7 days)
-    const today = new Date(); today.setHours(0,0,0,0);
-    const upcoming = schedules.filter(s => new Date(s.date) >= today).slice(0, 7);
-    if (!upcoming.length) {
+    const active = schedules.filter(s => s.enabled !== false);
+    if (!active.length) {
       schedDiv.innerHTML = '<div class="schedule-empty">📅 暂无出摊计划</div>';
       return;
     }
-    schedDiv.innerHTML = upcoming.map(s => {
-      const d = new Date(s.date);
-      const dateStr = `${d.getMonth()+1}月${d.getDate()}日`;
-      const timeStr = s.start_time && s.end_time ? `${s.start_time} – ${s.end_time}` : (s.start_time || '');
+    schedDiv.innerHTML = active.map(s => {
+      const dayName = DAY_NAMES[s.dayOfWeek] || '';
+      const timeStr = s.openTime && s.closeTime ? `${s.openTime} – ${s.closeTime}` : '';
       return `
         <div class="schedule-card">
-          <div class="schedule-date">📅 ${dateStr}</div>
+          <div class="schedule-date">📅 ${dayName}</div>
           ${timeStr ? `<div class="schedule-time">⏰ ${timeStr}</div>` : ''}
           ${s.address ? `<div class="schedule-addr">📍 ${s.address}</div>` : ''}
-          ${s.note ? `<div class="schedule-note">${s.note}</div>` : ''}
         </div>
       `;
     }).join('');
