@@ -3010,6 +3010,11 @@
             sseConnection.close();
             sseConnection = null;
         }
+        // 清空登录表单
+        document.getElementById('loginPhone').value = '';
+        document.getElementById('loginPassword').value = '';
+        // 重置 createStoreSection 为隐藏状态
+        document.getElementById('createStoreSection').style.display = 'none';
         toast(t('logout_success'), 'info');
         showLoginPage();
     }
