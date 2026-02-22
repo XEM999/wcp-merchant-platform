@@ -78,6 +78,9 @@ import {
   ensurePhase2cColumns,
 } from './database';
 import { register, login, authMiddleware, optionalAuthMiddleware, adminMiddleware, superAdminMiddleware } from './auth';
+import { monitoringMiddleware, errorReportingMiddleware, healthHandler, metricsHandler } from './monitoring';
+import { isEnabled, getAllFlags } from './featureFlags';
+import { apiVersionHeader, versionGuard, getVersionInfo } from './apiVersioning';
 
 // ==================== Multer 配置 ====================
 
@@ -205,6 +208,23 @@ function sanitizeInput(input: string, maxLength: number = 500): string {
 // ==================== Express 基础中间件 ====================
 
 app.use(express.json());
+
+// ==================== 监控中间件 ====================
+app.use(monitoringMiddleware);
+
+// ==================== API 版本管理 ====================
+app.use('/api', apiVersionHeader);
+app.use('/api', versionGuard);
+
+// ==================== 健康检查 & 指标（放在认证前） ====================
+app.get('/api/health', healthHandler);
+app.get('/api/metrics', adminMiddleware, metricsHandler);
+app.get('/api/version', (_req: Request, res: Response) => res.json(getVersionInfo()));
+
+// ==================== Feature Flags 接口 ====================
+app.get('/api/admin/flags', adminMiddleware, (_req: Request, res: Response) => {
+  res.json(getAllFlags());
+});
 
 // ==================== 认证接口 ====================
 
@@ -1900,6 +1920,9 @@ import { mountMcpServer } from './mcp-server';
 
 // 挂载 MCP Server 到 /mcp 路径
 mountMcpServer(app, '/mcp');
+
+// ==================== 错误捕获中间件（必须放在所有路由之后） ====================
+app.use(errorReportingMiddleware);
 
 // ==================== 启动 ====================
 
