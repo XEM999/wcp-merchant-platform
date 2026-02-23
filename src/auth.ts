@@ -54,9 +54,9 @@ export interface AuthRequest {
 
 // ==================== 注册 ====================
 
-export async function register(phone: string, password: string): Promise<{ token: string; user: Omit<User, 'passwordHash'> }> {
+export async function register(phone: string, password: string, role: string = 'consumer'): Promise<{ token: string; user: Omit<User, 'passwordHash'> }> {
   const normalizedPhone = normalizePhone(phone);
-  const user = await createUser(normalizedPhone, password);
+  const user = await createUser(normalizedPhone, password, role);
   const token = generateToken(user);
   const { passwordHash, ...userWithoutPassword } = user;
   return { token, user: userWithoutPassword };

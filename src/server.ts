@@ -243,12 +243,12 @@ app.get('/api/admin/flags', adminMiddleware, (_req: Request, res: Response) => {
 
 // --- 注册 ---
 app.post('/api/auth/register', async (req: Request, res: Response) => {
-  const { phone, password } = req.body;
+  const { phone, password, role } = req.body;
   if (!phone || !password) return err(res, 400, 'phone/password 必填');
   if (password.length < 6) return err(res, 400, '密码至少6位');
 
   try {
-    const result = await register(phone, password);
+    const result = await register(phone, password, role || 'consumer');
     const merchantId = await getUserMerchantId(result.user.id);
     res.status(201).json({ message: '注册成功', token: result.token, user: { ...result.user, merchantId: merchantId || null } });
   } catch (e: any) {

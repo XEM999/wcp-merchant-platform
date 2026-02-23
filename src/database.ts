@@ -138,7 +138,7 @@ export function haversine(a: Location, b: Location): number {
 
 // ==================== 用户操作 ====================
 
-export async function createUser(phone: string, password: string): Promise<User> {
+export async function createUser(phone: string, password: string, role: string = 'consumer'): Promise<User> {
   // 检查手机号是否已存在
   const { data: existing } = await supabase
     .from('users')
@@ -155,7 +155,7 @@ export async function createUser(phone: string, password: string): Promise<User>
     .insert({
       phone,
       password_hash: hashPassword(password),
-      role: 'user',
+      role: role,
     })
     .select()
     .single();
