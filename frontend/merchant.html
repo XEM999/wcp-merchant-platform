@@ -3160,7 +3160,7 @@
             restaurant: t('type_restaurant')
         };
 
-        const followerCount = merchant.follower_count || 0;
+        const followerCount = merchant.followerCount || merchant.follower_count || 0;
 
         document.getElementById('storeCard').innerHTML = `
             <div class="store-header">
