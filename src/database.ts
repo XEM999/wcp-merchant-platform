@@ -67,6 +67,8 @@ export interface Merchant {
   // 厨房工位配置
   kitchenStations: KitchenStation[];
   followerCount?: number;
+  actualLat?: number;
+  actualLng?: number;
 }
 
 export interface User {
@@ -1945,7 +1947,7 @@ export async function followMerchant(userId: string, merchantId: string): Promis
     // 异步更新计数（不阻塞响应）
     supabase.rpc('increment_follower_count_safe', { 
       merchant_id: merchantId 
-    }).catch(e => console.warn('粉丝计数更新警告:', e));
+    }).then(({ error }: any) => { if (error) console.warn('粉丝计数更新警告:', error); });
 
     return true;
   } catch (e) {
@@ -1980,7 +1982,7 @@ export async function unfollowMerchant(userId: string, merchantId: string): Prom
       // 异步更新计数（不阻塞响应）
       supabase.rpc('decrement_follower_count_safe', { 
         merchant_id: merchantId 
-      }).catch(e => console.warn('粉丝计数更新警告:', e));
+      }).then(({ error }: any) => { if (error) console.warn('粉丝计数更新警告:', error); });
     }
 
     return true;
