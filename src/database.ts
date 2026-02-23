@@ -255,6 +255,8 @@ export function mapMerchantFromDb(data: any, menuItems: MenuItem[] = []): Mercha
     // 厨房工位配置
     kitchenStations: data.kitchen_stations || [],
     followerCount: data.follower_count || 0,
+    actualLat: data.actual_lat || undefined,
+    actualLng: data.actual_lng || undefined,
   };
 }
 
