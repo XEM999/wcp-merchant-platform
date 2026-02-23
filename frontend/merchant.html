@@ -3033,6 +3033,13 @@
                 merchant = merchants.find(m => m.userId === user.id) || merchants[0];
                 // 更新menuItems
                 menuItems = merchant.menuItems || [];
+                // 加载厨房工位数据
+                try {
+                    const ksData = await apiCall('/merchant/kitchen-stations');
+                    merchant.kitchenStations = ksData.stations || [];
+                } catch (e) {
+                    console.warn('加载工位数据失败:', e);
+                }
                 document.getElementById('createStoreSection').style.display = 'none';
                 return true;
             }
