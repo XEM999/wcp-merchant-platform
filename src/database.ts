@@ -1929,18 +1929,7 @@ ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS station_ids JSONB DEFAULT NULL;
  */
 export async function followMerchant(userId: string, merchantId: string): Promise<boolean> {
   try {
-    // 检查商家是否存在
-    const { data: merchant, error: merchantError } = await supabase
-      .from('merchants')
-      .select('id')
-      .eq('id', merchantId)
-      .single();
-
-    if (merchantError || !merchant) {
-      throw new Error('商家不存在');
-    }
-
-    // 插入关注记录（使用 upsert 避免重复关注）
+    // 直接插入关注记录（外键约束会自动检查商家是否存在）
     const { error: followError } = await supabase
       .from('follows')
       .upsert(
@@ -1953,32 +1942,10 @@ export async function followMerchant(userId: string, merchantId: string): Promis
       return false;
     }
 
-    // 直接使用 SQL 原子更新 follower_count（使用 COALESCE 避免 NULL 问题）
-    const { error: updateError } = await supabase.rpc('increment_follower_count_safe', { 
+    // 异步更新计数（不阻塞响应）
+    supabase.rpc('increment_follower_count_safe', { 
       merchant_id: merchantId 
-    });
-    
-    if (updateError) {
-      // 如果 RPC 函数不存在，使用简单的 UPDATE
-      // 注意：这不如原子操作准确，但在大多数情况下足够
-      try {
-        // 先获取当前值
-        const { data: m } = await supabase
-          .from('merchants')
-          .select('follower_count')
-          .eq('id', merchantId)
-          .single();
-        
-        const newCount = (m?.follower_count || 0) + 1;
-        
-        await supabase
-          .from('merchants')
-          .update({ follower_count: newCount })
-          .eq('id', merchantId);
-      } catch (e) {
-        console.warn('粉丝计数更新警告:', e);
-      }
-    }
+    }).catch(e => console.warn('粉丝计数更新警告:', e));
 
     return true;
   } catch (e) {
@@ -2010,31 +1977,10 @@ export async function unfollowMerchant(userId: string, merchantId: string): Prom
 
     // 只有实际删除了记录才更新计数
     if (data && data.length > 0) {
-      // 使用 RPC 原子更新
-      const { error: rpcError } = await supabase.rpc('decrement_follower_count_safe', { 
+      // 异步更新计数（不阻塞响应）
+      supabase.rpc('decrement_follower_count_safe', { 
         merchant_id: merchantId 
-      });
-      
-      if (rpcError) {
-        // 如果 RPC 不存在，使用简单的 UPDATE（确保不小于0）
-        try {
-          // 先获取当前值
-          const { data: m } = await supabase
-            .from('merchants')
-            .select('follower_count')
-            .eq('id', merchantId)
-            .single();
-          
-          const newCount = Math.max(0, (m?.follower_count || 0) - 1);
-          
-          await supabase
-            .from('merchants')
-            .update({ follower_count: newCount })
-            .eq('id', merchantId);
-        } catch (e) {
-          console.warn('粉丝计数更新警告:', e);
-        }
-      }
+      }).catch(e => console.warn('粉丝计数更新警告:', e));
     }
 
     return true;
