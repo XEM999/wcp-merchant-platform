@@ -222,7 +222,10 @@ export async function getUserById(id: string): Promise<User | undefined> {
 
 // ==================== 商户操作 ====================
 
-function mapMerchantFromDb(data: any, menuItems: MenuItem[] = []): Merchant {
+/**
+ * 导出 mapMerchantFromDb 用于 server.ts 批量查询
+ */
+export function mapMerchantFromDb(data: any, menuItems: MenuItem[] = []): Merchant {
   return {
     id: data.id,
     userId: data.user_id,
@@ -1948,13 +1951,16 @@ export async function followMerchant(userId: string, merchantId: string): Promis
       return false;
     }
 
-    // 原子更新：使用 RPC 调用 PostgreSQL 原子操作
-    // 先尝试自定义 RPC 函数
-    const { error: rpcError } = await supabase.rpc('increment_follower_count', { merchant_id: merchantId });
+    // 直接使用 SQL 原子更新 follower_count（使用 COALESCE 避免 NULL 问题）
+    const { error: updateError } = await supabase.rpc('increment_follower_count_safe', { 
+      merchant_id: merchantId 
+    });
     
-    if (rpcError) {
-      // RPC 函数不存在，使用乐观锁更新作为 fallback
+    if (updateError) {
+      // 如果 RPC 函数不存在，使用简单的 UPDATE
+      // 注意：这不如原子操作准确，但在大多数情况下足够
       try {
+        // 先获取当前值
         const { data: m } = await supabase
           .from('merchants')
           .select('follower_count')
@@ -1967,8 +1973,8 @@ export async function followMerchant(userId: string, merchantId: string): Promis
           .from('merchants')
           .update({ follower_count: newCount })
           .eq('id', merchantId);
-      } catch (fallbackError) {
-        console.warn('粉丝计数更新警告:', fallbackError);
+      } catch (e) {
+        console.warn('粉丝计数更新警告:', e);
       }
     }
 
@@ -2002,12 +2008,15 @@ export async function unfollowMerchant(userId: string, merchantId: string): Prom
 
     // 只有实际删除了记录才更新计数
     if (data && data.length > 0) {
-      // 原子更新：使用 RPC 调用 PostgreSQL 原子操作
-      const { error: rpcError } = await supabase.rpc('decrement_follower_count', { merchant_id: merchantId });
+      // 使用 RPC 原子更新
+      const { error: rpcError } = await supabase.rpc('decrement_follower_count_safe', { 
+        merchant_id: merchantId 
+      });
       
       if (rpcError) {
-        // RPC 函数不存在，使用乐观锁更新作为 fallback
+        // 如果 RPC 不存在，使用简单的 UPDATE（确保不小于0）
         try {
+          // 先获取当前值
           const { data: m } = await supabase
             .from('merchants')
             .select('follower_count')
@@ -2020,8 +2029,8 @@ export async function unfollowMerchant(userId: string, merchantId: string): Prom
             .from('merchants')
             .update({ follower_count: newCount })
             .eq('id', merchantId);
-        } catch (fallbackError) {
-          console.warn('粉丝计数更新警告:', fallbackError);
+        } catch (e) {
+          console.warn('粉丝计数更新警告:', e);
         }
       }
     }

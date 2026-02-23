@@ -3114,34 +3114,40 @@ function renderFollowedList(merchants, container, countEl) {
   if (!merchants.length) {
     container.innerHTML = `
       <div class="followed-empty">
-        <span class="empty-icon">🔍</span>
-        <div class="empty-title">还没有关注的商家</div>
-        <div class="empty-desc">去首页发现更多美食餐车</div>
-        <button class="empty-action" onclick="switchBottomTab('home')">发现商家</button>
+        <span class="empty-icon">⭐</span>
+        <div class="empty-title">${currentLang === 'en' ? 'No Following Yet' : '还没有关注商家'}</div>
+        <div class="empty-desc">${currentLang === 'en' ? 'Discover great restaurants on the home page!' : '去首页发现更多美食吧！'}</div>
+        <button class="empty-action" onclick="switchBottomTab('home')">${currentLang === 'en' ? 'Discover Now' : '去发现'}</button>
       </div>
     `;
     return;
   }
   container.innerHTML = merchants.map(m => {
-    const name = currentLang === 'en' && m.name_en ? m.name_en : m.name;
-    const emoji = m.emoji || '🍽️';
-    const isOpen = m.isOpen !== false;
-    const dist = m.distance ? m.distance.toFixed(1) : '?';
-    const type = m.type || '';
+    const id = m._id || m.id;
+    const name = currentLang === 'en' && m.name_en ? m.name_en : (m.name || 'Unknown');
+    const emoji = m.emoji || '🍜';
+    const isOpen = m.online !== false;
+    const desc = m.description || (currentLang === 'en' ? 'Great food' : '美味佳肴');
+    const followerCount = m.follower_count || m.followerCount || 0;
     return `
       <div class="followed-card">
-        <div class="followed-left" onclick="switchBottomTab('home');setTimeout(()=>toggleMerchantMenu('${m._id || m.id}'),300)">
+        <div class="followed-left" onclick="switchBottomTab('home');setTimeout(()=>toggleMerchantMenu('${id}'),300)">
           <div class="followed-emoji">${emoji}</div>
           <div class="followed-info">
             <div class="followed-name">${name}</div>
             <div class="followed-meta">
               <span class="status-dot ${isOpen ? '' : 'closed'}"></span>
-              <span class="status-text ${isOpen ? '' : 'closed'}">${isOpen ? '营业中' : '休息中'}</span>
-              <span class="distance">📍 ${dist} km</span>
+              <span class="status-text ${isOpen ? '' : 'closed'}">${isOpen ? (currentLang === 'en' ? 'Open' : '营业中') : (currentLang === 'en' ? 'Closed' : '休息中')}</span>
+              <span style="color:#bfbfbf">•</span>
+              <span class="followed-desc">${desc}</span>
             </div>
           </div>
         </div>
-        <button class="followed-view-btn" onclick="switchBottomTab('home');setTimeout(()=>toggleMerchantMenu('${m._id || m.id}'),300)">去看看</button>
+        <div class="followed-right">
+          <button class="btn-view" onclick="event.stopPropagation();switchBottomTab('home');setTimeout(()=>toggleMerchantMenu('${id}'),300)">
+            ${currentLang === 'en' ? 'View' : '查看'}
+          </button>
+        </div>
       </div>
     `;
   }).join('');

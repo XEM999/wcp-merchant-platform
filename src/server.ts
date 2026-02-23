@@ -17,6 +17,7 @@ import {
   getReviews,
   Merchant,
   Location,
+  mapMerchantFromDb,
   // 订单相关导入
   createOrder,
   getOrder,
@@ -758,6 +759,7 @@ app.get('/api/merchants/:id/followers', authMiddleware, async (req: Request, res
 /**
  * GET /api/user/following
  * 获取我关注的商家列表（需登录）
+ * 优化：使用批量查询而不是N+1
  */
 app.get('/api/user/following', authMiddleware, async (req: Request, res: Response) => {
   const userId = (req as any).userId;
@@ -765,14 +767,31 @@ app.get('/api/user/following', authMiddleware, async (req: Request, res: Respons
   try {
     const merchantIds = await getFollowedMerchants(userId);
     
-    // 获取商家详细信息
-    const merchants = await Promise.all(
-      merchantIds.map(id => getMerchant(id))
-    );
+    if (merchantIds.length === 0) {
+      return res.json({ count: 0, merchants: [] });
+    }
+
+    // 批量查询商户信息（不包含菜单，避免N+1）
+    const { data: merchantsData, error } = await supabase
+      .from('merchants')
+      .select('*')
+      .in('id', merchantIds);
+
+    if (error || !merchantsData) {
+      console.error('批量获取关注商户错误:', error);
+      return res.json({ count: 0, merchants: [] });
+    }
+
+    // 按照 merchantIds 的顺序返回（保持关注顺序）
+    const merchantMap = new Map(merchantsData.map(m => [m.id, m]));
+    const orderedMerchants = merchantIds
+      .map(id => merchantMap.get(id))
+      .filter(m => m !== undefined)
+      .map(m => mapMerchantFromDb(m, []));
 
     res.json({ 
       count: merchantIds.length, 
-      merchants: merchants.filter(m => m !== undefined) 
+      merchants: orderedMerchants
     });
   } catch (e: any) {
     console.error('获取关注列表错误:', e);
