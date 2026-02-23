@@ -456,6 +456,9 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
 window.doLogout=function(){
   token=null;user=null;
   localStorage.removeItem('token');localStorage.removeItem('user');
+  // 清空登录表单（安全考虑）
+  document.getElementById('lPhone').value = '';
+  document.getElementById('lPass').value = '';
   window.location.href = '/';
 };
 

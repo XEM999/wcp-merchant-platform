@@ -2312,6 +2312,14 @@ function doLogout() {
   localStorage.removeItem('nb_cartMerchant');
   cart = [];
   currentMerchantId = null;
+  // 清空登录和注册表单（安全考虑）
+  document.getElementById('loginPhone').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('regName') && (document.getElementById('regName').value = '');
+  document.getElementById('regPhone') && (document.getElementById('regPhone').value = '');
+  document.getElementById('regPass') && (document.getElementById('regPass').value = '');
+  document.getElementById('loginErr').textContent = '';
+  document.getElementById('regErr').textContent = '';
   showFullLoginPage();
 }
 
