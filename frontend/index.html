@@ -1912,6 +1912,8 @@ body {
   <!-- ===== FULL MAP VIEW ===== -->
   <div class="full-map-wrap" id="fullMapWrap">
     <div id="full-map"></div>
+    <button onclick="document.getElementById('fullMapWrap').classList.remove('show')" style="position:fixed;top:16px;right:16px;z-index:450;width:40px;height:40px;border-radius:50%;border:none;background:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    <button onclick="document.getElementById('fullMapWrap').classList.remove('show')" style="position:fixed;bottom:86px;left:50%;transform:translateX(-50%);z-index:450;padding:8px 24px;border-radius:20px;border:none;background:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:14px;font-weight:600;cursor:pointer;color:#333;">收起地图</button>
   </div>
 
   <!-- ===== DISCOVER PAGE (placeholder) ===== -->
@@ -2395,7 +2397,7 @@ function renderMerchants() {
     const rating = m.rating ? m.rating.toFixed(1) : '—';
     const dist = m.distance ? m.distance.toFixed(1) : '?';
     const sales = m.monthlySales || 0;
-    const isOpen = m.isOpen !== false;
+    const isOpen = m.online !== false;
     const tags = [];
     if (sales > 300) tags.push(`<span class="v-tag">🔥 ${t('filterHot')}</span>`);
     if (m.rating >= 4.7) tags.push(`<span class="v-tag-ai">✨ ${t('aiTag')}</span>`);
@@ -2471,7 +2473,7 @@ async function toggleMerchantMenu(merchantId) {
   const emoji = merchant.emoji || '🍽️';
   const rating = merchant.rating ? merchant.rating.toFixed(1) : '—';
   const dist = merchant.distance ? merchant.distance.toFixed(1) : '?';
-  const isOpen = merchant.isOpen !== false;
+  const isOpen = merchant.online !== false;
   const followerCount = merchant.followerCount || merchant.follower_count || 0;
 
   let menuItems = merchant.menu || [];
@@ -3176,7 +3178,7 @@ async function loadMyFollowingBar() {
     scroll.innerHTML = merchants.map(m => {
       const name = currentLang === 'en' && m.name_en ? m.name_en : m.name;
       const emoji = m.emoji || '🍽️';
-      const isOpen = m.isOpen !== false;
+      const isOpen = m.online !== false;
       return `
         <div class="my-following-chip" onclick="toggleMerchantMenu('${m._id || m.id}');scrollToCard('${m._id || m.id}')">
           <span class="chip-emoji">${emoji}</span>

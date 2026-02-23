@@ -1542,7 +1542,7 @@
                     <option value="ja">🇯🇵 日本語</option>
                     <option value="ko">🇰🇷 한국어</option>
                 </select>
-                <button id="logoutBtn" style="padding:6px 14px;border:1px solid #e74c3c;border-radius:20px;background:white;color:#e74c3c;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" data-i18n="logout">退出</button>
+                
             </div>
         </header>
 
@@ -4302,9 +4302,6 @@
         applyLang();
         updateSoundUI();
         initConfirmModeUI();
-        
-        // 退出登录按钮
-        document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
         
         // Optimistic auth: if token exists, show app immediately
         const savedToken = localStorage.getItem('token');
